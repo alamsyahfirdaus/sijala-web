@@ -111,6 +111,7 @@ Route::middleware('api.auth')->group(function () {
     Route::prefix('counseling')->group(function () {
         Route::get('/', [CounselingController::class, 'index']);
         Route::get('/count/{counseleeId?}', [CounselingController::class, 'countCounselingSessions']);
+        Route::get('/{elderlyCounseleeId}/show', [CounselingController::class, 'getCounselingSessionsById']);
         
         // Route::match(['put', 'post'], '/store', [CounselingController::class, 'store']);
         // Route::get('/{id}/scores', [CounselingController::class, 'getSessionScores']);
