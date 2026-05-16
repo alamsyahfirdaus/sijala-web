@@ -19,7 +19,7 @@ class CounselingSession extends Model
         return $this->belongsTo(User::class, 'counselor_id', 'id');
     }
 
-    public function elderly_counselee()
+    public function elderlyCounselee()
     {
         return $this->belongsTo(ElderlyCounselee::class, 'elderly_counselee_id');
     }

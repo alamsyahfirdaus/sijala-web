@@ -26,7 +26,7 @@ class CounselingController extends Controller
                 'counselor',
             ])
             ->when($user->role === 'konseli', function ($q) use ($user) {
-                $q->whereHas('elderly_counselee', function ($subQuery) use ($user) {
+                $q->whereHas('elderlyCounselee', function ($subQuery) use ($user) {
                     $subQuery->where('counselee_id', $user->id);
                 });
             })
@@ -94,7 +94,7 @@ class CounselingController extends Controller
         $total = CounselingSession::query()
             ->when($user->role === 'konseli', function ($q) use ($user) {
                 // Konseli hanya melihat sesi miliknya
-                $q->whereHas('elderly_counselee', function ($subQuery) use ($user) {
+                $q->whereHas('elderlyCounselee', function ($subQuery) use ($user) {
                     $subQuery->where('counselee_id', $user->id);
                 });
             })

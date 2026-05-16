@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\EmpowermentController;
 use App\Http\Controllers\Api\FallRiskController;
 use App\Http\Controllers\Api\PuskesmasController;
 use App\Http\Controllers\Api\QaController;
+use App\Http\Controllers\Api\CounselingChatController;
 use App\Http\Controllers\Api\RegionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -99,6 +100,7 @@ Route::middleware('api.auth')->group(function () {
     Route::prefix('counseling')->group(function () {
         Route::get('/', [CounselingController::class, 'index']);
         Route::get('/count/{counseleeId?}', [CounselingController::class, 'countCounselingSessions']);
+        
         // Route::match(['put', 'post'], '/store', [CounselingController::class, 'store']);
         // Route::get('/{id}/scores', [CounselingController::class, 'getSessionScores']);
     });
@@ -119,6 +121,10 @@ Route::middleware('api.auth')->group(function () {
         Route::post('/question', [QaController::class, 'storeQuestion']);
         Route::post('/{id}/answer', [QaController::class, 'storeAnswer']);
         Route::delete('/{id}', [QaController::class, 'destroy']);
+    });
+
+    Route::prefix('chat')->group(function () {
+        Route::get('/{sessionId}/show', [CounselingChatController::class, 'showChatSessions']);
     });
 
     // Route::match(['put', 'post'], '/logbook/save', [CounselingController::class, 'saveLogBook']);
