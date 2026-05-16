@@ -162,7 +162,7 @@ class CounselingController extends Controller
             ])
             ->where('elderly_counselee_id', $elderlyCounseleeId)
             ->where('counselor_id', $user->id)
-            ->orderBy('created_at', 'asc')
+            ->orderBy('created_at', 'desc')
             ->get();
 
         // Jika data tidak ditemukan
