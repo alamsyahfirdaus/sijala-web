@@ -7,6 +7,7 @@ use App\Models\CounselingSession;
 use App\Models\ElderlyCounselee;
 use App\Models\EmpowermentAssessment;
 use App\Models\FallRiskScreening;
+use App\Models\EducationContent;
 use App\Models\LogBook;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -117,6 +118,17 @@ class CounselingController extends Controller
         $hasAssessment = EmpowermentAssessment::where('counseling_session_id', $sessionId)->exists();
 
         return $hasScreening && $hasAssessment;
+    }
+
+    public function showEducationContents() 
+    {
+        $contents = EducationContent::where('is_active', 1)->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Daftar konten edukasi berhasil diambil',
+            'data'  => $contents
+        ]);
     }
 
     /* private function formatStatus($status)

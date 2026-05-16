@@ -12,50 +12,108 @@ class EducationContentsSeeder extends Seeder
      */
     public function run(): void
     {
+        // Hapus data lama agar tidak duplikat
+        DB::table('education_contents')->truncate();
+
         $data = [
 
-            // =========================
-            // VIDEO EDUKASI
-            // =========================
+            // ======================================================
+            // MATERI EDUKASI PENCEGAHAN RISIKO JATUH PADA LANSIA
+            // ======================================================
+
+            // ======================================================
+            // 1. POSTER EDUKASI (MATERI DASAR)
+            // ======================================================
+
             [
-                'title' => 'Pencegahan Risiko Jatuh pada Lansia',
-                'category' => 'video',
-                'file_path' => 'education/videos/pencegahan_risiko_jatuh.mp4',
-                'description' => 'Video edukasi mengenai langkah-langkah pencegahan risiko jatuh pada lansia di lingkungan rumah.',
-            ],
-            [
-                'title' => 'Latihan Keseimbangan untuk Lansia',
-                'category' => 'video',
-                'file_path' => 'education/videos/latihan_keseimbangan_lansia.mp4',
-                'description' => 'Panduan latihan sederhana untuk meningkatkan keseimbangan dan kekuatan lansia.',
+                'title' => 'Pencegahan Jatuh pada Lansia',
+                'category' => 'poster',
+                // File tersedia di public/images/pencegahan_jatuh.jpg
+                'file_path' => 'pencegahan_jatuh.jpg',
+                'description' => 'Materi edukasi mengenai faktor risiko jatuh dan langkah-langkah pencegahan yang dapat dilakukan di rumah maupun lingkungan sekitar.',
             ],
 
-            // =========================
-            // POSTER EDUKASI
-            // =========================
             [
-                'title' => 'Poster Lingkungan Rumah Aman bagi Lansia',
+                'title' => 'Penggunaan Alat Bantu Jalan yang Benar',
                 'category' => 'poster',
-                'file_path' => 'lingkungan_aman_lansia.jpg',
-                'description' => 'Poster edukasi tentang pengaturan lingkungan rumah agar aman dan ramah lansia.',
+                // File tersedia di public/images/alat_bantu_jalan.jpg
+                'file_path' => 'alat_bantu_jalan.jpg',
+                'description' => 'Panduan penggunaan alat bantu jalan seperti tongkat, walker, dan kursi roda agar lansia dapat bergerak dengan aman dan mandiri.',
             ],
+
+            // ======================================================
+            // 2. VIDEO EDUKASI PENGGUNAAN ALAT BANTU
+            // ======================================================
+
             [
-                'title' => 'Poster Tips Mencegah Jatuh',
+                'title' => 'Cara Aman Menggunakan Tongkat untuk Lansia',
+                'category' => 'video',
+                'file_path' => 'https://youtu.be/Kb-YJe_OpS4?si=_Sq8b6zVnyqXL4oQ',
+                'description' => 'Video panduan penggunaan tongkat yang benar untuk membantu menjaga keseimbangan dan mengurangi risiko jatuh saat berjalan.',
+            ],
+
+            [
+                'title' => 'Cara Aman Menggunakan Walker untuk Lansia',
+                'category' => 'video',
+                'file_path' => 'https://youtu.be/ZbtdHBsXnC8?si=1iV997UFNs-Jjdbh',
+                'description' => 'Video edukasi tentang cara menggunakan walker secara tepat agar lansia dapat berjalan lebih stabil dan aman.',
+            ],
+
+            [
+                'title' => 'Cara Aman Menggunakan Kursi Roda untuk Lansia',
+                'category' => 'video',
+                'file_path' => 'https://youtu.be/1CpcOTZlka8?si=41KB6uQH9C6xBsMC',
+                'description' => 'Panduan penggunaan kursi roda yang aman, termasuk teknik berpindah posisi dan langkah keselamatan saat digunakan.',
+            ],
+
+            // ======================================================
+            // 3. VIDEO EDUKASI LATIHAN KESEIMBANGAN
+            // ======================================================
+
+            [
+                'title' => 'Latihan Keseimbangan untuk Mencegah Risiko Jatuh pada Lansia',
+                'category' => 'video',
+                'file_path' => 'https://youtu.be/5UlD1n-6QqU?si=Ob8-FhRPJo3zj0v2',
+                'description' => 'Video latihan sederhana untuk meningkatkan kekuatan otot, koordinasi, dan keseimbangan tubuh lansia.',
+            ],
+
+            [
+                'title' => 'Latihan Keseimbangan bagi Lansia Pengguna Kursi Roda',
+                'category' => 'video',
+                'file_path' => 'https://youtu.be/oPG9EYbCp9w?si=SttP98VbxMXOkLAy',
+                'description' => 'Latihan gerak yang dirancang khusus bagi lansia pengguna kursi roda untuk menjaga fleksibilitas dan keseimbangan tubuh.',
+            ],
+
+            // ======================================================
+            // 4. EDUKASI KOMUNIKASI DAN PSIKOSOSIAL
+            // ======================================================
+
+            [
+                'title' => 'Cara Berkomunikasi dengan Lansia',
                 'category' => 'poster',
-                'file_path' => 'tips_mencegah_jatuh.jpg',
-                'description' => 'Poster berisi tips praktis pencegahan jatuh pada lansia dalam aktivitas sehari-hari.',
+                // File tersedia di public/images/komunikasi_lansia.jpg
+                'file_path' => 'komunikasi_lansia.jpg',
+                'description' => 'Materi edukasi mengenai teknik komunikasi yang sabar, empatik, dan efektif untuk membangun hubungan yang baik dengan lansia.',
+            ],
+
+            [
+                'title' => 'Masalah Psikologis Keluarga dalam Merawat Lansia',
+                'category' => 'poster',
+                // File tersedia di public/images/psikologis_keluarga.jpg
+                'file_path' => 'psikologis_keluarga.jpg',
+                'description' => 'Materi edukasi tentang tantangan emosional yang dapat dialami keluarga serta strategi menghadapi stres dalam merawat lansia.',
             ],
         ];
 
         foreach ($data as $item) {
             DB::table('education_contents')->insert([
-                'title' => $item['title'],
-                'category' => $item['category'],
-                'file_path' => $item['file_path'],
+                'title'       => $item['title'],
+                'category'    => $item['category'],
+                'file_path'   => $item['file_path'],
                 'description' => $item['description'],
-                'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'is_active'   => true,
+                'created_at'  => now(),
+                'updated_at'  => now(),
             ]);
         }
     }

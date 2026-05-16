@@ -55,13 +55,24 @@ Route::prefix('puskesmas')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('api.auth')->get('/image/{filename}', function ($filename) {
+Route::get('/image/{filename}', function ($filename) {
+    // Mencegah path traversal
+    $filename = basename($filename);
+
+    // Path file di folder public/images
     $path = public_path('images/' . $filename);
 
+    // Jika file tidak ditemukan
     if (!file_exists($path)) {
-        abort(404);
+        return response()->json([
+            'status' => false,
+            'message' => 'File tidak ditemukan',
+            'filename' => $filename,
+            'path' => $path,
+        ], 404);
     }
 
+    // Tampilkan file gambar
     return response()->file($path);
 });
 
@@ -129,6 +140,8 @@ Route::middleware('api.auth')->group(function () {
         Route::get('/{sessionId}/messages', [CounselingChatController::class, 'fetchMessages']);
         Route::post('/{sessionId}/read', [CounselingChatController::class, 'markMessagesAsRead']);
     });
+
+    Route::get('education-contents', [CounselingController::class, 'showEducationContents']);
 
     // Route::match(['put', 'post'], '/logbook/save', [CounselingController::class, 'saveLogBook']);
 });
