@@ -21,8 +21,7 @@ class CounselingController extends Controller
         $user = $request->attributes->get('user');
 
         $sessions = CounselingSession::with([
-                // Load relasi elderly_counselee beserta data konseli (user)
-                'elderly_counselee.counselee',
+                'elderlyCounselee.counselee',
                 'counselor',
             ])
             ->when($user->role === 'konseli', function ($q) use ($user) {

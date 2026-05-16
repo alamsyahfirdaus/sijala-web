@@ -125,6 +125,9 @@ Route::middleware('api.auth')->group(function () {
 
     Route::prefix('chat')->group(function () {
         Route::get('/{sessionId}/show', [CounselingChatController::class, 'showChatSessions']);
+        Route::post('/send', [CounselingChatController::class, 'storeChatMessage']);
+        Route::get('/{sessionId}/messages', [CounselingChatController::class, 'fetchMessages']);
+        Route::post('/{sessionId}/read', [CounselingChatController::class, 'markMessagesAsRead']);
     });
 
     // Route::match(['put', 'post'], '/logbook/save', [CounselingController::class, 'saveLogBook']);

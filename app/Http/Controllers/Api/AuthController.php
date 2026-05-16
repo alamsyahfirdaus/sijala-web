@@ -245,7 +245,6 @@ class AuthController extends Controller
             'birth_date' => $formatDate($user->birth_date),
             'occupation' => $user->occupation,
             'education' => $user->education,
-            'address' => $user->address,
             'is_active' => $user->is_active,
 
             // Data puskesmas
@@ -393,8 +392,6 @@ class AuthController extends Controller
 
                 'gender' => 'sometimes|in:L,P',
                 'birth_date' => 'sometimes|date_format:Y-m-d|before:today',
-                'village_id' => 'sometimes|exists:villages,id',
-                'address' => 'sometimes|string|max:500',
                 'photo' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
             ]
         );
