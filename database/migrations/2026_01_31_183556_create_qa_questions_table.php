@@ -28,8 +28,7 @@ return new class extends Migration
             // =========================
             // STATUS PERTANYAAN
             // =========================
-            $table->enum('status', ['open', 'answered'])
-                ->default('open');
+            $table->enum('status', ['open', 'answered'])->nullable();
             // open     = belum dijawab
             // answered = sudah dijawab
 

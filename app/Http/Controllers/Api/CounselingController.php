@@ -287,6 +287,133 @@ class CounselingController extends Controller
         return $hasScreening && $hasAssessment;
     }
 
+    public function getTodayCounselingSessions(Request $request)
+    {
+        // ================= AMBIL USER LOGIN =================
+        $user = $request->attributes->get('user');
+
+        // Pastikan hanya konselor yang dapat mengakses endpoint ini
+        if ($user->role !== 'konselor') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak.',
+                'data' => null,
+            ], 403);
+        }
+
+        // ================= AMBIL SESI KONSELING HARI INI =================
+        // Mengambil sesi konseling hari ini milik konselor login,
+        // lalu memilih hanya record terakhir (id terbesar)
+        // untuk setiap elderly_counselee_id.
+        $sessions = CounselingSession::with([
+                'elderlyCounselee.counselee',
+                'counselor',
+            ])
+            ->where('counselor_id', $user->id)
+            ->whereDate('created_at', Carbon::today())
+            ->orderBy('id', 'desc')
+            ->get()
+            ->groupBy('elderly_counselee_id')
+            ->map(function ($items) {
+                // Karena sudah diorder desc, item pertama = id terbesar
+                return $items->first();
+            })
+            ->values();
+
+        // ================= FORMAT RESPONSE =================
+        $data = $sessions->map(function ($session) {
+            $elderlyCounselee = $session->elderlyCounselee;
+            $counselee = $elderlyCounselee->counselee ?? null;
+
+            return [
+                'counseling_session_id' => $session->id,
+                'elderly_counselee_id' => $elderlyCounselee->id ?? null,
+
+                // ================= DATA KONSELI =================
+                'counselee_id' => $elderlyCounselee->counselee_id ?? null,
+                'counselee_name' => $counselee->name ?? null,
+                'counselee_phone' => $counselee->phone ?? null,
+
+                // ================= DATA LANSIA =================
+                'elderly_name' => $elderlyCounselee->elderly_name ?? null,
+                'elderly_gender' => $elderlyCounselee->elderly_gender ?? null,
+                'elderly_age' => $elderlyCounselee->elderly_age ?? null,
+                'health_problems' => $elderlyCounselee->health_problems ?? null,
+                'has_fallen' => $elderlyCounselee->has_fallen ?? null,
+
+                // ================= DATA SESI =================
+                'service_mode' => $session->service_mode,
+                'status' => $session->status,
+                'created_at' => optional($session->created_at)
+                    ->format('d-m-Y H:i'),
+
+                // ================= STATUS PENYELESAIAN =================
+                'is_completed' => $this->isCounselingSessionCompleted($session->id),
+            ];
+        });
+
+        // ================= RESPONSE =================
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar konseling hari ini berhasil diambil.',
+            'total' => $data->count(),
+            'data' => $data->values(),
+        ]);
+    }
+
+    public function getCounselingStatistics(Request $request)
+    {
+        // ================= AMBIL USER LOGIN =================
+        $user = $request->attributes->get('user');
+
+        // Pastikan hanya konselor yang dapat mengakses endpoint ini
+        if ($user->role !== 'konselor') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak.',
+                'data' => null,
+            ], 403);
+        }
+
+        // ================= AMBIL SEMUA SESI KONSELING MILIK KONSELOR =================
+        $sessions = CounselingSession::where('counselor_id', $user->id)->get();
+
+        // ================= HITUNG STATUS =================
+        $berjalan = 0;
+        $selesai = 0;
+
+        foreach ($sessions as $session) {
+            if ($this->isCounselingSessionCompleted($session->id)) {
+                $selesai++;
+            } else {
+                $berjalan++;
+            }
+        }
+
+        // ================= HITUNG KONSELING HARI INI =================
+        $today = CounselingSession::where('counselor_id', $user->id)
+            ->whereDate('created_at', Carbon::today())
+            ->count();
+
+        // ================= HITUNG TOTAL KONSELI UNIK =================
+        $totalCounselees = CounselingSession::where('counselor_id', $user->id)
+            ->distinct('elderly_counselee_id')
+            ->count('elderly_counselee_id');
+
+        // ================= RESPONSE =================
+        return response()->json([
+            'success' => true,
+            'message' => 'Statistik konseling berhasil diambil.',
+            'data' => [
+                'berjalan' => $berjalan,
+                'selesai' => $selesai,
+                'today' => $today,
+                'total_sessions' => $sessions->count(),
+                'total_counselees' => $totalCounselees,
+            ],
+        ]);
+    }
+
     public function showEducationContents() 
     {
         $contents = EducationContent::where('is_active', 1)->get();
