@@ -24,46 +24,65 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
+        // =========================================================
+        // VALIDASI INPUT
+        // =========================================================
         $validator = Validator::make(
             $request->all(),
             [
-                'name' => 'required',
+                'name' => 'required|string|max:255',
                 'gender' => 'required|in:L,P',
                 'phone' => 'required|numeric|unique:users,phone',
                 'role' => 'required|in:konselor,konseli',
 
-                // opsional tapi harus valid jika diisi
-                'village_id'   => 'nullable|exists:villages,id',
-                'puskesmas_id' => 'nullable|exists:puskesmas,id'
+                // Puskesmas wajib untuk semua role
+                'puskesmas_id' => 'required|exists:puskesmas,id',
             ],
             [
+                // Name
                 'name.required' => 'Nama wajib diisi.',
+
+                // Gender
                 'gender.required' => 'Jenis kelamin wajib dipilih.',
                 'gender.in' => 'Jenis kelamin harus L atau P.',
+
+                // Phone
                 'phone.required' => 'Nomor handphone wajib diisi.',
                 'phone.numeric' => 'Nomor handphone harus berupa angka.',
                 'phone.unique' => 'Nomor handphone sudah terdaftar.',
+
+                // Role
                 'role.required' => 'Peran pengguna wajib dipilih.',
                 'role.in' => 'Peran harus konselor atau konseli.',
 
-                'village_id.exists' => 'Kelurahan tidak ditemukan.',
-                'puskesmas_id.exists' => 'Puskesmas tidak ditemukan.'
+                // Puskesmas
+                'puskesmas_id.required' => 'Puskesmas wajib dipilih.',
+                'puskesmas_id.exists' => 'Puskesmas tidak ditemukan.',
             ]
         );
 
+        // Jika validasi gagal
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
-                'errors' => $validator->errors()
+                'message' => 'Validasi gagal.',
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         DB::beginTransaction();
 
         try {
+            // =========================================================
+            // GENERATE USERNAME UNIK
+            // Contoh:
+            // "Budi Santoso" -> "budisantoso"
+            // Jika sudah ada -> "budisantoso1"
+            // =========================================================
+            $baseUsername = strtolower(
+                preg_replace('/[^a-zA-Z0-9]/', '', $request->name)
+            );
 
-            // generate username
-            $baseUsername = strtolower(str_replace(' ', '', $request->name));
             $username = $baseUsername;
             $counter = 1;
 
@@ -72,50 +91,47 @@ class AuthController extends Controller
                 $counter++;
             }
 
-            $password = '123456';
+            // Password default
+            $plainPassword = '123456';
 
-            // simpan user + village_id
+            // =========================================================
+            // SIMPAN DATA USER
+            // =========================================================
             $user = User::create([
                 'name' => $request->name,
                 'username' => $username,
                 'phone' => $request->phone,
                 'gender' => $request->gender,
-                'password' => Hash::make($password),
+                'password' => Hash::make($plainPassword),
                 'role' => $request->role,
-                'village_id' => $request->village_id // opsional
+                'puskesmas_id' => $request->puskesmas_id,
             ]);
-
-            // jika role konselor → insert ke counselors
-            if ($request->role === 'konselor') {
-
-                Counselor::create([
-                    'user_id' => $user->id,
-                    'puskesmas_id' => $request->puskesmas_id // opsional
-                ]);
-            }
 
             DB::commit();
 
+            // =========================================================
+            // RESPONSE BERHASIL
+            // =========================================================
             return response()->json([
                 'status' => true,
-                'message' => 'Registrasi berhasil',
+                'message' => 'Registrasi berhasil.',
                 'data' => [
                     'id' => $user->id,
                     'name' => $user->name,
                     'username' => $user->username,
                     'phone' => $user->phone,
-                    'password' => $password,
-                    'role' => $user->role
-                ]
-            ]);
-        } catch (\Exception $e) {
-
+                    'password' => $plainPassword,
+                    'role' => $user->role,
+                    'puskesmas_id' => $user->puskesmas_id,
+                ],
+            ], 200);
+        } catch (\Throwable $e) {
             DB::rollBack();
 
             return response()->json([
                 'status' => false,
-                'message' => 'Registrasi gagal',
-                'error' => $e->getMessage()
+                'message' => 'Registrasi gagal.',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
