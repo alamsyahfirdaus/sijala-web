@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\EvaluationQuestion;
 use App\Models\EvaluationTopic;
+use App\Models\Evaluation;
+use App\Models\EvaluationAnswer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -283,7 +285,7 @@ class EvaluationController extends Controller
                     'evaluation_topic_id' => $request->evaluation_topic_id,
                     'total_questions' => $totalQuestions,
                     'correct_answers' => $correctAnswers,
-                    'score' => $totalScore,
+                    'total_score' => $totalScore,
                     'percentage' => $percentage,
                     'category' => $category,
                 ]);
@@ -303,7 +305,7 @@ class EvaluationController extends Controller
                     'evaluation_topic_id' => $request->evaluation_topic_id,
                     'total_questions' => $totalQuestions,
                     'correct_answers' => $correctAnswers,
-                    'score' => $totalScore,
+                    'total_score' => $totalScore,
                     'percentage' => $percentage,
                     'category' => $category,
                 ]);
@@ -356,7 +358,7 @@ class EvaluationController extends Controller
                     'total_questions' => $totalQuestions,
                     'correct_answers' => $correctAnswers,
                     'wrong_answers' => $totalQuestions - $correctAnswers,
-                    'score' => $totalScore,
+                    'total_score' => $totalScore,
                     'percentage' => $percentage,
                     'category' => $category,
                 ],

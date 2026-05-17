@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Counselor;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -15,7 +14,6 @@ use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
 {
-
     /*
     |--------------------------------------------------------------------------
     | REGISTER
@@ -87,7 +85,7 @@ class AuthController extends Controller
             $counter = 1;
 
             while (User::where('username', $username)->exists()) {
-                $username = $baseUsername . $counter;
+                $username = $baseUsername.$counter;
                 $counter++;
             }
 
@@ -149,18 +147,18 @@ class AuthController extends Controller
             $request->all(),
             [
                 'username' => 'required',
-                'password' => 'required'
+                'password' => 'required',
             ],
             [
                 'username.required' => 'Username / email / nomor HP wajib diisi.',
-                'password.required' => 'Password wajib diisi.'
+                'password.required' => 'Password wajib diisi.',
             ]
         );
 
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -169,17 +167,17 @@ class AuthController extends Controller
             ->orWhere('phone', $request->username)
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'status' => false,
-                'message' => 'Akun tidak ditemukan.'
+                'message' => 'Akun tidak ditemukan.',
             ], 401);
         }
 
-        if (!Hash::check($request->password, $user->password)) {
+        if (! Hash::check($request->password, $user->password)) {
             return response()->json([
                 'status' => false,
-                'message' => 'Password salah.'
+                'message' => 'Password salah.',
             ], 401);
         }
 
@@ -197,8 +195,8 @@ class AuthController extends Controller
                 'username' => $user->username,
                 'phone' => $user->phone,
                 'role' => $user->role,
-                'token' => $token
-            ]
+                'token' => $token,
+            ],
         ]);
     }
 
@@ -215,7 +213,7 @@ class AuthController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Auto login berhasil',
-            'data' => $user
+            'data' => $user,
         ]);
     }
 
@@ -229,16 +227,14 @@ class AuthController extends Controller
     {
         // Ambil user yang sedang login beserta relasi puskesmas
         $user = User::with([
-            'puskesmas.village.district.regency.province'
+            'puskesmas.village.district.regency.province',
         ])->find($request->attributes->get('user')->id);
 
         // Format tanggal lahir
-        $formatDate = fn($date) =>
-            $date ? \Carbon\Carbon::parse($date)->format('d-m-Y') : null;
+        $formatDate = fn ($date) => $date ? \Carbon\Carbon::parse($date)->format('d-m-Y') : null;
 
         // Format alamat puskesmas
-        $buildPuskesmasAddress = fn($p) =>
-            $p?->village_id
+        $buildPuskesmasAddress = fn ($p) => $p?->village_id
                 ? collect([
                     $p->name,
                     $p->village?->name,
@@ -292,7 +288,7 @@ class AuthController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'Logout berhasil'
+            'message' => 'Logout berhasil',
         ]);
     }
 
@@ -310,28 +306,28 @@ class AuthController extends Controller
             $request->all(),
             [
                 'current_password' => 'required',
-                'new_password' => 'required|min:6|confirmed'
+                'new_password' => 'required|min:6|confirmed',
             ],
             [
                 'current_password.required' => 'Password lama wajib diisi.',
                 'new_password.required' => 'Password baru wajib diisi.',
                 'new_password.min' => 'Password baru minimal 6 karakter.',
-                'new_password.confirmed' => 'Konfirmasi password tidak sama.'
+                'new_password.confirmed' => 'Konfirmasi password tidak sama.',
             ]
         );
 
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         // Cek password lama
-        if (!Hash::check($request->current_password, $user->password)) {
+        if (! Hash::check($request->current_password, $user->password)) {
             return response()->json([
                 'status' => false,
-                'message' => 'Password lama tidak sesuai.'
+                'message' => 'Password lama tidak sesuai.',
             ], 400);
         }
 
@@ -339,7 +335,7 @@ class AuthController extends Controller
         if (Hash::check($request->new_password, $user->password)) {
             return response()->json([
                 'status' => false,
-                'message' => 'Password baru tidak boleh sama dengan password lama.'
+                'message' => 'Password baru tidak boleh sama dengan password lama.',
             ], 400);
         }
 
@@ -349,7 +345,7 @@ class AuthController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'Password berhasil diubah'
+            'message' => 'Password berhasil diubah',
         ]);
     }
 
@@ -377,7 +373,7 @@ class AuthController extends Controller
                 }
 
                 $request->merge([
-                    'birth_date' => $date->format('Y-m-d')
+                    'birth_date' => $date->format('Y-m-d'),
                 ]);
             } catch (\Exception $e) {
                 // biarkan validator handle error format tanggal
@@ -390,11 +386,13 @@ class AuthController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
+                // Data dasar pengguna
                 'name' => 'sometimes|string|max:255',
 
                 'email' => [
                     'sometimes',
                     'email',
+                    'max:255',
                     Rule::unique('users', 'email')->ignore($user->id),
                 ],
 
@@ -406,9 +404,50 @@ class AuthController extends Controller
                     Rule::unique('users', 'phone')->ignore($user->id),
                 ],
 
+                // Jenis kelamin: L = Laki-laki, P = Perempuan
                 'gender' => 'sometimes|in:L,P',
+
+                // Tempat dan tanggal lahir
+                'birth_place' => 'sometimes|string|max:100',
                 'birth_date' => 'sometimes|date_format:Y-m-d|before:today',
+
+                // Informasi tambahan
+                'occupation' => 'sometimes|string|max:100',
+                'education' => 'sometimes|string|max:100',
+
+                 // Relasi Puskesmas
+                'puskesmas_id' => 'sometimes|nullable|integer|exists:puskesmas,id',
+
+                // Foto profil
                 'photo' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
+            ],
+            [
+                // Custom message
+                'name.max' => 'Nama maksimal 255 karakter.',
+
+                'email.email' => 'Format email tidak valid.',
+                'email.unique' => 'Email sudah digunakan.',
+                'email.max' => 'Email maksimal 255 karakter.',
+
+                'phone.min' => 'Nomor HP minimal 10 digit.',
+                'phone.max' => 'Nomor HP maksimal 15 digit.',
+                'phone.unique' => 'Nomor HP sudah digunakan.',
+
+                'gender.in' => 'Jenis kelamin harus L atau P.',
+
+                'birth_place.max' => 'Tempat lahir maksimal 100 karakter.',
+                'birth_date.date_format' => 'Format tanggal lahir harus YYYY-MM-DD.',
+                'birth_date.before' => 'Tanggal lahir harus sebelum hari ini.',
+
+                'occupation.max' => 'Pekerjaan maksimal 100 karakter.',
+                'education.max' => 'Pendidikan maksimal 100 karakter.',
+
+                'puskesmas_id.integer' => 'Puskesmas tidak valid.',
+                'puskesmas_id.exists'  => 'Puskesmas yang dipilih tidak ditemukan.',
+
+                'photo.image' => 'File harus berupa gambar.',
+                'photo.mimes' => 'Foto harus berformat jpeg, png, jpg, atau gif.',
+                'photo.max' => 'Ukuran foto maksimal 2 MB.',
             ]
         );
 
@@ -416,7 +455,7 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -429,8 +468,8 @@ class AuthController extends Controller
         if ($request->hasFile('photo')) {
 
             // Hapus foto lama jika ada
-            if (!empty($user->photo)) {
-                $oldPath = public_path('images/' . $user->photo);
+            if (! empty($user->photo)) {
+                $oldPath = public_path('images/'.$user->photo);
                 if (file_exists($oldPath)) {
                     unlink($oldPath);
                 }
@@ -438,12 +477,12 @@ class AuthController extends Controller
 
             // Pastikan folder tersedia
             $destinationPath = public_path('images');
-            if (!is_dir($destinationPath)) {
+            if (! is_dir($destinationPath)) {
                 mkdir($destinationPath, 0755, true);
             }
 
             // Simpan foto baru
-            $fileName = Str::random(20) . '.' . $request->file('photo')->extension();
+            $fileName = Str::random(20).'.'.$request->file('photo')->extension();
             $request->file('photo')->move($destinationPath, $fileName);
 
             // Simpan nama file ke database
@@ -459,9 +498,9 @@ class AuthController extends Controller
         // 5. Response
         // =========================
         return response()->json([
-            'status'  => true,
+            'status' => true,
             'message' => 'Profil berhasil diperbarui',
-            'data'    => $user
+            'data' => $user,
         ]);
     }
 
@@ -483,7 +522,7 @@ class AuthController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Token berhasil diperbarui',
-            'token' => $token
+            'token' => $token,
         ]);
     }
 }
