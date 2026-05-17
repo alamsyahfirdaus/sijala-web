@@ -139,7 +139,7 @@ Route::middleware('api.auth')->group(function () {
     Route::prefix('evaluation')->group(function () {
         Route::get('/', [EvaluationController::class, 'index']);
         Route::get('/{id}/questions', [EvaluationController::class, 'getEvaluationQuestions']);
-        Route::match(['put', 'post'], 'save', [EvaluationController::class, 'saveEvaluationQuestions']);
+        Route::match(['put', 'post'], 'store', [EvaluationController::class, 'saveEvaluationQuestions']);
     });
 
     Route::get('education-contents', [CounselingController::class, 'showEducationContents']);
