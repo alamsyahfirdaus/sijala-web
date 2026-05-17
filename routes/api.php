@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\PuskesmasController;
 use App\Http\Controllers\Api\QaController;
 use App\Http\Controllers\Api\CounselingChatController;
 use App\Http\Controllers\Api\RegionController;
+use App\Http\Controllers\Api\EvaluationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Symfony\Component\Routing\Router;
@@ -102,21 +103,12 @@ Route::middleware('api.auth')->group(function () {
         Route::get('/count', [ElderlyCounseleeController::class, 'count']);
     });
 
-    // Route::prefix('counselors')->group(function () {
-    //     Route::match(['get', 'post'], '/', [CounselorController::class, 'index']);
-    //     Route::get('/{id}/show', [CounselorController::class, 'show']);
-    //     Route::match(['put', 'post'], '/{id}/update', [CounselorController::class, 'updateConselor']);
-    // });
-
     Route::prefix('counseling')->group(function () {
         Route::get('/', [CounselingController::class, 'index']);
         Route::get('/count/{counseleeId?}', [CounselingController::class, 'countCounselingSessions']);
         Route::get('/{elderlyCounseleeId}/show', [CounselingController::class, 'getCounselingSessionsById']);
         Route::get('/today', [CounselingController::class, 'getTodayCounselingSessions']);
         Route::get('/statistics',[CounselingController::class, 'getCounselingStatistics']);
-        
-        // Route::match(['put', 'post'], '/store', [CounselingController::class, 'store']);
-        // Route::get('/{id}/scores', [CounselingController::class, 'getSessionScores']);
     });
 
     Route::prefix('fall-risk')->group(function () {
@@ -144,9 +136,13 @@ Route::middleware('api.auth')->group(function () {
         Route::post('/{sessionId}/read', [CounselingChatController::class, 'markMessagesAsRead']);
     });
 
-    Route::get('education-contents', [CounselingController::class, 'showEducationContents']);
+    Route::prefix('evaluation')->group(function () {
+        Route::get('/', [EvaluationController::class, 'index']);
+        Route::get('/{id}/questions', [EvaluationController::class, 'getEvaluationQuestions']);
+        Route::match(['put', 'post'], 'save', [EvaluationController::class, 'saveEvaluationQuestions']);
+    });
 
-    // Route::match(['put', 'post'], '/logbook/save', [CounselingController::class, 'saveLogBook']);
+    Route::get('education-contents', [CounselingController::class, 'showEducationContents']);
 });
 
 /*
