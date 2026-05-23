@@ -14,16 +14,15 @@ class EvaluationSeeder extends Seeder
     {
         $topics = [
 
-            /*
-            |--------------------------------------------------------------------------
-            | TOPIK 1: PENCEGAHAN JATUH PADA LANSIA
-            |--------------------------------------------------------------------------
-            */
+            // =========================================================
+            // PENCEGAHAN JATUH PADA LANSIA
+            // =========================================================
             [
                 'topic' => 'Pencegahan Jatuh pada Lansia',
-                'description' => 'Evaluasi pengetahuan keluarga mengenai faktor risiko, pencegahan, dan penanganan jatuh pada lansia.',
+                'description' => 'Evaluasi mengenai pencegahan risiko jatuh pada lansia.',
                 'order' => 1,
                 'questions' => [
+
                     [
                         'question' => 'Manakah yang termasuk faktor internal (dari dalam) penyebab jatuh pada lansia?',
                         'option_a' => 'Lantai licin',
@@ -31,9 +30,8 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Penurunan keseimbangan dan kekuatan otot',
                         'option_d' => 'Pencahayaan buruk',
                         'correct_answer' => 'c',
-                        'score' => 1,
-                        'order' => 1,
                     ],
+
                     [
                         'question' => 'Berikut yang termasuk faktor lingkungan penyebab jatuh adalah …',
                         'option_a' => 'Osteoporosis',
@@ -41,9 +39,8 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Diabetes',
                         'option_d' => 'Karpet yang mudah bergeser',
                         'correct_answer' => 'd',
-                        'score' => 1,
-                        'order' => 2,
                     ],
+
                     [
                         'question' => 'Salah satu cara keluarga mencegah risiko jatuh pada lansia adalah …',
                         'option_a' => 'Membiarkan lansia berjalan sendiri tanpa pengawasan',
@@ -51,9 +48,8 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Mengurangi aktivitas fisik lansia sepenuhnya',
                         'option_d' => 'Membatasi komunikasi dengan lansia',
                         'correct_answer' => 'b',
-                        'score' => 1,
-                        'order' => 3,
                     ],
+
                     [
                         'question' => 'Apa yang harus dilakukan pertama kali saat lansia terjatuh?',
                         'option_a' => 'Langsung memaksa lansia berdiri',
@@ -61,9 +57,8 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Tetap tenang dan memeriksa kondisi lansia',
                         'option_d' => 'Membiarkan lansia beristirahat sendiri',
                         'correct_answer' => 'c',
-                        'score' => 1,
-                        'order' => 4,
                     ],
+
                     [
                         'question' => 'Bila dicurigai terdapat patah tulang atau cedera kepala setelah jatuh, tindakan yang tepat adalah …',
                         'option_a' => 'Dipijat segera',
@@ -71,9 +66,8 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Diberikan obat tidur',
                         'option_d' => 'Segera dibawa ke fasilitas kesehatan',
                         'correct_answer' => 'd',
-                        'score' => 1,
-                        'order' => 5,
                     ],
+
                     [
                         'question' => 'Perilaku berikut yang dapat meningkatkan risiko jatuh pada lansia adalah …',
                         'option_a' => 'Bangun dari tempat tidur secara perlahan',
@@ -81,19 +75,17 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Tergesa-gesa saat berjalan',
                         'option_d' => 'Menggunakan pegangan tangan di kamar mandi',
                         'correct_answer' => 'c',
-                        'score' => 1,
-                        'order' => 6,
                     ],
+
                     [
-                        'question' => 'Mengapa latihan fisik dan program keseimbangan penting bagi lansia?',
+                        'question' => 'Mengapa latihan fisik dan latihan keseimbangan penting bagi lansia?',
                         'option_a' => 'Membuat lansia cepat lelah',
                         'option_b' => 'Menurunkan kekuatan otot',
                         'option_c' => 'Membantu menjaga keseimbangan dan kekuatan tubuh',
                         'option_d' => 'Mengurangi kemampuan berjalan',
                         'correct_answer' => 'c',
-                        'score' => 1,
-                        'order' => 7,
                     ],
+
                     [
                         'question' => 'Pencegahan jatuh pada lansia terbukti dapat …',
                         'option_a' => 'Mengurangi kemandirian lansia',
@@ -101,22 +93,19 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Menurunkan kualitas hidup',
                         'option_d' => 'Mempertahankan kemandirian lansia',
                         'correct_answer' => 'd',
-                        'score' => 1,
-                        'order' => 8,
                     ],
                 ],
             ],
 
-            /*
-            |--------------------------------------------------------------------------
-            | TOPIK 2: PENGGUNAAN ALAT BANTU JALAN YANG BENAR
-            |--------------------------------------------------------------------------
-            */
+            // =========================================================
+            // PENGGUNAAN ALAT BANTU JALAN YANG BENAR
+            // =========================================================
             [
                 'topic' => 'Penggunaan Alat Bantu Jalan yang Benar',
-                'description' => 'Evaluasi pengetahuan tentang penggunaan tongkat dan walker secara aman.',
+                'description' => 'Evaluasi mengenai penggunaan alat bantu jalan pada lansia.',
                 'order' => 2,
                 'questions' => [
+
                     [
                         'question' => 'Apa manfaat utama penggunaan alat bantu jalan pada lansia?',
                         'option_a' => 'Membuat lansia lebih cepat berjalan',
@@ -124,9 +113,8 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Menghilangkan seluruh nyeri sendi',
                         'option_d' => 'Membatasi aktivitas lansia',
                         'correct_answer' => 'b',
-                        'score' => 1,
-                        'order' => 1,
                     ],
+
                     [
                         'question' => 'Tongkat sebaiknya digunakan pada tangan yang …',
                         'option_a' => 'Sama dengan kaki yang lemah',
@@ -134,9 +122,8 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Berlawanan dengan kaki yang lemah atau nyeri',
                         'option_d' => 'Dominan digunakan sehari-hari',
                         'correct_answer' => 'c',
-                        'score' => 1,
-                        'order' => 2,
                     ],
+
                     [
                         'question' => 'Tinggi tongkat yang benar adalah ketika pegangan tongkat …',
                         'option_a' => 'Setinggi bahu',
@@ -144,9 +131,8 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Sejajar lipatan pergelangan tangan saat berdiri tegak',
                         'option_d' => 'Setinggi pinggang',
                         'correct_answer' => 'c',
-                        'score' => 1,
-                        'order' => 3,
                     ],
+
                     [
                         'question' => 'Saat berjalan menggunakan tongkat, langkah yang benar adalah …',
                         'option_a' => 'Kaki kuat maju lebih dulu',
@@ -154,9 +140,8 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Tongkat dimajukan bersama kaki yang lemah',
                         'option_d' => 'Tongkat diletakkan jauh di samping tubuh',
                         'correct_answer' => 'c',
-                        'score' => 1,
-                        'order' => 4,
                     ],
+
                     [
                         'question' => 'Berikut ini yang harus diperiksa secara rutin pada walker adalah …',
                         'option_a' => 'Warna walker',
@@ -164,9 +149,8 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Bentuk pegangan walker',
                         'option_d' => 'Karet, baut, roda, dan rem walker',
                         'correct_answer' => 'd',
-                        'score' => 1,
-                        'order' => 5,
                     ],
+
                     [
                         'question' => 'Saat berdiri menggunakan walker, tindakan yang benar adalah …',
                         'option_a' => 'Menarik walker agar tubuh terangkat',
@@ -174,9 +158,8 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Dorong badan ke ujung kursi lalu berdiri dan pegang walker',
                         'option_d' => 'Mengangkat walker terlebih dahulu',
                         'correct_answer' => 'c',
-                        'score' => 1,
-                        'order' => 6,
                     ],
+
                     [
                         'question' => 'Cara berjalan yang benar menggunakan walker adalah …',
                         'option_a' => 'Walker diangkat tinggi-tinggi',
@@ -184,9 +167,8 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Kaki kuat melangkah jauh ke depan',
                         'option_d' => 'Walker diseret sambil berjalan cepat',
                         'correct_answer' => 'b',
-                        'score' => 1,
-                        'order' => 7,
                     ],
+
                     [
                         'question' => 'Banyak lansia jatuh saat menggunakan alat bantu jalan karena …',
                         'option_a' => 'Lansia terlalu aktif',
@@ -194,22 +176,19 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Alat bantu tidak pas atau cara penggunaan salah',
                         'option_d' => 'Lansia kurang tidur',
                         'correct_answer' => 'c',
-                        'score' => 1,
-                        'order' => 8,
                     ],
                 ],
             ],
 
-            /*
-            |--------------------------------------------------------------------------
-            | TOPIK 3: KOMUNIKASI EFEKTIF DENGAN LANSIA
-            |--------------------------------------------------------------------------
-            */
+            // =========================================================
+            // KOMUNIKASI EFEKTIF DENGAN LANSIA
+            // =========================================================
             [
                 'topic' => 'Komunikasi Efektif dengan Lansia',
-                'description' => 'Evaluasi pengetahuan tentang teknik komunikasi yang empatik dan efektif.',
+                'description' => 'Evaluasi mengenai komunikasi efektif dan empati terhadap lansia.',
                 'order' => 3,
                 'questions' => [
+
                     [
                         'question' => 'Apa yang dimaksud dengan validasi perasaan pada lansia?',
                         'option_a' => 'Mengabaikan perasaan lansia',
@@ -217,9 +196,8 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Menghargai dan memahami perasaan lansia',
                         'option_d' => 'Memaksa lansia mengikuti pendapat orang lain',
                         'correct_answer' => 'c',
-                        'score' => 1,
-                        'order' => 1,
                     ],
+
                     [
                         'question' => 'Dalam berkomunikasi dengan lansia, sikap yang paling penting adalah …',
                         'option_a' => 'Berbicara dengan cepat',
@@ -227,9 +205,8 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Memotong pembicaraan lansia',
                         'option_d' => 'Mengubah topik pembicaraan terus-menerus',
                         'correct_answer' => 'b',
-                        'score' => 1,
-                        'order' => 2,
                     ],
+
                     [
                         'question' => 'Nostalgia pada lansia biasanya berkaitan dengan …',
                         'option_a' => 'Keinginan membeli barang baru',
@@ -237,9 +214,8 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Kemampuan bekerja berat',
                         'option_d' => 'Aktivitas olahraga berat',
                         'correct_answer' => 'b',
-                        'score' => 1,
-                        'order' => 3,
                     ],
+
                     [
                         'question' => 'Tujuan komunikasi yang baik dengan lansia adalah …',
                         'option_a' => 'Membuat lansia merasa takut',
@@ -247,9 +223,8 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Membantu lansia merasa dihargai dan nyaman',
                         'option_d' => 'Menghindari percakapan dengan lansia',
                         'correct_answer' => 'c',
-                        'score' => 1,
-                        'order' => 4,
                     ],
+
                     [
                         'question' => 'Saat lansia sedang bercerita, tindakan yang tepat adalah …',
                         'option_a' => 'Menyela pembicaraan',
@@ -257,9 +232,8 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Mendengarkan dengan sabar',
                         'option_d' => 'Meminta lansia berhenti berbicara',
                         'correct_answer' => 'c',
-                        'score' => 1,
-                        'order' => 5,
                     ],
+
                     [
                         'question' => 'Berikut ini contoh komunikasi yang kurang baik pada lansia adalah …',
                         'option_a' => 'Menggunakan bahasa yang sopan',
@@ -267,9 +241,8 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Berbicara sambil marah-marah',
                         'option_d' => 'Memberi kesempatan lansia berbicara',
                         'correct_answer' => 'c',
-                        'score' => 1,
-                        'order' => 6,
                     ],
+
                     [
                         'question' => 'Mengapa validasi perasaan penting bagi lansia?',
                         'option_a' => 'Agar lansia merasa dihukum',
@@ -277,9 +250,8 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Agar lansia lebih banyak diam',
                         'option_d' => 'Agar komunikasi cepat selesai',
                         'correct_answer' => 'b',
-                        'score' => 1,
-                        'order' => 7,
                     ],
+
                     [
                         'question' => 'Salah satu manfaat menyimak aktif pada lansia adalah …',
                         'option_a' => 'Lansia merasa tidak diperhatikan',
@@ -287,32 +259,28 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Membantu terciptanya hubungan yang baik',
                         'option_d' => 'Membatasi komunikasi dengan keluarga',
                         'correct_answer' => 'c',
-                        'score' => 1,
-                        'order' => 8,
                     ],
                 ],
             ],
 
-            /*
-            |--------------------------------------------------------------------------
-            | TOPIK 4: MASALAH PSIKOLOGIS DALAM MERAWAT LANSIA
-            |--------------------------------------------------------------------------
-            */
+            // =========================================================
+            // MASALAH PSIKOLOGIS DALAM MERAWAT LANSIA
+            // =========================================================
             [
                 'topic' => 'Masalah Psikologis dalam Merawat Lansia',
-                'description' => 'Evaluasi pengetahuan tentang stres, burnout, dan strategi coping caregiver.',
+                'description' => 'Evaluasi mengenai masalah psikologis keluarga dalam merawat lansia.',
                 'order' => 4,
                 'questions' => [
+
                     [
-                        'question' => 'Apa faktor utama yang menyebabkan masalah psikologis pada keluarga yang merawat lansia?',
+                        'question' => 'Apa faktor utama yang menyebabkan masalah psikologis pada keluarga yang merawat lansia menurut materi?',
                         'option_a' => 'Dukungan sosial yang terlalu banyak',
                         'option_b' => 'Tuntutan perawatan yang tinggi baik secara fisik maupun emosional',
                         'option_c' => 'Lansia yang masih sangat mandiri',
                         'option_d' => 'Waktu perawatan yang singkat',
                         'correct_answer' => 'b',
-                        'score' => 1,
-                        'order' => 1,
                     ],
+
                     [
                         'question' => 'Kondisi lansia seperti apa yang dapat menyebabkan waktu perawatan menjadi panjang dan memicu stres keluarga?',
                         'option_a' => 'Lansia dengan flu ringan',
@@ -320,29 +288,26 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Kondisi demensia (pikun) atau disabilitas dengan ketergantungan tinggi',
                         'option_d' => 'Lansia yang rutin berolahraga',
                         'correct_answer' => 'c',
-                        'score' => 1,
-                        'order' => 2,
                     ],
+
                     [
-                        'question' => 'Manakah yang termasuk masalah psikologis yang sering dialami caregiver?',
+                        'question' => 'Manakah di bawah ini yang termasuk dalam masalah psikologis yang sering dialami keluarga (caregiver)?',
                         'option_a' => 'Peningkatan rasa percaya diri',
                         'option_b' => 'Burnout (kelelahan hebat) dan depresi',
                         'option_c' => 'Hubungan sosial yang makin luas',
                         'option_d' => 'Tubuh yang terasa makin segar',
                         'correct_answer' => 'b',
-                        'score' => 1,
-                        'order' => 3,
                     ],
+
                     [
-                        'question' => 'Selain kecemasan, perasaan negatif apa yang sering muncul karena merasa tidak maksimal dalam merawat lansia?',
+                        'question' => 'Selain kecemasan, perasaan negatif apa yang sering muncul pada keluarga karena merasa tidak maksimal dalam merawat lansia?',
                         'option_a' => 'Rasa bangga',
                         'option_b' => 'Rasa bersalah',
                         'option_c' => 'Rasa tidak peduli',
                         'option_d' => 'Rasa tenang',
                         'correct_answer' => 'b',
-                        'score' => 1,
-                        'order' => 4,
                     ],
+
                     [
                         'question' => 'Apa dampak dari masalah psikologis keluarga terhadap kualitas asuhan lansia?',
                         'option_a' => 'Kualitas perawatan lansia menurun',
@@ -350,9 +315,8 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Perawatan menjadi lebih profesional',
                         'option_d' => 'Tidak ada dampak pada lansia',
                         'correct_answer' => 'a',
-                        'score' => 1,
-                        'order' => 5,
                     ],
+
                     [
                         'question' => 'Risiko berbahaya apa yang meningkat jika beban psikologis keluarga tidak segera ditangani?',
                         'option_a' => 'Peningkatan ekonomi keluarga',
@@ -360,121 +324,80 @@ class EvaluationSeeder extends Seeder
                         'option_c' => 'Lansia menjadi lebih penurut',
                         'option_d' => 'Komunikasi keluarga menjadi lebih lancar',
                         'correct_answer' => 'b',
-                        'score' => 1,
-                        'order' => 6,
                     ],
+
                     [
-                        'question' => 'Strategi apa yang disarankan untuk memberikan jeda istirahat sementara bagi caregiver?',
+                        'question' => 'Strategi apa yang disarankan untuk memberikan jeda istirahat sementara bagi keluarga yang merawat lansia?',
                         'option_a' => 'Isolasi sosial',
                         'option_b' => 'Pengabaian perawatan',
-                        'option_c' => 'Time-Out atau Respite Care',
+                        'option_c' => 'Time-Out atau Respite Care (beristirahat sebentar, bergantian merawat lansia)',
                         'option_d' => 'Manajemen konflik',
                         'correct_answer' => 'c',
-                        'score' => 1,
-                        'order' => 7,
                     ],
+
                     [
-                        'question' => 'Jika keluarga merasa tidak mampu menangani tekanan emosional sendiri, langkah yang paling tepat adalah …',
-                        'option_a' => 'Menanggung beban sendiri',
+                        'question' => 'Jika keluarga merasa sudah tidak mampu menangani tekanan emosional sendiri, langkah apa yang paling tepat sesuai strategi penanganan?',
+                        'option_a' => 'Menanggung beban sendiri agar tidak merepotkan orang lain',
                         'option_b' => 'Berhenti merawat lansia sepenuhnya',
                         'option_c' => 'Mencari bantuan profesional',
-                        'option_d' => 'Mengurangi komunikasi dengan keluarga',
+                        'option_d' => 'Mengurangi komunikasi dengan anggota keluarga lain',
                         'correct_answer' => 'c',
-                        'score' => 1,
-                        'order' => 8,
                     ],
                 ],
             ],
 
-            /*
-            |--------------------------------------------------------------------------
-            | TOPIK 5: LATIHAN OTAGO UNTUK KESEIMBANGAN LANSIA
-            |--------------------------------------------------------------------------
-            */
+            // =========================================================
+            // LATIHAN OTAGO UNTUK KESEIMBANGAN LANSIA
+            // =========================================================
             [
                 'topic' => 'Latihan Otago untuk Keseimbangan Lansia',
-                'description' => 'Evaluasi pengetahuan tentang Otago Exercise Programme untuk mengurangi risiko jatuh.',
+                'description' => 'Evaluasi mengenai latihan Otago untuk meningkatkan keseimbangan dan mengurangi risiko jatuh pada lansia.',
                 'order' => 5,
                 'questions' => [
+
                     [
-                        'question' => 'Apa tujuan utama dari Otago Exercise Programme (OEP)?',
+                        'question' => 'Apa tujuan utama dari pelaksanaan latihan keseimbangan Otago bagi lansia?',
                         'option_a' => 'Menurunkan berat badan secara drastis',
                         'option_b' => 'Mencegah kejadian jatuh melalui peningkatan kekuatan otot dan keseimbangan',
                         'option_c' => 'Mengobati penyakit jantung akut',
                         'option_d' => 'Mengganti peran obat-obatan medis',
                         'correct_answer' => 'b',
-                        'score' => 1,
-                        'order' => 1,
                     ],
+
                     [
-                        'question' => 'Berapa frekuensi dan durasi latihan OEP yang disarankan?',
+                        'question' => 'Berapa frekuensi dan durasi latihan keseimbangan yang disarankan dalam satu minggu?',
                         'option_a' => 'Setiap hari selama 1 jam',
                         'option_b' => 'Dua kali seminggu selama 10 menit',
-                        'option_c' => 'Tiga kali seminggu dengan durasi 20–30 menit',
+                        'option_c' => 'Tiga kali seminggu dengan durasi 20-30 menit',
                         'option_d' => 'Satu kali seminggu selama 45 menit',
                         'correct_answer' => 'c',
-                        'score' => 1,
-                        'order' => 2,
                     ],
+
                     [
-                        'question' => 'Siapa yang diperbolehkan melakukan latihan OEP?',
-                        'option_a' => 'Lansia usia 65 tahun ke atas yang mampu berdiri dan berjalan',
+                        'question' => 'Manakah di bawah ini yang merupakan indikasi lansia yang diperbolehkan melakukan latihan keseimbangan?',
+                        'option_a' => 'Lansia berusia 65 tahun ke atas yang mampu berdiri dan berjalan',
                         'option_b' => 'Lansia yang menggunakan kursi roda sepenuhnya',
-                        'option_c' => 'Lansia dengan gangguan kognitif berat',
-                        'option_d' => 'Lansia dengan masalah kardiovaskular akut',
+                        'option_c' => 'Lansia yang mengalami gangguan kognitif berat',
+                        'option_d' => 'Lansia dengan masalah kardiovaskuler akut',
                         'correct_answer' => 'a',
-                        'score' => 1,
-                        'order' => 3,
                     ],
+
                     [
-                        'question' => 'Gerakan "Heel Raises" dilakukan dengan posisi awal …',
-                        'option_a' => 'Duduk di kursi',
-                        'option_b' => 'Berbaring tegak',
-                        'option_c' => 'Berdiri dan memegang kursi',
-                        'option_d' => 'Berjalan mundur',
-                        'correct_answer' => 'c',
-                        'score' => 1,
-                        'order' => 4,
-                    ],
-                    [
-                        'question' => 'Apa yang dimaksud dengan gerakan "Tandem Stance"?',
-                        'option_a' => 'Mengangkat satu kaki selama 20 detik',
-                        'option_b' => 'Berdiri dengan satu kaki di depan kaki lain seperti di garis lurus',
-                        'option_c' => 'Jalan santai selama 5 menit',
-                        'option_d' => 'Menekuk lutut seperti akan duduk',
-                        'correct_answer' => 'b',
-                        'score' => 1,
-                        'order' => 5,
-                    ],
-                    [
-                        'question' => 'Pada latihan "Sit to Stand", berapa kali pengulangan yang disarankan?',
-                        'option_a' => '5 kali',
-                        'option_b' => '10 kali',
-                        'option_c' => '20 kali',
-                        'option_d' => '30 kali',
-                        'correct_answer' => 'b',
-                        'score' => 1,
-                        'order' => 6,
-                    ],
-                    [
-                        'question' => 'Kondisi berikut yang menjadi kontraindikasi latihan OEP adalah …',
+                        'question' => 'Manakah kondisi berikut yang menjadi kontraindikasi (larangan) untuk melakukan latihan OEP?',
                         'option_a' => 'Lansia yang ingin hidup mandiri',
-                        'option_b' => 'Lansia dengan nyeri akut atau gangguan muskuloskeletal berat',
+                        'option_b' => 'Lansia dengan nyeri akut atau gangguan muskuloskeletal (tulang dan otot) berat',
                         'option_c' => 'Lansia yang merasa percaya diri',
                         'option_d' => 'Lansia yang ingin meningkatkan kekuatan otot',
                         'correct_answer' => 'b',
-                        'score' => 1,
-                        'order' => 7,
                     ],
+
                     [
-                        'question' => 'Hal penting terkait keselamatan saat latihan di rumah adalah …',
-                        'option_a' => 'Melakukan latihan di permukaan licin',
+                        'question' => 'Hal penting apa yang harus diperhatikan terkait keselamatan saat melakukan latihan di rumah?',
+                        'option_a' => 'Melakukan latihan di permukaan yang licin',
                         'option_b' => 'Memakai alas kaki yang tidak licin dan berhenti jika merasa nyeri',
-                        'option_c' => 'Tetap memaksakan latihan meskipun sangat lelah',
-                        'option_d' => 'Tidak perlu berkonsultasi dengan tenaga kesehatan',
+                        'option_c' => 'Tetap memaksakan latihan meskipun merasa sangat lelah',
+                        'option_d' => 'Tidak perlu berkonsultasi dengan tenaga kesehatan meskipun ragu',
                         'correct_answer' => 'b',
-                        'score' => 1,
-                        'order' => 8,
                     ],
                 ],
             ],

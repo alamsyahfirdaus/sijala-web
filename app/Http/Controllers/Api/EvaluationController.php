@@ -7,6 +7,7 @@ use App\Models\EvaluationQuestion;
 use App\Models\EvaluationTopic;
 use App\Models\Evaluation;
 use App\Models\EvaluationAnswer;
+use App\Models\CounselingSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -135,19 +136,27 @@ class EvaluationController extends Controller
             [
                 'counseling_session_id.required' => 'Sesi konseling wajib dipilih.',
                 'counseling_session_id.exists' => 'Sesi konseling tidak ditemukan.',
+
                 'evaluation_topic_id.required' => 'Topik evaluasi wajib dipilih.',
                 'evaluation_topic_id.exists' => 'Topik evaluasi tidak ditemukan.',
+
                 'answers.required' => 'Jawaban evaluasi wajib diisi.',
                 'answers.array' => 'Format jawaban evaluasi tidak valid.',
                 'answers.min' => 'Minimal harus ada satu jawaban yang dikirim.',
-                'answers.*.evaluation_question_id.required' => 'ID pertanyaan evaluasi wajib diisi.',
-                'answers.*.evaluation_question_id.exists' => 'Pertanyaan evaluasi tidak ditemukan.',
-                'answers.*.selected_answer.required' => 'Jawaban yang dipilih wajib diisi.',
-                'answers.*.selected_answer.in' => 'Jawaban yang dipilih harus berupa a, b, c, atau d.',
+
+                'answers.*.evaluation_question_id.required' =>
+                    'ID pertanyaan evaluasi wajib diisi.',
+                'answers.*.evaluation_question_id.exists' =>
+                    'Pertanyaan evaluasi tidak ditemukan.',
+
+                'answers.*.selected_answer.required' =>
+                    'Jawaban yang dipilih wajib diisi.',
+                'answers.*.selected_answer.in' =>
+                    'Jawaban yang dipilih harus berupa a, b, c, atau d.',
             ]
         );
 
-        // Jika validasi gagal, kembalikan pesan error
+        // Jika validasi gagal
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
@@ -161,9 +170,28 @@ class EvaluationController extends Controller
         DB::beginTransaction();
 
         try {
+
             /*
             |--------------------------------------------------------------------------
-            | 2. AMBIL TOPIK EVALUASI
+            | 2. AMBIL DATA SESI KONSELING
+            |--------------------------------------------------------------------------
+            | Memastikan sesi konseling tersedia.
+            */
+            $counselingSession = CounselingSession::find(
+                $request->counseling_session_id
+            );
+
+            if (! $counselingSession) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Sesi konseling tidak ditemukan.',
+                    'data' => null,
+                ], 404);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | 3. AMBIL TOPIK EVALUASI
             |--------------------------------------------------------------------------
             | Pastikan topik evaluasi yang dipilih masih aktif.
             */
@@ -185,7 +213,7 @@ class EvaluationController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | 3. VALIDASI PERTANYAAN
+            | 4. VALIDASI PERTANYAAN
             |--------------------------------------------------------------------------
             | Pastikan seluruh question_id yang dikirim benar-benar
             | berasal dari topik evaluasi yang dipilih.
@@ -202,18 +230,19 @@ class EvaluationController extends Controller
                 ->whereIn('id', $questionIds)
                 ->count();
 
-            // Jika ada question_id yang tidak valid
+            // Jika ada question_id tidak valid
             if ($validQuestionCount !== count($questionIds)) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Terdapat pertanyaan yang tidak sesuai dengan topik evaluasi.',
+                    'message' =>
+                        'Terdapat pertanyaan yang tidak sesuai dengan topik evaluasi.',
                     'data' => null,
                 ], 422);
             }
 
             /*
             |--------------------------------------------------------------------------
-            | 4. HITUNG HASIL EVALUASI
+            | 5. HITUNG HASIL EVALUASI
             |--------------------------------------------------------------------------
             | Rumus:
             | P = F / N × 100%
@@ -227,6 +256,7 @@ class EvaluationController extends Controller
             $totalQuestions = count($request->answers);
 
             foreach ($request->answers as $answer) {
+
                 // Ambil data pertanyaan
                 $question = EvaluationQuestion::find(
                     $answer['evaluation_question_id']
@@ -252,7 +282,7 @@ class EvaluationController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | 5. TENTUKAN KATEGORI NILAI
+            | 6. TENTUKAN KATEGORI NILAI
             |--------------------------------------------------------------------------
             | Baik   : 76 - 100%
             | Cukup  : 56 - 75%
@@ -268,7 +298,7 @@ class EvaluationController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | 6. CEK DATA EVALUASI BERDASARKAN counseling_session_id
+            | 7. CEK DATA EVALUASI
             |--------------------------------------------------------------------------
             | Setiap sesi konseling hanya boleh memiliki satu data evaluasi.
             | Jika data sudah ada, maka diperbarui.
@@ -280,6 +310,7 @@ class EvaluationController extends Controller
             )->first();
 
             if ($evaluation) {
+
                 // Update data evaluasi
                 $evaluation->update([
                     'evaluation_topic_id' => $request->evaluation_topic_id,
@@ -298,7 +329,9 @@ class EvaluationController extends Controller
 
                 $message = 'Hasil evaluasi berhasil diperbarui.';
                 $statusCode = 200;
+
             } else {
+
                 // Simpan evaluasi baru
                 $evaluation = Evaluation::create([
                     'counseling_session_id' => $request->counseling_session_id,
@@ -316,12 +349,13 @@ class EvaluationController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | 7. SIMPAN DETAIL JAWABAN
+            | 8. SIMPAN DETAIL JAWABAN
             |--------------------------------------------------------------------------
             | Menyimpan seluruh jawaban pengguna ke tabel
             | evaluation_answers.
             */
             foreach ($request->answers as $answer) {
+
                 $question = EvaluationQuestion::find(
                     $answer['evaluation_question_id']
                 );
@@ -332,8 +366,10 @@ class EvaluationController extends Controller
 
                 EvaluationAnswer::create([
                     'evaluation_id' => $evaluation->id,
-                    'evaluation_question_id' => $answer['evaluation_question_id'],
-                    'selected_answer' => $answer['selected_answer'],
+                    'evaluation_question_id' =>
+                        $answer['evaluation_question_id'],
+                    'selected_answer' =>
+                        $answer['selected_answer'],
                     'is_correct' => $isCorrect,
                     'score' => $isCorrect
                         ? $question->score
@@ -341,12 +377,23 @@ class EvaluationController extends Controller
                 ]);
             }
 
+            /*
+            |--------------------------------------------------------------------------
+            | 9. UPDATE STATUS SESI KONSELING
+            |--------------------------------------------------------------------------
+            | Setelah evaluasi selesai disimpan,
+            | maka status sesi konseling diubah menjadi selesai.
+            */
+            $counselingSession->update([
+                'status' => 'completed',
+            ]);
+
             // Simpan seluruh perubahan ke database
             DB::commit();
 
             /*
             |--------------------------------------------------------------------------
-            | 8. RESPONSE SUKSES
+            | 10. RESPONSE SUKSES
             |--------------------------------------------------------------------------
             */
             return response()->json([
@@ -354,16 +401,28 @@ class EvaluationController extends Controller
                 'message' => $message,
                 'data' => [
                     'evaluation_id' => $evaluation->id,
+                    'counseling_session_id' =>
+                        $counselingSession->id,
+
                     'topic' => $topic->topic,
+
                     'total_questions' => $totalQuestions,
                     'correct_answers' => $correctAnswers,
-                    'wrong_answers' => $totalQuestions - $correctAnswers,
+                    'wrong_answers' =>
+                        $totalQuestions - $correctAnswers,
+
                     'total_score' => $totalScore,
                     'percentage' => $percentage,
                     'category' => $category,
+
+                    // Status sesi terbaru
+                    'counseling_status' =>
+                        $counselingSession->status,
                 ],
             ], $statusCode);
+
         } catch (\Exception $e) {
+
             // Batalkan seluruh proses jika terjadi error
             DB::rollBack();
 
@@ -374,7 +433,8 @@ class EvaluationController extends Controller
             */
             return response()->json([
                 'status' => false,
-                'message' => 'Terjadi kesalahan saat menyimpan evaluasi.',
+                'message' =>
+                    'Terjadi kesalahan saat menyimpan evaluasi.',
                 'error' => $e->getMessage(),
                 'data' => null,
             ], 500);
