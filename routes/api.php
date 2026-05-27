@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\QaController;
 use App\Http\Controllers\Api\CounselingChatController;
 use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\EvaluationController;
+use App\Http\Controllers\Api\ConsultationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Symfony\Component\Routing\Router;
@@ -143,6 +144,15 @@ Route::middleware('api.auth')->group(function () {
     });
 
     Route::get('education-contents', [CounselingController::class, 'showEducationContents']);
+
+    Route::prefix('consultations')->group(function () {
+        Route::get('/', [ConsultationController::class, 'index']); // Daftar konsultasi
+        Route::get('/{id}/show', [ConsultationController::class, 'consultationDetail']); // Detail konsultasi
+        Route::post('/request-call', [ConsultationController::class, 'requestCall']); // Request panggilan konsultasi
+        Route::post('/accept-call', [ConsultationController::class, 'acceptCall']); // Menerima panggilan konsultasi
+        Route::post('/reject-call', [ConsultationController::class, 'rejectCall']); // Menolak panggilan konsultasi
+        Route::post('/end-call', [ConsultationController::class, 'endCall']); // Mengakhiri panggilan konsultasi
+    });
 });
 
 /*
