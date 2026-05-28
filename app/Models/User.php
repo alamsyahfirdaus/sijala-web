@@ -53,4 +53,9 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Puskesmas::class);
     }
+
+    public function devices()
+    {
+        return $this->hasMany(UserDevice::class);
+    }
 }
