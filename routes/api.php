@@ -128,7 +128,7 @@ Route::middleware('api.auth')->group(function () {
         Route::get('/{id}', [QaController::class, 'show']);
         Route::post('/question', [QaController::class, 'storeQuestion']);
         Route::post('/{id}/answer', [QaController::class, 'storeAnswer']);
-        Route::delete('/{id}', [QaController::class, 'destroy']);
+        Route::match(['get', 'post', 'delete'], '/{id}', [QaController::class, 'destroy']);
     });
 
     Route::prefix('chat')->group(function () {
