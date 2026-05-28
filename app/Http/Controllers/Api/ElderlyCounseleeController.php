@@ -169,8 +169,8 @@ class ElderlyCounseleeController extends Controller
 
                 // User non-admin hanya boleh mengubah datanya sendiri
                 if (
-                    $user->role !== 'admin' &&
-                    $data->counselee_id !== $user->id
+                    $user->role != 'admin' &&
+                    $data->counselee_id != $user->id
                 ) {
                     return response()->json([
                         'status' => false,
@@ -187,7 +187,7 @@ class ElderlyCounseleeController extends Controller
 
             // ================= TENTUKAN COUNSELEE ID =================
             $data->counselee_id =
-                ($user->role === 'admin' && $request->filled('counselee_id'))
+                ($user->role == 'admin' && $request->filled('counselee_id'))
                     ? $request->counselee_id
                     : $user->id;
 
