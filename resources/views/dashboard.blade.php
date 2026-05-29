@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIJALA</title>
+    <title>SIJALA | Konseling Jaga Lansia</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -41,7 +41,7 @@
         }
 
         header h1 {
-            color: var(--primary-dark);
+            color: #000;
             font-size: 48px;
             font-weight: 700;
             margin-bottom: 15px;
@@ -76,7 +76,7 @@
         }
 
         .btn-download {
-            background: var(--white);
+            background: #fff;
             color: var(--primary-dark);
         }
 
@@ -129,18 +129,33 @@
             padding: 18px;
         }
 
+        .video-date {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+
         .video-info h3 {
             color: var(--primary-dark);
             font-size: 16px;
             line-height: 1.6;
-            font-weight: 600;
             margin-bottom: 10px;
+            min-height: 55px;
         }
 
         .video-info p {
             color: #666;
             font-size: 14px;
             line-height: 1.7;
+        }
+
+        .empty-video {
+            grid-column: 1 / -1;
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
         }
 
         .apk-section {
@@ -171,8 +186,8 @@
             padding: 15px 30px;
             border-radius: 50px;
             font-weight: 700;
-            box-shadow: var(--shadow);
             transition: .3s;
+            box-shadow: var(--shadow);
         }
 
         .apk-btn:hover {
@@ -187,7 +202,7 @@
             padding: 20px;
         }
 
-        @media (max-width:768px) {
+        @media(max-width:768px) {
 
             header {
                 padding: 60px 20px;
@@ -209,7 +224,6 @@
             .btn {
                 width: 100%;
                 max-width: 300px;
-                text-align: center;
             }
 
             .video-container {
@@ -227,7 +241,7 @@
 
     <header>
 
-        <h1 style="color: black;">Konseling Jaga Lansia</h1>
+        <h1>Konseling Jaga Lansia</h1>
 
         <p>
             Konseling Jaga Lansia menyediakan layanan edukasi, konsultasi, dan pendampingan
@@ -257,60 +271,40 @@
 
         <div class="video-container">
 
-            <div class="video-card">
-                <iframe src="https://www.youtube.com/embed/oPG9EYbCp9w?si=i_JU62bHwKfx-A4V" allowfullscreen></iframe>
-                <div class="video-info">
-                    <h3>Cara Aman Menggunakan Walker untuk Lansia</h3>
-                    <p>
-                        Pelajari teknik berjalan yang benar menggunakan walker untuk meningkatkan
-                        keseimbangan, keamanan, dan kemandirian lansia saat beraktivitas sehari-hari.
-                    </p>
-                </div>
-            </div>
+            @forelse($videos as $video)
+                @if (isset($video['id']['videoId']))
+                    <div class="video-card">
 
-            <div class="video-card">
-                <iframe src="https://www.youtube.com/embed/5UlD1n-6QqU?si=Ya95KizVemveWRJ1" allowfullscreen></iframe>
-                <div class="video-info">
-                    <h3>Cara Aman Menggunakan Tongkat untuk Lansia</h3>
-                    <p>
-                        Panduan penggunaan tongkat yang tepat agar lansia dapat berjalan
-                        lebih stabil dan mengurangi risiko jatuh saat beraktivitas.
-                    </p>
-                </div>
-            </div>
+                        <iframe src="https://www.youtube.com/embed/{{ $video['id']['videoId'] }}"
+                            title="{{ $video['snippet']['title'] }}" allowfullscreen>
+                        </iframe>
 
-            <div class="video-card">
-                <iframe src="https://www.youtube.com/embed/1CpcOTZlka8?si=Sw2UbEjEQaWoeSV2" allowfullscreen></iframe>
-                <div class="video-info">
-                    <h3>Cara Aman Menggunakan Kursi Roda untuk Lansia</h3>
-                    <p>
-                        Tips keselamatan penggunaan kursi roda untuk menjaga kenyamanan,
-                        keamanan, dan mobilitas lansia dalam kehidupan sehari-hari.
-                    </p>
-                </div>
-            </div>
+                        <div class="video-info">
 
-            <div class="video-card">
-                <iframe src="https://www.youtube.com/embed/Kb-YJe_OpS4?si=3-C7f2Ay35x4bMDx" allowfullscreen></iframe>
-                <div class="video-info">
-                    <h3>Latihan Keseimbangan untuk Mencegah Risiko Jatuh</h3>
-                    <p>
-                        Serangkaian latihan sederhana yang membantu meningkatkan keseimbangan,
-                        koordinasi tubuh, dan mengurangi risiko jatuh pada lansia.
-                    </p>
-                </div>
-            </div>
+                            <div class="video-date" style="display: none;">
+                                {{ \Carbon\Carbon::parse($video['snippet']['publishedAt'])->translatedFormat('d F Y') }}
+                            </div>
 
-            <div class="video-card">
-                <iframe src="https://www.youtube.com/embed/ZbtdHBsXnC8?si=Ip2B1qY3w6UzsKhJ" allowfullscreen></iframe>
-                <div class="video-info">
-                    <h3>Latihan Keseimbangan bagi Lansia Pengguna Kursi Roda</h3>
-                    <p>
-                        Latihan khusus untuk meningkatkan kekuatan otot inti dan keseimbangan
-                        tubuh bagi lansia yang menggunakan kursi roda.
-                    </p>
+                            <h3>
+                                {{ $video['snippet']['title'] }}
+                            </h3>
+
+                            <p>
+                                {{ \Illuminate\Support\Str::limit($video['snippet']['description'], 200) }}
+                            </p>
+
+                        </div>
+
+                    </div>
+                @endif
+
+            @empty
+
+                <div class="empty-video">
+                    <h3>Tidak ada video tersedia</h3>
+                    <p>Video edukasi akan ditampilkan di sini.</p>
                 </div>
-            </div>
+            @endforelse
 
         </div>
 
