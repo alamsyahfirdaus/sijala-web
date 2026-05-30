@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\EvaluationQuestion;
-use App\Models\EvaluationTopic;
+use App\Models\CounselingSession;
 use App\Models\Evaluation;
 use App\Models\EvaluationAnswer;
-use App\Models\CounselingSession;
+use App\Models\EvaluationQuestion;
+use App\Models\EvaluationTopic;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -64,7 +64,7 @@ class EvaluationController extends Controller
         |--------------------------------------------------------------------------
         | Jika topik tidak ditemukan, kembalikan response 404.
         */
-        if (!$topic) {
+        if (! $topic) {
             return response()->json([
                 'status' => false,
                 'message' => 'Topik evaluasi tidak ditemukan.',
@@ -80,19 +80,19 @@ class EvaluationController extends Controller
         | topik evaluasi yang dipilih.
         */
         $questions = EvaluationQuestion::where(
-                'evaluation_topic_id',
-                $evaluationTopicId
-            )
+            'evaluation_topic_id',
+            $evaluationTopicId
+        )
             ->where('is_active', true)
             ->orderBy('order', 'asc')
             ->get([
-                'id',
-                'question',
-                'option_a',
-                'option_b',
-                'option_c',
-                'option_d',
-            ]);
+            'id',
+            'question',
+            'option_a',
+            'option_b',
+            'option_c',
+            'option_d',
+        ]);
 
         /*
         |--------------------------------------------------------------------------
@@ -144,15 +144,11 @@ class EvaluationController extends Controller
                 'answers.array' => 'Format jawaban evaluasi tidak valid.',
                 'answers.min' => 'Minimal harus ada satu jawaban yang dikirim.',
 
-                'answers.*.evaluation_question_id.required' =>
-                    'ID pertanyaan evaluasi wajib diisi.',
-                'answers.*.evaluation_question_id.exists' =>
-                    'Pertanyaan evaluasi tidak ditemukan.',
+                'answers.*.evaluation_question_id.required' => 'ID pertanyaan evaluasi wajib diisi.',
+                'answers.*.evaluation_question_id.exists' => 'Pertanyaan evaluasi tidak ditemukan.',
 
-                'answers.*.selected_answer.required' =>
-                    'Jawaban yang dipilih wajib diisi.',
-                'answers.*.selected_answer.in' =>
-                    'Jawaban yang dipilih harus berupa a, b, c, atau d.',
+                'answers.*.selected_answer.required' => 'Jawaban yang dipilih wajib diisi.',
+                'answers.*.selected_answer.in' => 'Jawaban yang dipilih harus berupa a, b, c, atau d.',
             ]
         );
 
@@ -234,8 +230,7 @@ class EvaluationController extends Controller
             if ($validQuestionCount !== count($questionIds)) {
                 return response()->json([
                     'status' => false,
-                    'message' =>
-                        'Terdapat pertanyaan yang tidak sesuai dengan topik evaluasi.',
+                    'message' => 'Terdapat pertanyaan yang tidak sesuai dengan topik evaluasi.',
                     'data' => null,
                 ], 422);
             }
@@ -298,30 +293,90 @@ class EvaluationController extends Controller
 
             /*
             |--------------------------------------------------------------------------
+            | INTERPRETASI HASIL EVALUASI
+            |--------------------------------------------------------------------------
+            | Membuat kesimpulan otomatis berdasarkan hasil evaluasi
+            | yang diperoleh peserta.
+            */
+            if ($category === 'Baik') {
+
+                $interpretation =
+                    'Peserta memiliki pemahaman yang baik terhadap materi "'.
+                    $topic->topic.
+                    '". Sebagian besar pertanyaan dapat dijawab dengan benar. '
+                    .'Disarankan untuk mempertahankan pemahaman yang sudah dimiliki '
+                    .'dan terus menerapkan materi yang telah dipelajari.';
+
+            } elseif ($category === 'Cukup') {
+
+                $interpretation =
+                    'Peserta memiliki pemahaman yang cukup terhadap materi "'.
+                    $topic->topic.
+                    '". Masih terdapat beberapa konsep yang perlu diperkuat. '
+                    .'Disarankan untuk mengulang kembali materi dan melakukan '
+                    .'pendampingan lanjutan pada bagian yang belum dipahami.';
+
+            } else {
+
+                $interpretation =
+                    'Peserta masih mengalami kesulitan dalam memahami materi "'.
+                    $topic->topic.
+                    '". Diperlukan edukasi ulang, pendampingan, serta penguatan '
+                    .'materi agar tingkat pemahaman dapat meningkat.';
+            }
+
+            /*
+            |--------------------------------------------------------------------------
             | 7. CEK DATA EVALUASI
             |--------------------------------------------------------------------------
-            | Setiap sesi konseling hanya boleh memiliki satu data evaluasi.
-            | Jika data sudah ada, maka diperbarui.
-            | Jika belum ada, maka dibuat baru.
+            | Satu sesi konseling dapat memiliki banyak topik evaluasi.
+            |
+            | Namun kombinasi:
+            | - counseling_session_id
+            | - evaluation_topic_id
+            |
+            | hanya boleh memiliki satu data evaluasi.
+            |
+            | Jika evaluasi untuk topik yang sama sudah ada,
+            | maka data akan diperbarui.
+            |
+            | Jika belum ada,
+            | maka dibuat data evaluasi baru.
             */
             $evaluation = Evaluation::where(
                 'counseling_session_id',
                 $request->counseling_session_id
-            )->first();
+            )
+                ->where(
+                    'evaluation_topic_id',
+                    $request->evaluation_topic_id
+                )
+                ->first();
 
             if ($evaluation) {
 
-                // Update data evaluasi
+                /*
+                |--------------------------------------------------------------------------
+                | UPDATE EVALUASI
+                |--------------------------------------------------------------------------
+                | Update data evaluasi yang sudah ada untuk topik yang sama.
+                */
                 $evaluation->update([
-                    'evaluation_topic_id' => $request->evaluation_topic_id,
                     'total_questions' => $totalQuestions,
                     'correct_answers' => $correctAnswers,
                     'total_score' => $totalScore,
                     'percentage' => $percentage,
                     'category' => $category,
+                    'interpretation' => $interpretation,
                 ]);
 
-                // Hapus seluruh jawaban lama
+                /*
+                |--------------------------------------------------------------------------
+                | HAPUS JAWABAN LAMA
+                |--------------------------------------------------------------------------
+                | Karena evaluasi diperbarui, maka seluruh jawaban lama
+                | harus dihapus terlebih dahulu.
+                */
                 EvaluationAnswer::where(
                     'evaluation_id',
                     $evaluation->id
@@ -332,15 +387,24 @@ class EvaluationController extends Controller
 
             } else {
 
-                // Simpan evaluasi baru
+                /*
+                |--------------------------------------------------------------------------
+                | SIMPAN EVALUASI BARU
+                |--------------------------------------------------------------------------
+                | Membuat data evaluasi baru untuk topik yang belum pernah
+                | dikerjakan pada sesi konseling ini.
+                */
                 $evaluation = Evaluation::create([
                     'counseling_session_id' => $request->counseling_session_id,
+
                     'evaluation_topic_id' => $request->evaluation_topic_id,
+
                     'total_questions' => $totalQuestions,
                     'correct_answers' => $correctAnswers,
                     'total_score' => $totalScore,
                     'percentage' => $percentage,
                     'category' => $category,
+                    'interpretation' => $interpretation,
                 ]);
 
                 $message = 'Hasil evaluasi berhasil disimpan.';
@@ -366,10 +430,8 @@ class EvaluationController extends Controller
 
                 EvaluationAnswer::create([
                     'evaluation_id' => $evaluation->id,
-                    'evaluation_question_id' =>
-                        $answer['evaluation_question_id'],
-                    'selected_answer' =>
-                        $answer['selected_answer'],
+                    'evaluation_question_id' => $answer['evaluation_question_id'],
+                    'selected_answer' => $answer['selected_answer'],
                     'is_correct' => $isCorrect,
                     'score' => $isCorrect
                         ? $question->score
@@ -381,11 +443,10 @@ class EvaluationController extends Controller
             |--------------------------------------------------------------------------
             | 9. UPDATE STATUS SESI KONSELING
             |--------------------------------------------------------------------------
-            | Setelah evaluasi selesai disimpan,
-            | maka status sesi konseling diubah menjadi selesai.
+
             */
             $counselingSession->update([
-                'status' => 'completed',
+                'status' => 'ongoing',
             ]);
 
             // Simpan seluruh perubahan ke database
@@ -401,23 +462,20 @@ class EvaluationController extends Controller
                 'message' => $message,
                 'data' => [
                     'evaluation_id' => $evaluation->id,
-                    'counseling_session_id' =>
-                        $counselingSession->id,
+                    'counseling_session_id' => $counselingSession->id,
 
                     'topic' => $topic->topic,
 
                     'total_questions' => $totalQuestions,
                     'correct_answers' => $correctAnswers,
-                    'wrong_answers' =>
-                        $totalQuestions - $correctAnswers,
+                    'wrong_answers' => $totalQuestions - $correctAnswers,
 
                     'total_score' => $totalScore,
                     'percentage' => $percentage,
                     'category' => $category,
+                    'interpretation' => $evaluation->interpretation,
 
-                    // Status sesi terbaru
-                    'counseling_status' =>
-                        $counselingSession->status,
+                    'counseling_status' => $counselingSession->status,
                 ],
             ], $statusCode);
 
@@ -433,8 +491,7 @@ class EvaluationController extends Controller
             */
             return response()->json([
                 'status' => false,
-                'message' =>
-                    'Terjadi kesalahan saat menyimpan evaluasi.',
+                'message' => 'Terjadi kesalahan saat menyimpan evaluasi.',
                 'error' => $e->getMessage(),
                 'data' => null,
             ], 500);

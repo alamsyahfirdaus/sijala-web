@@ -56,6 +56,8 @@ return new class extends Migration
             // KATEGORI HASIL EVALUASI
             $table->string('category')->nullable();
 
+            $table->text('interpretation')->nullable();
+
             // =========================
             // STATUS KELULUSAN
             // =========================

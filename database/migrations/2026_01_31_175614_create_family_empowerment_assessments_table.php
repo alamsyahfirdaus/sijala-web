@@ -51,9 +51,8 @@ return new class extends Migration
             $table->string('empowerment_level')->nullable();
             // Tingkat pemberdayaan keluarga
 
-            // CATATAN
-            $table->text('note')->nullable();
-            // Catatan konselor
+            $table->text('interpretation')->nullable();
+            // Interpretasi hasil asesmen
 
             $table->timestamps();
         });

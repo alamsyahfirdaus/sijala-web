@@ -180,7 +180,7 @@ class CounselingController extends Controller
         }
 
         // =========================================================
-        // AMBIL DATA UMUM
+        // DATA UMUM
         // =========================================================
         $firstSession = $sessions->first();
 
@@ -195,7 +195,9 @@ class CounselingController extends Controller
         // =========================================================
         $data = [
 
-            // ================= DATA KONSELI =================
+            // =====================================================
+            // DATA KONSELI
+            // =====================================================
             'elderly_counselee_id' =>
                 $elderlyCounselee->id ?? null,
 
@@ -208,7 +210,9 @@ class CounselingController extends Controller
             'counselee_phone' =>
                 $counselee->phone ?? null,
 
-            // ================= DATA LANSIA =================
+            // =====================================================
+            // DATA LANSIA
+            // =====================================================
             'elderly_name' =>
                 $elderlyCounselee->elderly_name ?? null,
 
@@ -224,116 +228,138 @@ class CounselingController extends Controller
             'has_fallen' =>
                 $elderlyCounselee->has_fallen ?? null,
 
-            // ================= DATA KONSELOR =================
+            // =====================================================
+            // DATA KONSELOR
+            // =====================================================
             'counselor_id' =>
                 $firstSession->counselor_id,
 
             'counselor_name' =>
-                $firstSession->counselor->name ?? null,
+                optional($firstSession->counselor)->name,
 
             'counselor_phone' =>
-                $firstSession->counselor->phone ?? null,
+                optional($firstSession->counselor)->phone,
 
-            // ================= RINGKASAN =================
+            // =====================================================
+            // RINGKASAN
+            // =====================================================
             'total_sessions' => $sessions->count(),
 
-            // ================= DAFTAR SESI =================
-            'sessions' => $sessions->map(
-                function ($session) {
+            // =====================================================
+            // DAFTAR SESI
+            // =====================================================
+            'sessions' => $sessions->map(function ($session) {
 
-                    // ============================================
+                // ============================================
+                // SCREENING RISIKO JATUH
+                // ============================================
+                $fallRisk = FallRiskScreening::where(
+                    'counseling_session_id',
+                    $session->id
+                )->first();
+
+                // ============================================
+                // ASESMEN PEMBERDAYAAN
+                // ============================================
+                $empowerment = EmpowermentAssessment::where(
+                    'counseling_session_id',
+                    $session->id
+                )->first();
+
+                // ============================================
+                // HASIL EVALUASI
+                // ============================================
+                $evaluations = Evaluation::with([
+                        'topic:id,topic'
+                    ])
+                    ->where(
+                        'counseling_session_id',
+                        $session->id
+                    )
+                    ->orderBy('id', 'asc')
+                    ->get();
+
+                return [
+
+                    // ========================================
+                    // DATA SESI
+                    // ========================================
+                    'id' => $session->id,
+
+                    'service_mode' =>
+                        $session->service_mode,
+
+                    'status' =>
+                        $session->status,
+
+                    'created_at' =>
+                        optional(
+                            $session->created_at
+                        )->format('d-m-Y H:i'),
+
+                    // ========================================
+                    // STATUS PENYELESAIAN
+                    // ========================================
+                    'is_completed' =>
+                        $this->isCounselingSessionCompleted(
+                            $session->id
+                        ),
+
+                    // ========================================
                     // SCREENING RISIKO JATUH
-                    // ============================================
-                    $fallRisk =
-                        FallRiskScreening::where(
-                            'counseling_session_id',
-                            $session->id
-                        )->first();
+                    // ========================================
+                    'fall_risk' => $fallRisk
+                        ? [
+                            'id' =>
+                                $fallRisk->id,
 
-                    // ============================================
+                            'total_score' =>
+                                $fallRisk->total_score,
+
+                            'risk_level' =>
+                                $fallRisk->risk_level,
+
+                            'interpretation' =>
+                                $fallRisk->interpretation,
+                        ]
+                        : null,
+
+                    // ========================================
                     // ASESMEN PEMBERDAYAAN
-                    // ============================================
-                    $empowerment =
-                        EmpowermentAssessment::where(
-                            'counseling_session_id',
-                            $session->id
-                        )->first();
+                    // ========================================
+                    'empowerment' => $empowerment
+                        ? [
+                            'id' =>
+                                $empowerment->id,
 
-                    // ============================================
+                            'total_score' =>
+                                $empowerment->total_score,
+
+                            'empowerment_level' =>
+                                $empowerment->empowerment_level,
+
+                            'interpretation' =>
+                                $empowerment->interpretation ?? null,
+                        ]
+                        : null,
+
+                    // ========================================
                     // HASIL EVALUASI
-                    // ============================================
-                    $evaluation =
-                        Evaluation::with(
-                            'topic:id,topic'
-                        )
-                        ->where(
-                            'counseling_session_id',
-                            $session->id
-                        )
-                        ->first();
+                    // ========================================
+                    'evaluations' => $evaluations->map(
+                        function ($evaluation) {
 
-                    return [
-
-                        // ================= DATA SESI =================
-                        'id' => $session->id,
-
-                        'service_mode' =>
-                            $session->service_mode,
-
-                        'status' =>
-                            $session->status,
-
-                        'created_at' =>
-                            optional(
-                                $session->created_at
-                            )->format('d-m-Y H:i'),
-
-                        // ================= STATUS =================
-                        'is_completed' =>
-                            $this->isCounselingSessionCompleted(
-                                $session->id
-                            ),
-
-                        // ================= SCREENING RISIKO JATUH =================
-                        'fall_risk' => $fallRisk
-                            ? [
-                                'id' =>
-                                    $fallRisk->id,
-
-                                'total_score' =>
-                                    $fallRisk->total_score,
-
-                                'risk_level' =>
-                                    $fallRisk->risk_level,
-
-                                'interpretation' =>
-                                    $fallRisk->interpretation,
-                            ]
-                            : null,
-
-                        // ================= ASESMEN PEMBERDAYAAN =================
-                        'empowerment' => $empowerment
-                            ? [
-                                'id' =>
-                                    $empowerment->id,
-
-                                'total_score' =>
-                                    $empowerment->total_score,
-
-                                'empowerment_level' =>
-                                    $empowerment->empowerment_level,
-                            ]
-                            : null,
-
-                        // ================= HASIL EVALUASI =================
-                        'evaluation' => $evaluation
-                            ? [
-
+                            return [
                                 'id' =>
                                     $evaluation->id,
 
+                                'evaluation_topic_id' =>
+                                    $evaluation->evaluation_topic_id,
+
                                 'topic' =>
-                                    $evaluation->topic->topic ?? null,
+                                    optional(
+                                        $evaluation->topic
+                                    )->topic,
 
                                 'total_questions' =>
                                     $evaluation->total_questions,
@@ -353,11 +379,14 @@ class CounselingController extends Controller
 
                                 'category' =>
                                     $evaluation->category,
-                            ]
-                            : null,
-                    ];
-                }
-            )->values(),
+
+                                'interpretation' =>
+                                    $evaluation->interpretation ?? null,
+                            ];
+                        }
+                    )->values(),
+                ];
+            })->values(),
         ];
 
         // =========================================================
@@ -405,6 +434,29 @@ class CounselingController extends Controller
 
         return $hasScreening && $hasAssessment;
     }
+
+    // private function isCounselingSessionCompleted(int $sessionId) 
+    // {
+    //     $hasScreening = FallRiskScreening::where(
+    //         'counseling_session_id',
+    //         $sessionId
+    //     )->exists();
+
+    //     $hasAssessment = EmpowermentAssessment::where(
+    //         'counseling_session_id',
+    //         $sessionId
+    //     )->exists();
+
+    //     $hasEvaluation = Evaluation::where(
+    //         'counseling_session_id',
+    //         $sessionId
+    //     )->exists();
+
+    //     return
+    //         $hasScreening &&
+    //         $hasAssessment &&
+    //         $hasEvaluation;
+    // }
 
     public function getTodayCounselingSessions(Request $request)
     {

@@ -113,6 +113,38 @@ class EmpowermentController extends Controller
                 $level = 'Tinggi';
             }
 
+            /*
+            |--------------------------------------------------------------------------
+            | INTERPRETASI HASIL PEMBERDAYAAN KELUARGA
+            |--------------------------------------------------------------------------
+            | Membuat kesimpulan otomatis berdasarkan tingkat
+            | pemberdayaan keluarga yang diperoleh.
+            */
+            if ($level === 'Tinggi') {
+
+                $interpretation =
+                    'Tingkat pemberdayaan keluarga tergolong tinggi. '
+                    . 'Keluarga memiliki kemampuan yang baik dalam memahami, '
+                    . 'mengambil keputusan, serta berperan aktif dalam proses '
+                    . 'perawatan dan pemeliharaan kesehatan anggota keluarga.';
+
+            } elseif ($level === 'Sedang') {
+
+                $interpretation =
+                    'Tingkat pemberdayaan keluarga tergolong sedang. '
+                    . 'Keluarga telah menunjukkan kemampuan dalam mendukung '
+                    . 'perawatan kesehatan, namun masih terdapat beberapa aspek '
+                    . 'yang perlu diperkuat melalui edukasi dan pendampingan.';
+
+            } else {
+
+                $interpretation =
+                    'Tingkat pemberdayaan keluarga tergolong rendah. '
+                    . 'Diperlukan pendampingan yang lebih intensif, peningkatan '
+                    . 'pengetahuan, serta penguatan peran keluarga dalam mendukung '
+                    . 'perawatan dan pengambilan keputusan terkait kesehatan.';
+            }
+
             // ==========================================================
             // CEK APAKAH ASESMEN SUDAH ADA UNTUK SESSION INI
             // Jika ada → update
@@ -127,6 +159,7 @@ class EmpowermentController extends Controller
                     // Data yang diupdate/disimpan
                     'total_score'       => $finalScore,
                     'empowerment_level' => $level,
+                    'interpretation'    => $interpretation
                 ]
             );
 
@@ -163,6 +196,7 @@ class EmpowermentController extends Controller
                     'counseling_session_id' => $request->counseling_session_id,
                     'total_score' => $finalScore,
                     'empowerment_level' => $level,
+                    'interpretation' => $interpretation,
                 ],
             ], 200);
         } catch (\Exception $e) {
