@@ -73,9 +73,16 @@ return new class extends Migration
             // ==================================================
             // CATATAN KONSELOR
             // ==================================================
-            // $table->text('note')->nullable();
+            $table->text('note')->nullable();
             // Ringkasan hasil konseling, rekomendasi,
             // dan tindak lanjut.
+
+            // ==================================================
+            // PENANDA SESI TERAKHIR
+            // ==================================================
+            $table->boolean('is_latest')->default(false);
+            // Menandai apakah sesi ini adalah sesi konseling
+            // terbaru untuk lansia tersebut.
 
             // ==================================================
             // USER YANG TERAKHIR MEMPERBARUI

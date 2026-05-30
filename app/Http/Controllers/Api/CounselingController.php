@@ -55,7 +55,11 @@ class CounselingController extends Controller
                 // Informasi sesi
                 'service_mode' => $session->service_mode,
                 'status' => $session->status,
+                'note' => $session->note,
+                'is_latest' => $session->is_latest ? true : false,
                 'created_at' => optional($session->created_at)
+                    ->format('d-m-Y H:i'),
+                'updated_at' => optional($session->updated_at)
                     ->format('d-m-Y H:i'),
 
                 // Data lansia
@@ -127,6 +131,7 @@ class CounselingController extends Controller
                             'status' => $session->status,
                             'created_at' => optional($session->created_at)
                                 ->format('d-m-Y H:i'),
+                            'is_latest' => $session->is_latest ? true : false,
                             'is_completed' => $this->isCounselingSessionCompleted($session->id),
                         ];
                     })->values(),
