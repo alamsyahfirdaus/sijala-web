@@ -1,7 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Web;
 
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
@@ -31,5 +33,10 @@ class HomeController extends Controller
         );
 
         return view('dashboard', compact('videos'));
+    }
+
+    public function home()
+    {
+        return view('index');
     }
 }

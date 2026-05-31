@@ -131,6 +131,8 @@ class CounselingController extends Controller
                             'status' => $session->status,
                             'created_at' => optional($session->created_at)
                                 ->format('d-m-Y H:i'),
+                            'updated_at' => optional($session->updated_at)
+                                ->format('d-m-Y H:i'),
                             'is_latest' => $session->is_latest ? true : false,
                             'is_completed' => $this->isCounselingSessionCompleted($session->id),
                         ];
@@ -296,10 +298,18 @@ class CounselingController extends Controller
 
                     'status' =>
                         $session->status,
+                    
+                    'is_latest' =>
+                        $session->is_latest ? true : false,
 
                     'created_at' =>
                         optional(
                             $session->created_at
+                        )->format('d-m-Y H:i'),
+                    
+                    'updated_at' =>
+                        optional(
+                            $session->updated_at
                         )->format('d-m-Y H:i'),
 
                     // ========================================
@@ -440,29 +450,6 @@ class CounselingController extends Controller
         return $hasScreening && $hasAssessment;
     }
 
-    // private function isCounselingSessionCompleted(int $sessionId) 
-    // {
-    //     $hasScreening = FallRiskScreening::where(
-    //         'counseling_session_id',
-    //         $sessionId
-    //     )->exists();
-
-    //     $hasAssessment = EmpowermentAssessment::where(
-    //         'counseling_session_id',
-    //         $sessionId
-    //     )->exists();
-
-    //     $hasEvaluation = Evaluation::where(
-    //         'counseling_session_id',
-    //         $sessionId
-    //     )->exists();
-
-    //     return
-    //         $hasScreening &&
-    //         $hasAssessment &&
-    //         $hasEvaluation;
-    // }
-
     public function getTodayCounselingSessions(Request $request)
     {
         // ================= AMBIL USER LOGIN =================
@@ -588,6 +575,163 @@ class CounselingController extends Controller
                 'total_counselees' => $totalCounselees,
             ],
         ]);
+    }
+
+    public function completeCounselingSession(Request $request, $counselingSessionId) 
+    {
+        // =====================================================
+        // USER LOGIN
+        // =====================================================
+        $user = $request->attributes->get('user');
+
+        // =====================================================
+        // VALIDASI ROLE
+        // =====================================================
+        if ($user->role !== 'konselor') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak.',
+                'data' => null,
+            ], 403);
+        }
+
+        // =====================================================
+        // VALIDASI INPUT
+        // =====================================================
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'note' => 'required|string|max:5000',
+                'needs_follow_up' => 'required|boolean',
+            ],
+            [
+                'note.required' =>
+                    'Tindak lanjut konseling wajib diisi.',
+
+                'needs_follow_up.required' =>
+                    'Status sesi lanjutan wajib dipilih.',
+            ]
+        );
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'data' => null,
+            ], 422);
+        }
+
+        DB::beginTransaction();
+
+        try {
+
+            // =================================================
+            // AMBIL SESI
+            // =================================================
+            $session = CounselingSession::where(
+                    'id',
+                    $counselingSessionId
+                )
+                ->where(
+                    'counselor_id',
+                    $user->id
+                )
+                ->first();
+
+            if (!$session) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sesi konseling tidak ditemukan.',
+                    'data' => null,
+                ], 404);
+            }
+
+            // =================================================
+            // HITUNG JUMLAH SESI KONSELING
+            // =================================================
+            $totalSessions = CounselingSession::where(
+                    'elderly_counselee_id',
+                    $session->elderly_counselee_id
+                )
+                ->count();
+
+            // =================================================
+            // APAKAH SESI PERTAMA ATAU TERAKHIR
+            // =================================================
+            $mustValidateCompletion = $totalSessions == 1 || $session->is_latest == 1;
+
+            // =================================================
+            // VALIDASI KELENGKAPAN
+            // Hanya untuk sesi pertama atau sesi terakhir, harus dipastikan sudah lengkap
+            // =================================================
+            if ($mustValidateCompletion && !$this->isCounselingSessionCompleted($session->id)) 
+            {
+                return response()->json([
+                    'success' => false,
+                    'message' =>
+                        'Skrining Risiko Jatuh dan Asesmen Pemberdayaan harus diselesaikan terlebih dahulu.',
+                    'data' => null,
+                ], 422);
+            }
+
+            // =================================================
+            // UPDATE SESI
+            // =================================================
+            $session->note = trim(
+                $request->note
+            );
+
+            $session->status = 'completed';
+            $session->updated_at = now();
+            $session->is_latest = 0;
+            $session->save();
+
+            $newSession = null;
+
+            if ($request->needs_follow_up) {
+                // =================================================
+                // BUAT SESI BARU UNTUK SESI TERAKHIR
+                // =================================================
+                $newSession = CounselingSession::create([
+                    'elderly_counselee_id' =>
+                        $session->elderly_counselee_id,
+    
+                    'counselor_id' =>
+                        $session->counselor_id,
+
+                    'service_mode' =>
+                        $session->service_mode,
+
+                    'status' => 'ongoing',
+
+                    'is_latest' => 1,
+                ]);
+            }
+
+            DB::commit();
+
+            // =================================================
+            // RESPONSE
+            // =================================================
+            return response()->json([
+                'success' => true,
+                'message' => 'Tindak lanjut berhasil disimpan dan sesi konseling telah diselesaikan.',
+                'data' => [
+                    'counseling_session_id' => $session->id,
+                    'status' => $session->status,
+                    'note' => $session->note,
+                ],
+            ]);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null,
+            ], 500);
+        }
     }
 
     public function showEducationContents() 

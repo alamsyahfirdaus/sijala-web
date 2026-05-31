@@ -111,6 +111,7 @@ Route::middleware('api.auth')->group(function () {
         Route::get('/{elderlyCounseleeId}/show', [CounselingController::class, 'getCounselingSessionsById']);
         Route::get('/today', [CounselingController::class, 'getTodayCounselingSessions']);
         Route::get('/statistics',[CounselingController::class, 'getCounselingStatistics']);
+        Route::match(['post', 'put'], '/{counselingSessionId}/complete', [CounselingController::class, 'completeCounselingSession']);
     });
 
     Route::prefix('fall-risk')->group(function () {
