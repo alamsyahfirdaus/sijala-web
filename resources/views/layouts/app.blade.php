@@ -7,7 +7,7 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="icon" href="{{ asset('images/logo.png') }}">
+    <link rel="icon" href="{{ url('images/logo.png') }}">
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
@@ -138,7 +138,42 @@
     <script src="https://cdn.datatables.net/2.3.2/js/dataTables.bootstrap5.js"></script>
     <script src="{{ asset('js/adminlte.js') }}"></script>
 
-    @stack('scripts')
+    <script>
+        $(document).ready(function() {
+
+            $('#userTable').DataTable({
+
+                responsive: true,
+                pageLength: 10,
+                lengthMenu: [
+                    [10, 25, 50, 100, -1],
+                    [10, 25, 50, 100, "Semua"]
+                ],
+
+                language: {
+                    processing: "Sedang memproses...",
+                    search: "Pencarian:",
+                    lengthMenu: "Tampilkan _MENU_ data per halaman",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                    infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+                    infoFiltered: "(disaring dari _MAX_ total data)",
+                    zeroRecords: "Data tidak ditemukan",
+                    emptyTable: "Tidak ada data tersedia",
+                    loadingRecords: "Memuat data...",
+                    paginate: {
+                        first: '<i class="bi bi-chevron-bar-left"></i>',
+                        previous: '<i class="bi bi-chevron-left"></i>',
+                        next: '<i class="bi bi-chevron-right"></i>',
+                        last: '<i class="bi bi-chevron-bar-right"></i>'
+                    }
+                }
+
+            });
+
+        });
+    </script>
+
+    {{-- @stack('scripts') --}}
 
 </body>
 

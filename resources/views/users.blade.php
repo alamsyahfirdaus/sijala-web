@@ -11,7 +11,6 @@
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">Daftar {{ $title }}</h3>
-
         </div>
         <div class="card-body table-responsive p-0">
             <table id="userTable" class="table table-hover align-middle mb-0">
@@ -21,6 +20,7 @@
                         <th>Nama</th>
                         <th>Jenis Kelamin</th>
                         <th>Nomor HP</th>
+                        <th>Role</th>
                         <th style="width: 5%;">Aksi</th>
                     </tr>
                 </thead>
@@ -29,7 +29,7 @@
                         <tr>
                             <td style="text-align: center;">{{ $index + 1 }}</td>
                             <td>
-                                <a href="#" class="text-decoration-none">
+                                <a href="javascript:void(0)" class="text-decoration-none">
                                     {{ $user->name }}
                                 </a>
                                 <br>
@@ -39,7 +39,7 @@
                             <td> {{ $user->gender ? ($user->gender == 'L' ? 'Laki-laki' : 'Perempuan') : '-' }}
                             </td>
                             <td>{{ $user->phone ?? '-' }}</td>
-
+                            <td>{{ ucwords($user->role) }}</td>
                             <td>
                                 <div class="btn-group btn-group-sm">
                                     <button type="button" class="btn btn-primary dropdown-toggle dropdown-menu-right"
@@ -47,27 +47,23 @@
                                         Aksi
                                     </button>
                                     <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#">Lihat Detail</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0)">Lihat Detail</a></li>
                                         <li>
                                             <hr class="dropdown-divider" />
                                         </li>
                                         <li>
-                                            <a class="dropdown-item" href="#">Hapus</a>
+                                            <a class="dropdown-item" href="javascript:void(0)">Hapus</a>
                                         </li>
                                     </ul>
                                 </div>
                             </td>
                         </tr>
                     @endforeach
-
                 </tbody>
-
             </table>
-
         </div>
-
     </div>
-    @push('scripts')
+    {{-- @push('scripts')
         <script>
             $(document).ready(function() {
 
@@ -102,6 +98,6 @@
 
             });
         </script>
-    @endpush
+    @endpush --}}
 
 @endsection

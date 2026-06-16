@@ -11,20 +11,26 @@ class UserController extends Controller
 {
     public function index()
     {
-        // 
-    }
+        $title = 'Pengguna';
 
-    public function getCounseleeList()
-    {
-        $title = 'Konseli';
-        $users = User::where('role', 'konseli')->get();
+        $users = User::where('role', '!=', 'admin')
+            ->orderBy('name')
+            ->get();
+
         return view('users', compact('title', 'users'));
     }
 
-    public function getCounselorList()
-    {
-        $title = 'Konselor';
-        $users = User::where('role', 'konselor')->get();
-        return view('users', compact('title', 'users'));
-    }
+    // public function getCounseleeList()
+    // {
+    //     $title = 'Konseli';
+    //     $users = User::where('role', 'konseli')->get();
+    //     return view('users', compact('title', 'users'));
+    // }
+
+    // public function getCounselorList()
+    // {
+    //     $title = 'Konselor';
+    //     $users = User::where('role', 'konselor')->get();
+    //     return view('users', compact('title', 'users'));
+    // }
 }

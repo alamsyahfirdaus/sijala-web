@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIJALA | Login</title>
-    <link rel="icon" href="{{ asset('images/logo.png') }}">
+    <link rel="icon" href="{{ url('image/logo.png') }}">
     <link rel="stylesheet" href="{{ asset('css/adminlte.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -117,7 +117,7 @@
         <div class="login-header">
 
             <div class="logo-circle">
-                <img src="{{ asset('images/logo.png') }}" alt="Logo SIJALA" class="logo-image">
+                <img src="{{ url('image/logo.png') }}" alt="Logo SIJALA" class="logo-image">
             </div>
 
             <div class="login-title">

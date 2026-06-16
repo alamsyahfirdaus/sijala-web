@@ -3,7 +3,7 @@
 
         <a href="{{ route('dashboard') }}" class="brand-link d-flex align-items-center justify-content-center">
 
-            <img src="{{ asset('images/logo.png') }}" alt="Logo SIJALA" class="brand-logo-circle">
+            <img src="{{ url('image/logo.png') }}" alt="Logo SIJALA" class="brand-logo-circle">
 
             <span class="fw-bold text-white ms-2">
                 SIJALA
@@ -25,7 +25,19 @@
                         <p>Beranda</p>
                     </a>
                 </li>
-                <li class="nav-item {{ request()->routeIs('users.*') ? 'menu-open' : '' }}">
+                <li class="nav-item">
+                    <a href="{{ route('users') }}" class="nav-link {{ request()->is('users*') ? 'active' : '' }}">
+                        <i class="nav-icon bi bi-circle-fill"></i>
+                        <p>Pengguna</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('counselings') }}" class="nav-link {{ request()->is('counselings*') ? 'active' : '' }}">
+                        <i class="nav-icon bi bi-circle-fill"></i>
+                        <p>Konseling</p>
+                    </a>
+                </li>
+                {{-- <li class="nav-item {{ request()->routeIs('users.*') ? 'menu-open' : '' }}">
                     <a href="javascript:void(0)" class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
                         <i class="nav-icon bi bi-circle-fill"></i>
                         <p>
@@ -40,35 +52,6 @@
                                 <p>Konseli</p>
                             </a>
                         </li>
-                        {{-- <li class="nav-item">
-                            <a href="javascript:void(0)" class="nav-link">
-                                <i class="nav-icon bi bi-circle"></i>
-                                <p>
-                                    Level 2
-                                    <i class="nav-arrow bi bi-chevron-right"></i>
-                                </p>
-                            </a>
-                            <ul class="nav nav-treeview">
-                                <li class="nav-item">
-                                    <a href="javascript:void(0)" class="nav-link">
-                                        <i class="nav-icon bi bi-record-circle-fill"></i>
-                                        <p>Level 3</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="javascript:void(0)" class="nav-link">
-                                        <i class="nav-icon bi bi-record-circle-fill"></i>
-                                        <p>Level 3</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="javascript:void(0)" class="nav-link">
-                                        <i class="nav-icon bi bi-record-circle-fill"></i>
-                                        <p>Level 3</p>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li> --}}
                         <li class="nav-item">
                             <a href="{{ route('users.counselors') }}" class="nav-link {{ request()->routeIs('users.counselors') ? 'active' : '' }}">
                                 <i class="nav-icon bi bi-circle"></i>
@@ -76,9 +59,9 @@
                             </a>
                         </li>
                     </ul>
-                </li>
-                <li class="nav-item">
-                    <a href="javascript:void(0)" class="nav-link">
+                </li> --}}
+                {{-- <li class="nav-item {{ request()->routeIs('counselings', 'screenings', 'evaluations') ? 'menu-open' : '' }}">
+                    <a href="javascript:void(0)" class="nav-link {{ request()->routeIs('counselings', 'screenings', 'evaluations') ? 'active' : '' }}">
                         <i class="nav-icon bi bi-circle-fill"></i>
                         <p>
                             Konseling
@@ -87,25 +70,25 @@
                     </a>
                     <ul class="nav nav-treeview">
                         <li class="nav-item">
-                            <a href="javascript:void(0)" class="nav-link">
+                            <a href="{{ route('counselings') }}" class="nav-link {{ request()->routeIs('counselings') ? 'active' : '' }}">
                                 <i class="nav-icon bi bi-circle"></i>
-                                <p>Data Konseling</p>
+                                <p>Sesi Konseling</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="javascript:void(0)" class="nav-link">
+                            <a href="{{ route('screenings') }}" class="nav-link {{ request()->routeIs('screenings') ? 'active' : '' }}">
                                 <i class="nav-icon bi bi-circle"></i>
                                 <p>Hasil Skrining</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="javascript:void(0)" class="nav-link">
+                            <a href="{{ route('evaluations') }}" class="nav-link {{ request()->routeIs('evaluations') ? 'active' : '' }}">
                                 <i class="nav-icon bi bi-circle"></i>
                                 <p>Hasil Evaluasi</p>
                             </a>
                         </li>
                     </ul>
-                </li>
+                </li> --}}
                 <li class="nav-item">
                     <a href="javascript:void(0)" class="nav-link">
                         <i class="nav-icon bi bi-circle-fill"></i>
