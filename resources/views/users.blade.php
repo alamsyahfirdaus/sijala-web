@@ -12,8 +12,8 @@
         <div class="card-header">
             <h3 class="card-title">Daftar {{ $title }}</h3>
         </div>
-        <div class="card-body table-responsive p-0">
-            <table id="userTable" class="table table-hover align-middle mb-0">
+        <div class="card-body table-responsive">
+            <table id="table" class="table table-hover align-middle">
                 <thead>
                     <tr>
                         <th style="width: 5%;">No</th>

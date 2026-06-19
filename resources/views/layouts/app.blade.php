@@ -3,14 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>SIJALA | @yield('title', 'SIJALA')</title>
-
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <link rel="icon" href="{{ url('images/logo.png') }}">
-
+    <title>SIJALA | @yield('title', 'SIJALA')</title>
+    <link rel="icon" href="{{ url('image/logo.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/2.3.2/css/dataTables.bootstrap5.css">
     <link rel="stylesheet" href="{{ asset('css/adminlte.css') }}">
@@ -90,7 +86,7 @@
     @stack('styles')
 </head>
 
-<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
+<body class="fixed-header sidebar-expand-lg bg-body-tertiary">
 
     <div class="app-wrapper">
 
@@ -141,7 +137,7 @@
     <script>
         $(document).ready(function() {
 
-            $('#userTable').DataTable({
+            $('#table, .datatable').DataTable({
 
                 responsive: true,
                 pageLength: 10,

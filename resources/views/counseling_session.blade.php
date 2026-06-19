@@ -9,6 +9,9 @@
 @section('content')
 
     <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Informasi Lansia</h3>
+        </div>
         <div class="card-body">
             <ul class="list-group list-group-flush text-start">
                 <li class="list-group-item d-flex justify-content-between px-0 pt-0">
@@ -34,7 +37,7 @@
                 </li>
                 <li class="list-group-item d-flex justify-content-between px-0">
                     <span>Pernah Jatuh</span>
-                    <span>{{ $counseling->elderlyCounselee->has_fallen ? 'YA' : 'Tidak' }}</span>
+                    <span>{{ $counseling->elderlyCounselee->has_fallen ? 'Ya' : 'Tidak' }}</span>
                 </li>
                 <li class="list-group-item d-flex justify-content-between px-0">
                     <span>Konselor</span>
@@ -48,8 +51,8 @@
             </ul>
             @if ($counseling->elderlyCounselee->health_problems)
                 <div class="form-group mt-2">
-                    <label for="health_problems" class="form-label">Kesehatan Lansia</label>
-                    <textarea id="health_problems" class="form-control" disabled>{{ $counseling->elderlyCounselee->health_problems ?? '-' }}</textarea>
+                    <label for="health_problems" class="form-label">Kondisi Kesehatan</label>
+                    <textarea id="health_problems" class="form-control" disabled style="background-color: #fff;">{{ $counseling->elderlyCounselee->health_problems ?? '-' }}</textarea>
                 </div>
             @endif
         </div>
@@ -59,18 +62,18 @@
         <div class="card-header">
             <h3 class="card-title">Hasil Skrining</h3>
         </div>
-        <div class="card-body table-responsive p-0">
-            <table class="table table-striped">
+        <div class="card-body table-responsive">
+            <table class="table table-hover align-middle datatable">
                 <thead>
                     <tr>
                         <th>Tanggal</th>
                         <th>Risiko Jatuh</th>
                         <th>Perberdayaan Keluarga</th>
-                        <th>Aksi</th>
+                        <th style="width: 5%;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($screenings as $index => $screening)
+                    @foreach ($screenings as $index => $screening)
                         <tr>
                             <td>
                                 {{ $screening['session']->updated_at->format('d/m/Y') }}
@@ -107,13 +110,7 @@
                                 </div>
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="text-center text-muted">
-                                Belum ada hasil skrining
-                            </td>
-                        </tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>
@@ -123,20 +120,20 @@
         <div class="card-header">
             <h3 class="card-title">Hasil Evaluasi</h3>
         </div>
-        <div class="card-body table-responsive p-0">
-            <table class="table table-striped">
+        <div class="card-body table-responsive">
+            <table class="table table-hover align-middle datatable">
                 <thead>
                     <tr>
-                        <th style="width: 5%;">Sesi</th>
+                        <th>Sesi</th>
                         <th>Tanggal</th>
                         <th>Topik</th>
                         <th>Skor</th>
                         <th>Kategori</th>
-                        <th>Aksi</th>
+                        <th style="width: 5%;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($evaluations as $evaluation)
+                    @foreach ($evaluations as $evaluation)
                         <tr>
                             <td>
                                 Sesi {{ $sessionNumbers[$evaluation->counseling_session_id] ?? '-' }}
@@ -147,17 +144,21 @@
                             </td>
 
                             <td>
-                                {{ $evaluation->topic->name ?? '-' }}
+                                {{ $evaluation->topic->topic ?? '-' }}
                             </td>
 
                             <td>
-                                {{ $evaluation->score ?? '-' }}
-                            </td>
+                              {{ $evaluation->total_score ?? '-' }}
 
+                                @if ($evaluation->percentage)
+                                    <span class="text-muted">
+                                        ({{ number_format($evaluation->percentage, 1) }}%)
+                                    </span>
+                                @endif
+                            </td>
                             <td>
                                 {{ $evaluation->category ?? '-' }}
                             </td>
-
                             <td>
                                 <div class="btn-group btn-group-sm">
                                     <button type="button" class="btn btn-primary dropdown-toggle dropdown-menu-right"
@@ -170,13 +171,7 @@
                                 </div>
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="text-center text-muted">
-                                Belum ada hasil evaluasi
-                            </td>
-                        </tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>

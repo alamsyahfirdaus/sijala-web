@@ -103,9 +103,9 @@
 
         .footer-text {
             text-align: center;
-            font-size: 13px;
+            font-size: 12px;
             color: #888;
-            margin-top: 20px;
+            margin-top: 12px;
         }
     </style>
 </head>
@@ -174,6 +174,12 @@
                     <i class="bi bi-box-arrow-in-right me-2"></i>
                     Login
                 </button>
+
+                <div class="text-center mt-3">
+                    <a href="{{ route('landing') }}" class="text-decoration-none" style="color: #f59e0b; font-size: 14px;">
+                        Kembali ke Dashboard
+                    </a>
+                </div>
 
             </form>
 

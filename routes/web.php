@@ -12,15 +12,15 @@
 // use App\Http\Controllers\Web\ElderlyController;
 // use App\Http\Controllers\Web\ElderlyFamilyController;
 // use App\Http\Controllers\Web\NotificationController;
-// use App\Http\Controllers\Web\ReportController;
 // use App\Http\Controllers\Web\RoleController;
 // use App\Http\Controllers\Web\SettingController;
 use App\Http\Controllers\Web\AuthController;
-use App\Http\Controllers\Web\HomeController;
-use App\Http\Controllers\Web\UserController;
 use App\Http\Controllers\Web\CounselingController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Web\HomeController;
+use App\Http\Controllers\Web\ReportController;
+use App\Http\Controllers\Web\UserController;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,14 +33,15 @@ use Illuminate\Support\Facades\File;
 // });
 
 Route::get('/image/{filename}', function ($filename) {
-    $path = public_path('images/' . $filename);
-    if (!File::exists($path)) {
+    $path = public_path('images/'.$filename);
+    if (! File::exists($path)) {
         abort(404);
     }
+
     return response()->file($path);
 })->where('filename', '.*');
 
-Route::get('/', [HomeController::class, 'index'])->name('dashboard');
+Route::get('/', [HomeController::class, 'index'])->name('landing');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'index'])->name('login');
@@ -59,8 +60,6 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index'])->name('users');
-        // Route::get('/counselees', [UserController::class, 'getCounseleeList'])->name('users.counselees');
-        // Route::get('/counselors', [UserController::class, 'getCounselorList'])->name('users.counselors');
     });
 
     Route::prefix('counselings')->group(function () {
@@ -68,13 +67,11 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/{id}/session', [CounselingController::class, 'session'])->name('counseling.session');
     });
 
-    // Route::prefix('screenings')->group(function () {
-    //     Route::get('/', [CounselingController::class, 'screeningList'])->name('screenings');
-    // });
+    Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
+});
 
-    // Route::prefix('evaluations')->group(function () {
-    //     Route::get('/', [CounselingController::class, 'evaluationList'])->name('evaluations');
-    // });
+Route::fallback(function () {
+    return redirect()->route('landing');
 });
 
 //     /*

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIJALA | Konseling Jaga Lansia</title>
-
+    <link rel="icon" href="{{ url('image/logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
@@ -234,6 +234,11 @@
                 padding: 25px;
             }
         }
+
+        .login-btn {
+            background: var(--primary-dark);
+            color: #fff;
+        }
     </style>
 </head>
 
@@ -320,6 +325,22 @@
 
             <a href="https://drive.google.com/uc?export=download&id=10ts9iD1I0yJB2chVBq9aq-paygxd1JKK" class="apk-btn">
                 Download APK Sekarang
+            </a>
+
+        </div>
+
+        <div class="apk-section">
+
+            <h2>Login Administrator</h2>
+
+            <p>
+                Halaman ini digunakan oleh administrator, konselor, dan petugas
+                untuk mengelola data, layanan konseling, edukasi, serta monitoring
+                pada sistem Jaga Lansia.
+            </p>
+
+            <a href="{{ route('login') }}" class="apk-btn login-btn">
+                Login Admin
             </a>
 
         </div>

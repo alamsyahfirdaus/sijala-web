@@ -1,7 +1,7 @@
 <aside class="app-sidebar text-white">
     <div class="sidebar-brand">
 
-        <a href="{{ route('dashboard') }}" class="brand-link d-flex align-items-center justify-content-center">
+        <a href="javascript:void(0)" class="brand-link d-flex align-items-center justify-content-center">
 
             <img src="{{ url('image/logo.png') }}" alt="Logo SIJALA" class="brand-logo-circle">
 
@@ -18,85 +18,93 @@
         <nav class="mt-2">
 
             <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" data-accordion="false" role="menu">
-
                 <li class="nav-item">
                     <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
-                        <i class="nav-icon bi bi-circle-fill"></i>
+                        <i class="nav-icon bi bi-house-door-fill"></i>
                         <p>Beranda</p>
                     </a>
                 </li>
+
                 <li class="nav-item">
                     <a href="{{ route('users') }}" class="nav-link {{ request()->is('users*') ? 'active' : '' }}">
-                        <i class="nav-icon bi bi-circle-fill"></i>
+                        <i class="nav-icon bi bi-people-fill"></i>
                         <p>Pengguna</p>
                     </a>
                 </li>
+
                 <li class="nav-item">
-                    <a href="{{ route('counselings') }}" class="nav-link {{ request()->is('counselings*') ? 'active' : '' }}">
-                        <i class="nav-icon bi bi-circle-fill"></i>
+                    <a href="{{ route('counselings') }}"
+                        class="nav-link {{ request()->is('counselings*') ? 'active' : '' }}">
+                        <i class="nav-icon bi bi-chat-dots-fill"></i>
                         <p>Konseling</p>
                     </a>
                 </li>
-                {{-- <li class="nav-item {{ request()->routeIs('users.*') ? 'menu-open' : '' }}">
-                    <a href="javascript:void(0)" class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
-                        <i class="nav-icon bi bi-circle-fill"></i>
+
+                @php
+                    use Illuminate\Support\Facades\Crypt;
+
+                    $reports = [
+                        ['slug' => 'elderly', 'name' => 'Lansia'],
+                        ['slug' => 'counselor', 'name' => 'Konselor'],
+                        ['slug' => 'counseling', 'name' => 'Konseling'],
+                        ['slug' => 'screening', 'name' => 'Skrining'],
+                        ['slug' => 'evaluation', 'name' => 'Evaluasi'],
+                    ];
+
+                    $currentReport = null;
+
+                    try {
+                        if (request()->routeIs('reports.show')) {
+                            $currentReport = Crypt::decryptString(urldecode(request()->route('report')));
+                        }
+                    } catch (\Exception $e) {
+                        $currentReport = null;
+                    }
+                @endphp
+
+                <li class="nav-item {{ request()->routeIs('reports.show') ? 'menu-open' : '' }}">
+
+                    <a href="javascript:void(0)"
+                        class="nav-link {{ request()->routeIs('reports.show') ? 'active' : '' }}">
+
+                        <i class="nav-icon bi bi-file-earmark-bar-graph-fill"></i>
+
                         <p>
-                            Pengguna
+                            Laporan
                             <i class="nav-arrow bi bi-chevron-right"></i>
                         </p>
+
                     </a>
+
                     <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a href="{{ route('users.counselees') }}" class="nav-link {{ request()->routeIs('users.counselees') ? 'active' : '' }}">
-                                <i class="nav-icon bi bi-circle"></i>
-                                <p>Konseli</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('users.counselors') }}" class="nav-link {{ request()->routeIs('users.counselors') ? 'active' : '' }}">
-                                <i class="nav-icon bi bi-circle"></i>
-                                <p>Konselor</p>
-                            </a>
-                        </li>
+
+                        @foreach ($reports as $report)
+                            <li class="nav-item">
+
+                                <a href="{{ route('reports.show', [
+                                    'report' => urlencode(Crypt::encryptString($report['slug'])),
+                                ]) }}"
+                                    class="nav-link {{ $currentReport == $report['slug'] ? 'active' : '' }}">
+
+                                    <i class="nav-icon bi bi-circle"></i>
+
+                                    <p>{{ $report['name'] }}</p>
+
+                                </a>
+
+                            </li>
+                        @endforeach
+
                     </ul>
-                </li> --}}
-                {{-- <li class="nav-item {{ request()->routeIs('counselings', 'screenings', 'evaluations') ? 'menu-open' : '' }}">
-                    <a href="javascript:void(0)" class="nav-link {{ request()->routeIs('counselings', 'screenings', 'evaluations') ? 'active' : '' }}">
-                        <i class="nav-icon bi bi-circle-fill"></i>
-                        <p>
-                            Konseling
-                            <i class="nav-arrow bi bi-chevron-right"></i>
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a href="{{ route('counselings') }}" class="nav-link {{ request()->routeIs('counselings') ? 'active' : '' }}">
-                                <i class="nav-icon bi bi-circle"></i>
-                                <p>Sesi Konseling</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('screenings') }}" class="nav-link {{ request()->routeIs('screenings') ? 'active' : '' }}">
-                                <i class="nav-icon bi bi-circle"></i>
-                                <p>Hasil Skrining</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('evaluations') }}" class="nav-link {{ request()->routeIs('evaluations') ? 'active' : '' }}">
-                                <i class="nav-icon bi bi-circle"></i>
-                                <p>Hasil Evaluasi</p>
-                            </a>
-                        </li>
-                    </ul>
-                </li> --}}
-                <li class="nav-item">
+
+                </li>
+
+                {{-- <li class="nav-item">
                     <a href="javascript:void(0)" class="nav-link">
                         <i class="nav-icon bi bi-circle-fill"></i>
                         <p>Laporan</p>
                     </a>
-                </li>
-
-
+                </li> --}}
             </ul>
 
         </nav>

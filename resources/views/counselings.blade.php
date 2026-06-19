@@ -12,8 +12,8 @@
         <div class="card-header">
             <h3 class="card-title">Daftar {{ $title }}</h3>
         </div>
-        <div class="card-body table-responsive p-0">
-            <table id="userTable" class="table table-hover align-middle mb-0">
+        <div class="card-body table-responsive">
+            <table id="table" class="table table-hover align-middle">
                 <thead>
                     <tr>
                         <th style="width: 5%;">No</th>
@@ -28,11 +28,7 @@
                     @foreach ($counselingSessions as $index => $session)
                         <tr>
                             <td style="text-align: center;">{{ $index + 1 }}</td>
-                            <td>{{ $session->elderlyCounselee->elderly_name ?? '-' }}
-                                <br>
-                                <span class="text-muted" style="font-size: 12px;">Usia:
-                                    {{ $session->elderlyCounselee->elderly_age ?? '-' }} tahun</span>
-                            </td>
+                            <td>{{ $session->elderlyCounselee->elderly_name ?? '-' }} </td>
                             <td>{{ $session->elderlyCounselee->counselee->name ?? '-' }}</td>
                             <td>{{ $session->counselor->name ?? '-' }}</td>
                             <td>{{ $session->session_count }} Sesi</td>
