@@ -23,4 +23,20 @@ class CounselingSession extends Model
     {
         return $this->belongsTo(ElderlyCounselee::class, 'elderly_counselee_id');
     }
+
+    public function fallRiskScreening()
+    {
+        return $this->hasOne(
+            FallRiskScreening::class,
+            'counseling_session_id'
+        );
+    }
+
+    public function empowermentAssessment()
+    {
+        return $this->hasOne(
+            EmpowermentAssessment::class,
+            'counseling_session_id'
+        );
+    }
 }

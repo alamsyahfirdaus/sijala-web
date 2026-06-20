@@ -13,4 +13,5 @@ class EmpowermentAssessment extends Model
     protected $primaryKey = 'id';
 
     protected $guarded = [];
+    
 }

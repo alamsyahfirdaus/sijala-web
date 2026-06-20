@@ -76,7 +76,7 @@
                     @foreach ($screenings as $index => $screening)
                         <tr>
                             <td>
-                                {{ $screening['session']->updated_at->format('d/m/Y') }}
+                                {{ \Carbon\Carbon::parse($screening['session']->updated_at)->translatedFormat('d F Y') }}
                             </td>
                             <td>
                                 @if ($screening['fallRisk'])
@@ -140,7 +140,7 @@
                             </td>
 
                             <td>
-                                {{ $evaluation->created_at->format('d/m/Y') }}
+                                {{ \Carbon\Carbon::parse($evaluation->created_at)->translatedFormat('d F Y') }}
                             </td>
 
                             <td>

@@ -41,8 +41,6 @@
                 </li>
 
                 @php
-                    use Illuminate\Support\Facades\Crypt;
-
                     $reports = [
                         ['slug' => 'elderly', 'name' => 'Lansia'],
                         ['slug' => 'counselor', 'name' => 'Konselor'],
@@ -51,15 +49,7 @@
                         ['slug' => 'evaluation', 'name' => 'Evaluasi'],
                     ];
 
-                    $currentReport = null;
-
-                    try {
-                        if (request()->routeIs('reports.show')) {
-                            $currentReport = Crypt::decryptString(urldecode(request()->route('report')));
-                        }
-                    } catch (\Exception $e) {
-                        $currentReport = null;
-                    }
+                    $currentReport = request()->route('report');
                 @endphp
 
                 <li class="nav-item {{ request()->routeIs('reports.show') ? 'menu-open' : '' }}">
@@ -81,10 +71,8 @@
                         @foreach ($reports as $report)
                             <li class="nav-item">
 
-                                <a href="{{ route('reports.show', [
-                                    'report' => urlencode(Crypt::encryptString($report['slug'])),
-                                ]) }}"
-                                    class="nav-link {{ $currentReport == $report['slug'] ? 'active' : '' }}">
+                                <a href="{{ route('reports.show', $report['slug']) }}"
+                                    class="nav-link {{ $currentReport === $report['slug'] ? 'active' : '' }}">
 
                                     <i class="nav-icon bi bi-circle"></i>
 

@@ -67,7 +67,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/{id}/session', [CounselingController::class, 'session'])->name('counseling.session');
     });
 
-    Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
+    Route::match(['get', 'post'], '/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
 });
 
 Route::fallback(function () {

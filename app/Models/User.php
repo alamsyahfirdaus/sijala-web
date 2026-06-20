@@ -58,4 +58,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserDevice::class);
     }
+
+    public function counselingSessions()
+    {
+        return $this->hasMany(CounselingSession::class, 'counselor_id', 'id');
+    }
 }
