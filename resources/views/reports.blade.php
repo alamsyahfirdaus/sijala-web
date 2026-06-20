@@ -147,7 +147,7 @@
                                 <td style="text-align: center;">{{ $loop->iteration }}</td>
 
                                 <td>
-                                    {{ $counseling['elderly_name'] }}
+                                    {{ $counseling['counselee_name'] }}
                                 </td>
 
                                 <td>
@@ -164,11 +164,10 @@
                 </table>
             @elseif ($report == 'screening')
                 <table class="table table-bordered table-striped datatable" style="width: 100%;">
-
                     <thead>
                         <tr>
                             <th width="5%">No</th>
-                            <th>Nama Lansia</th>
+                            <th>Konseli</th>
                             <th>Tanggal Skrining</th>
                             <th>Risiko Jatuh</th>
                             <th>Pemberdayaan Keluarga</th>
@@ -182,7 +181,7 @@
                                 <td>{{ $loop->iteration }}</td>
 
                                 <td>
-                                    {{ $screening['elderly_name'] }}
+                                    {{ $screening['counselee_name'] }}
                                 </td>
                                 <td>
                                     {{ \Carbon\Carbon::parse($screening['screening_date'])->translatedFormat('d F Y') }}
@@ -190,14 +189,14 @@
                                 <td>
                                     {{ $screening['fall_risk_score'] }}
                                     <span class="text-muted">
-                                    ({{ $screening['fall_risk_category'] }})
+                                        ({{ $screening['fall_risk_category'] }})
                                     </span>
                                 </td>
 
                                 <td>
                                     {{ $screening['empowerment_score'] }}
                                     <span class="text-muted">
-                                    ({{ $screening['empowerment_category'] }})
+                                        ({{ $screening['empowerment_category'] }})
                                     </span>
                                 </td>
                             </tr>
@@ -211,22 +210,53 @@
                     <thead>
                         <tr>
                             <th width="5%">No</th>
-                            <th>Nama Lansia</th>
-                            <th>Tanggal Evaluasi</th>
-                            <th>Hasil</th>
-                            <th>Catatan</th>
+                            <th>Konseli</th>
+                            <th>Tgl.<span style="font-size: 10px; color: #fff;">_</span>Evaluasi</th>
+                            <th>Topik</th>
+                            <th>Hasil<span style="font-size: 10px; color: #fff;">_</span>Evaluasi</th>
+                            <th>Keterangan</th>
                         </tr>
                     </thead>
 
                     <tbody>
-                        {{-- Data Evaluasi --}}
+                        @foreach ($data['evaluations'] as $evaluation)
+                            <tr>
+
+                                <td class="text-center">
+                                    {{ $loop->iteration }}
+                                </td>
+
+                                <td>
+                                    {{ $evaluation['counselee_name'] }}
+                                </td>
+
+                                <td>
+                                    {{ \Carbon\Carbon::parse($evaluation['evaluation_date'])->translatedFormat('d F Y') }}
+                                </td>
+
+                                <td>
+                                    {{ $evaluation['topic_name'] }}
+                                </td>
+
+                                <td>
+                                    Skor {{ $evaluation['score'] }}
+                                    <span class="text-muted">
+                                        ({{ $evaluation['percentage'] }}%)
+                                    </span>
+                                    {{ $evaluation['category'] }}
+                                </td>
+
+                                <td>
+                                    {{ $evaluation['interpretation'] }}
+                                </td>
+
+                            </tr>
+                        @endforeach
                     </tbody>
 
                 </table>
             @endif
-
         </div>
-
     </div>
     <script>
         $(document).ready(function() {

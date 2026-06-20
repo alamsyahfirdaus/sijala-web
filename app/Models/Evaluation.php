@@ -16,7 +16,7 @@ class Evaluation extends Model
 
     public function session()
     {
-        return $this->belongsTo(CounselingSession::class, 'counseling_session_id ');
+        return $this->belongsTo(CounselingSession::class, 'counseling_session_id');
     }
 
     public function topic()

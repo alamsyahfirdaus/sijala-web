@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
     <link rel="stylesheet" href="{{ asset('css/adminlte.css') }}">
@@ -93,6 +94,22 @@
         .invalid-feedback {
             font-size: 12px;
         }
+
+        /* .table-responsive {
+            overflow-x: auto;
+        }
+
+        @media (max-width: 768px) {
+
+            .dataTables_wrapper {
+                font-size: 13px;
+            }
+
+            table.dataTable td,
+            table.dataTable th {
+                white-space: nowrap;
+            }
+        } */
     </style>
 
     @stack('styles')
@@ -103,6 +120,8 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="{{ asset('js/adminlte.js') }}"></script>
 
@@ -148,10 +167,19 @@
 
     <script>
         $(document).ready(function() {
+
             $('#table, .datatable').DataTable({
 
-                responsive: true,
+                responsive: {
+                    details: {
+                        type: 'inline'
+                    }
+                },
+
+                autoWidth: false,
+
                 pageLength: 10,
+
                 lengthMenu: [
                     [10, 25, 50, 100, -1],
                     [10, 25, 50, 100, "Semua"]
@@ -160,7 +188,7 @@
                 language: {
                     processing: "Sedang memproses...",
                     search: "Pencarian:",
-                    lengthMenu: "Tampilkan _MENU_ data per halaman",
+                    lengthMenu: "Tampilkan _MENU_",
                     info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
                     infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
                     infoFiltered: "(disaring dari _MAX_ total data)",
@@ -176,6 +204,7 @@
                 }
 
             });
+
         });
     </script>
 

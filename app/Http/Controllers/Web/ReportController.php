@@ -202,11 +202,12 @@ class ReportController extends Controller
 
                 $lastSession = CounselingSession::with([
                     'counselor',
-                    'elderlyCounselee'
+                    'elderlyCounselee.counselee'
                 ])->find($item->last_session_id);
 
                 return [
                     'id'               => $lastSession->id,
+                    'counselee_name'   => $lastSession->elderlyCounselee?->counselee?->name ?? '-',
                     'counselor_name'   => $lastSession->counselor?->name ?? '-',
                     'elderly_name'     => $lastSession->elderlyCounselee?->elderly_name ?? '-',
                     'elderly_gender'   => $lastSession->elderlyCounselee?->elderly_gender ?? '-',
@@ -248,7 +249,7 @@ class ReportController extends Controller
         $screenings = CounselingSession::query()
 
         ->with([
-            'elderlyCounselee',
+            'elderlyCounselee.counselee',
             'fallRiskScreening',
             'empowermentAssessment'
         ])
@@ -287,6 +288,9 @@ class ReportController extends Controller
             return [
                 'id' => $item->id,
 
+                'counselee_name' =>
+                    $item->elderlyCounselee->counselee?->name ?? '-',
+
                 'elderly_name' =>
                     $item->elderlyCounselee?->elderly_name ?? '-',
 
@@ -321,9 +325,78 @@ class ReportController extends Controller
 
     private function getEvaluationReport()
     {
+        $evaluations = Evaluation::query()
+
+            ->with([
+                'topic',
+                'session.counselor',
+                'session.elderlyCounselee.counselee',
+            ])
+
+            ->when(
+                request()->filled('start_date'),
+                fn ($query) =>
+                $query->whereDate(
+                    'created_at',
+                    '>=',
+                    request('start_date')
+                )
+            )
+
+            ->when(
+                request()->filled('end_date'),
+                fn ($query) =>
+                $query->whereDate(
+                    'created_at',
+                    '<=',
+                    request('end_date')
+                )
+            )
+
+            ->latest()
+
+            ->get()
+
+            ->map(function ($item) {
+                return [
+
+                    'id' => $item->id,
+
+                    'counselee_name' =>
+                        $item->session?->elderlyCounselee?->counselee?->name ?? '-',
+
+                    'elderly_name' =>
+                        $item->session?->elderlyCounselee?->elderly_name ?? '-',
+
+                    'counselor_name' =>
+                        $item->session?->counselor?->name ?? '-',
+
+                    'topic_name' =>
+                        $item->topic?->topic ?? '-',
+
+                    'score' =>
+                        $item->total_score ?? '-',
+
+                    'category' =>
+                        $item->category ?? '-',
+                    
+                    'percentage' =>
+                        $item->percentage ?? '-',
+                    
+                    'interpretation' =>
+                        $item->interpretation ?? '-',
+
+                    // 'notes' =>
+                    //     $item->notes ?? '-',
+
+                    'evaluation_date' =>
+                        $item->created_at,
+                ];
+            });
+
         return [
             'availableDates' => $this->getAvailableDates(Evaluation::class),
-            'evaluations' => Evaluation::all(),
+            'evaluations'    => $evaluations,
         ];
     }
 }
