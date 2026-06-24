@@ -65,9 +65,14 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::prefix('counselings')->group(function () {
         Route::get('/', [CounselingController::class, 'index'])->name('counselings');
         Route::get('/{id}/session', [CounselingController::class, 'session'])->name('counseling.session');
+        Route::match(['post', 'put'], '/scores/update', [CounselingController::class, 'updateScore'])->name('scores.update');
     });
 
-    Route::match(['get', 'post'], '/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
+    Route::prefix('reports')->group(function () {
+        Route::match(['get', 'post'], '/{report}', [ReportController::class, 'show'])->name('reports.show');
+        Route::match(['get', 'post'], '/{report}/excel', [ReportController::class, 'exportExcel'])->name('reports.excel');
+        Route::match(['get', 'post'], '/{report}/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
+    });
 });
 
 Route::fallback(function () {

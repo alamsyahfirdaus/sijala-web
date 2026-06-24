@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use App\Models\CounselingSession;
 use App\Models\EmpowermentAssessment;
 use App\Models\FallRiskScreening;
@@ -102,6 +103,8 @@ class CounselingController extends Controller
                 ->flip()
                 ->map(fn ($index) => $index + 1);
 
+            // echo json_encode($screenings);
+
             // Tampilkan halaman detail konseling
             return view('counseling_session', compact(
                 'title',
@@ -116,6 +119,217 @@ class CounselingController extends Controller
 
             // Jika ID tidak valid atau gagal didekripsi
             abort(404);
+        }
+    }
+
+    public function updateScore(Request $request)
+    {
+        $request->validate([
+            'type' => 'required|in:fall-risk,empowerment,evaluation',
+            'id' => 'required|integer',
+            'score' => 'required|numeric|min:0',
+        ]);
+
+        try {
+
+            switch ($request->type) {
+
+                /*
+                |--------------------------------------------------------------------------
+                | SKRINING RISIKO JATUH
+                |--------------------------------------------------------------------------
+                */
+                case 'fall-risk':
+
+                    $data = FallRiskScreening::findOrFail($request->id);
+
+                    $totalScore = (int) $request->score;
+
+                    if ($totalScore <= 3) {
+
+                        $riskLevel = 'Rendah';
+
+                        $interpretation =
+                            'Risiko jatuh minimal.';
+
+                    } elseif ($totalScore <= 7) {
+
+                        $riskLevel = 'Sedang';
+
+                        $interpretation =
+                            'Perlu edukasi dan pemantauan.';
+
+                    } else {
+
+                        $riskLevel = 'Tinggi';
+
+                        $interpretation =
+                            'Perlu asesmen lanjutan dan intervensi.';
+                    }
+
+                    $data->update([
+                        'total_score' => $totalScore,
+                        'risk_level' => $riskLevel,
+                        'interpretation' => $interpretation,
+                    ]);
+
+                    break;
+
+                /*
+                |--------------------------------------------------------------------------
+                | PEMBERDAYAAN KELUARGA
+                |--------------------------------------------------------------------------
+                */
+                case 'empowerment':
+
+                    $data = EmpowermentAssessment::findOrFail($request->id);
+
+                    $totalScore = (int) $request->score;
+
+                    /*
+                    * Diasumsikan skor yang diedit adalah skor akhir
+                    * dalam rentang 0 - 100.
+                    */
+                    $finalScore = $totalScore;
+
+                    if ($finalScore <= 50) {
+
+                        $level = 'Rendah';
+
+                    } elseif ($finalScore <= 75) {
+
+                        $level = 'Sedang';
+
+                    } else {
+
+                        $level = 'Tinggi';
+                    }
+
+                    if ($level === 'Tinggi') {
+
+                        $interpretation =
+                            'Tingkat pemberdayaan keluarga tergolong tinggi. '
+                            . 'Keluarga memiliki kemampuan yang baik dalam memahami, '
+                            . 'mengambil keputusan, serta berperan aktif dalam proses '
+                            . 'perawatan dan pemeliharaan kesehatan anggota keluarga.';
+
+                    } elseif ($level === 'Sedang') {
+
+                        $interpretation =
+                            'Tingkat pemberdayaan keluarga tergolong sedang. '
+                            . 'Keluarga telah menunjukkan kemampuan dalam mendukung '
+                            . 'perawatan kesehatan, namun masih terdapat beberapa aspek '
+                            . 'yang perlu diperkuat melalui edukasi dan pendampingan.';
+
+                    } else {
+
+                        $interpretation =
+                            'Tingkat pemberdayaan keluarga tergolong rendah. '
+                            . 'Diperlukan pendampingan yang lebih intensif, peningkatan '
+                            . 'pengetahuan, serta penguatan peran keluarga dalam '
+                            . 'mendukung perawatan dan pengambilan keputusan terkait '
+                            . 'kesehatan.';
+                    }
+
+                    $data->update([
+                        'total_score' => $totalScore,
+                        'empowerment_level' => $level,
+                        'interpretation' => $interpretation,
+                    ]);
+
+                    break;
+
+                /*
+                |--------------------------------------------------------------------------
+                | EVALUASI PEMBELAJARAN
+                |--------------------------------------------------------------------------
+                */
+                case 'evaluation':
+
+                    $data = Evaluation::with('topic')
+                        ->findOrFail($request->id);
+
+                    $totalScore = (int) $request->score;
+
+                    /*
+                    * Diasumsikan skor yang diedit sudah dalam bentuk
+                    * persentase (0 - 100).
+                    *
+                    * Jika menggunakan skor mentah, sesuaikan kembali
+                    * rumus perhitungannya.
+                    */
+                    $percentage = $totalScore;
+
+                    if ($percentage >= 76) {
+
+                        $category = 'Baik';
+
+                    } elseif ($percentage >= 56) {
+
+                        $category = 'Cukup';
+
+                    } else {
+
+                        $category = 'Kurang';
+                    }
+
+                    $topicName = $data->topic->topic ?? 'materi';
+
+                    if ($category === 'Baik') {
+
+                        $interpretation =
+                            'Peserta memiliki pemahaman yang baik terhadap materi "'
+                            . $topicName .
+                            '". Sebagian besar pertanyaan dapat dijawab dengan benar. '
+                            . 'Disarankan untuk mempertahankan pemahaman yang sudah '
+                            . 'dimiliki dan terus menerapkan materi yang telah dipelajari.';
+
+                    } elseif ($category === 'Cukup') {
+
+                        $interpretation =
+                            'Peserta memiliki pemahaman yang cukup terhadap materi "'
+                            . $topicName .
+                            '". Masih terdapat beberapa konsep yang perlu diperkuat. '
+                            . 'Disarankan untuk mengulang kembali materi dan melakukan '
+                            . 'pendampingan lanjutan pada bagian yang belum dipahami.';
+
+                    } else {
+
+                        $interpretation =
+                            'Peserta masih mengalami kesulitan dalam memahami materi "'
+                            . $topicName .
+                            '". Diperlukan edukasi ulang, pendampingan, serta penguatan '
+                            . 'materi agar tingkat pemahaman dapat meningkat.';
+                    }
+
+                    $data->update([
+                        'total_score' => $totalScore,
+                        'percentage' => $percentage,
+                        'category' => $category,
+                        'interpretation' => $interpretation,
+                    ]);
+
+                    break;
+            }
+
+            return back()->with(
+                'success',
+                'Skor berhasil diperbarui.'
+            );
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+
+            return back()->with(
+                'error',
+                'Data yang akan diperbarui tidak ditemukan.'
+            );
+
+        } catch (\Exception $e) {
+
+            return back()->with(
+                'error',
+                'Terjadi kesalahan saat memperbarui skor.'
+            );
         }
     }
 }

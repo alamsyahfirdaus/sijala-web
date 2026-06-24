@@ -8,7 +8,7 @@
 
 @section('content')
 
-    <div class="card">
+    <div class="card card-outline card-warning">
         <div class="card-header">
             <h3 class="card-title">Informasi Lansia</h3>
         </div>
@@ -105,7 +105,21 @@
                                         Aksi
                                     </button>
                                     <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="">Ubah Nilai</a></li>
+                                        <li><a href="javascript:void(0)" class="dropdown-item btn-edit-score"
+                                                data-type="fall-risk" data-id="{{$screening['fallRisk']->id }}"
+                                                data-score="{{ $screening['fallRisk']->total_score ?? 0 }}">
+                                                Ubah Skor Risiko Jatuh
+                                            </a></li>
+                                        <li>
+                                            <hr class="dropdown-divider" />
+                                        </li>
+                                        <li>
+                                            <a href="javascript:void(0)" class="dropdown-item btn-edit-score"
+                                                data-type="empowerment" data-id="{{ $screening['empowerment']->id }}"
+                                                data-score="{{ $screening['empowerment']->total_score ?? 0 }}">
+                                                Ubah Skor Pemberdayaan
+                                            </a>
+                                        </li>
                                     </ul>
                                 </div>
                             </td>
@@ -148,13 +162,14 @@
                             </td>
 
                             <td>
-                              {{ $evaluation->total_score ?? '-' }}
+                                {{ round($evaluation->percentage) }}
+                                {{-- {{ $evaluation->total_score ?? '-' }}
 
                                 @if ($evaluation->percentage)
                                     <span class="text-muted">
                                         ({{ number_format($evaluation->percentage, 1) }}%)
                                     </span>
-                                @endif
+                                @endif --}}
                             </td>
                             <td>
                                 {{ $evaluation->category ?? '-' }}
@@ -166,7 +181,11 @@
                                         Aksi
                                     </button>
                                     <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="">Ubah Nilai</a></li>
+                                        <li><a href="javascript:void(0)" class="dropdown-item btn-edit-score"
+                                                data-type="evaluation" data-id="{{ $evaluation->id }}"
+                                                data-score="{{ $evaluation->total_score }}">
+                                                Ubah Skor
+                                            </a></li>
                                     </ul>
                                 </div>
                             </td>
@@ -176,4 +195,102 @@
             </table>
         </div>
     </div>
+
+    <div class="modal fade" id="scoreModal" tabindex="-1" aria-labelledby="scoreModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form action="{{ route('scores.update') }}" id="scoreForm" method="POST">
+                @csrf
+                @method('PUT')
+
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="scoreModalLabel">
+                            Ubah Skor
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <input type="hidden" name="type" id="score_type">
+                        <input type="hidden" name="id" id="score_id">
+
+                        <div class="form-group">
+                            <label for="score_value" class="form-label">Skor</label>
+                            <input type="number" class="form-control" id="score_value" name="score" min="0">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Simpan Perubahan</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+
+            $('.btn-edit-score').on('click', function() {
+
+                let type = $(this).data('type');
+                let id = $(this).data('id');
+                let score = $(this).data('score');
+                let title = $(this).text().trim();
+
+                $('#score_type').val(type);
+                $('#score_id').val(id);
+                $('#score_value').val(score);
+                $('#scoreModalLabel').text(title);
+
+                $('#score_value')
+                    .removeClass('is-invalid')
+                    .next('.invalid-feedback')
+                    .text('');
+
+                $('#scoreModal').modal('show');
+            });
+
+            $('#scoreForm').on('submit', function(e) {
+
+                let score = $('#score_value').val().trim();
+
+                let isValid = true;
+
+                $('#score_value')
+                    .removeClass('is-invalid')
+                    .next('.invalid-feedback')
+                    .text('');
+
+                if (score === '') {
+                    $('#score_value')
+                        .addClass('is-invalid')
+                        .next('.invalid-feedback')
+                        .text('Skor wajib diisi.');
+
+                    isValid = false;
+                } else if (isNaN(score)) {
+                    $('#score_value')
+                        .addClass('is-invalid')
+                        .next('.invalid-feedback')
+                        .text('Skor harus berupa angka.');
+
+                    isValid = false;
+                } else if (parseFloat(score) < 0) {
+                    $('#score_value')
+                        .addClass('is-invalid')
+                        .next('.invalid-feedback')
+                        .text('Skor tidak boleh kurang dari 0.');
+
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
 @endsection

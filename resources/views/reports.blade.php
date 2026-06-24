@@ -58,12 +58,12 @@
                             Filter
                         </button>
 
-                        <button type="button" class="btn btn-success">
+                        <button type="button" id="export-excel" class="btn btn-success">
                             <i class="bi bi-file-earmark-excel-fill"></i>
                             Excel
                         </button>
 
-                        <button type="button" class="btn btn-danger">
+                        <button type="button" id="export-pdf" class="btn btn-danger">
                             <i class="bi bi-file-earmark-pdf-fill"></i>
                             PDF
                         </button>
@@ -239,12 +239,19 @@
                                 </td>
 
                                 <td>
+                                    {{ round($evaluation['percentage'])}}
+                                    <span class="text-muted">
+                                        ({{ $evaluation['category'] }})
+                                    </span>
+                                </td>
+
+                                {{-- <td>
                                     Skor {{ $evaluation['score'] }}
                                     <span class="text-muted">
                                         ({{ $evaluation['percentage'] }}%)
                                     </span>
                                     {{ $evaluation['category'] }}
-                                </td>
+                                </td> --}}
 
                                 <td>
                                     {{ $evaluation['interpretation'] }}
@@ -360,6 +367,51 @@
                 .next('.select2-container')
                 .removeClass('select2-error');
 
+        });
+
+        function submitExport(url, target = '_self') {
+
+            const form = $('<form>', {
+                method: 'POST',
+                action: url,
+                target: target
+            });
+
+            form.append(
+                '<input type="hidden" name="_token" value="' +
+                $('meta[name="csrf-token"]').attr('content') +
+                '">'
+            );
+
+            form.append(
+                '<input type="hidden" name="start_date" value="' +
+                $('#start_date').val() +
+                '">'
+            );
+
+            form.append(
+                '<input type="hidden" name="end_date" value="' +
+                $('#end_date').val() +
+                '">'
+            );
+
+            $('body').append(form);
+
+            form.submit();
+            form.remove();
+        }
+
+        $('#export-excel').click(function() {
+            submitExport(
+                "{{ route('reports.excel', ['report' => $report]) }}"
+            );
+        });
+
+        $('#export-pdf').click(function() {
+            submitExport(
+                "{{ route('reports.pdf', ['report' => $report]) }}",
+                '_blank'
+            );
         });
     </script>
 
