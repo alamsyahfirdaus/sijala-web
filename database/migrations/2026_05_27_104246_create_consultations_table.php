@@ -24,6 +24,17 @@ return new class extends Migration
                 ->constrained('users')
                 ->cascadeOnDelete();
 
+            /*
+            |--------------------------------------------------------------------------
+            | SESI KONSELING (OPSIONAL)
+            |--------------------------------------------------------------------------
+            */
+            $table->foreignId('counseling_session_id')
+                ->nullable()
+                ->constrained('counseling_sessions')
+                ->nullOnDelete();
+
+
             // Nama channel Agora
             $table->string('channel_name')->unique();
 

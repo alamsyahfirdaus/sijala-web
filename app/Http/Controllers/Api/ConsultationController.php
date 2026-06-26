@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Consultation;
 use App\Models\Notification;
+use App\Models\CounselingSession;
 use App\Models\User;
 use App\Services\Agora\AgoraService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class ConsultationController extends Controller
 {
@@ -119,33 +122,32 @@ class ConsultationController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | JIKA USER ADALAH KONSELI
+        | DEFAULT SESSION
         |--------------------------------------------------------------------------
         */
-        if ($user->role == 'konseli') {
+        $sessionId = null;
 
-            /*
-            |--------------------------------------------------------------------------
-            | CARI KONSELOR BERDASARKAN PUSKESMAS
-            |--------------------------------------------------------------------------
-            */
+        /*
+        |--------------------------------------------------------------------------
+        | USER ADALAH KONSELI
+        |--------------------------------------------------------------------------
+        | Konseli akan otomatis menghubungi konselor berdasarkan puskesmas.
+        |--------------------------------------------------------------------------
+        */
+        if ($user->role === 'konseli') {
+
             $receiver = User::where([
                 'puskesmas_id' => $user->puskesmas_id,
                 'role' => 'konselor',
             ])
-                ->where('is_active', 1)
+                ->where('is_active', true)
                 ->first();
 
-            /*
-            |--------------------------------------------------------------------------
-            | JIKA KONSELOR TIDAK DITEMUKAN
-            |--------------------------------------------------------------------------
-            */
             if (! $receiver) {
 
                 return response()->json([
                     'status' => false,
-                    'message' => 'Konselor tidak ditemukan',
+                    'message' => 'Konselor tidak ditemukan.',
                 ], 404);
             }
 
@@ -156,51 +158,64 @@ class ConsultationController extends Controller
         |--------------------------------------------------------------------------
         | USER BUKAN KONSELI
         |--------------------------------------------------------------------------
+        | Menggunakan sesi konseling yang sudah dijadwalkan.
+        |--------------------------------------------------------------------------
         */
         else {
 
+            $request->validate(
+                [
+                    'counseling_session_id' => 'required|exists:counseling_sessions,id',
+                ],
+                [
+                    'counseling_session_id.required' => 'Sesi konseling wajib dipilih.',
+                    'counseling_session_id.exists'   => 'Sesi konseling yang dipilih tidak ditemukan.',
+                ]
+            );
+
+            $sessionId = $request->input('counseling_session_id');
+
             /*
             |--------------------------------------------------------------------------
-            | VALIDASI INPUT
+            | AMBIL SESI KONSELING
             |--------------------------------------------------------------------------
             */
-            $request->validate([
-                'receiver_id' => 'required|exists:users,id',
-            ]);
-
-            $receiverId = $request->receiver_id;
+            $session = CounselingSession::with([
+                'elderlyCounselee.counselee',
+            ])->find($sessionId);
 
             /*
             |--------------------------------------------------------------------------
-            | TIDAK BOLEH CALL DIRI SENDIRI
+            | VALIDASI PESERTA SESI
             |--------------------------------------------------------------------------
             */
-            if ($receiverId == $user->id) {
+            if (
+                ! $session ||
+                ! $session->elderlyCounselee ||
+                ! $session->elderlyCounselee->counselee
+            ) {
 
                 return response()->json([
                     'status' => false,
-                    'message' => 'Tidak dapat melakukan konsultasi dengan diri sendiri',
-                ], 400);
+                    'message' => 'Peserta pada sesi konseling tidak ditemukan.',
+                ], 404);
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | AMBIL RECEIVER
-            |--------------------------------------------------------------------------
-            */
-            $receiver = User::find($receiverId);
+            $receiver = $session->elderlyCounselee->counselee;
+
+            $receiverId = $receiver->id;
 
             /*
             |--------------------------------------------------------------------------
-            | JIKA RECEIVER TIDAK DITEMUKAN
+            | TIDAK BOLEH MELAKUKAN CALL KE DIRI SENDIRI
             |--------------------------------------------------------------------------
             */
-            if (! $receiver) {
+            if ($receiverId === $user->id) {
 
                 return response()->json([
                     'status' => false,
-                    'message' => 'Penerima konsultasi tidak ditemukan',
-                ], 404);
+                    'message' => 'Tidak dapat melakukan konsultasi dengan diri sendiri.',
+                ], 400);
             }
 
             /*
@@ -212,7 +227,7 @@ class ConsultationController extends Controller
 
                 return response()->json([
                     'status' => false,
-                    'message' => 'Penerima konsultasi sedang tidak aktif',
+                    'message' => 'Penerima konsultasi sedang tidak aktif.',
                 ], 400);
             }
         }
@@ -221,24 +236,22 @@ class ConsultationController extends Controller
         |--------------------------------------------------------------------------
         | CEK KONSULTASI AKTIF
         |--------------------------------------------------------------------------
-        | Mencegah duplicate active consultation.
+        | Mencegah dua video call aktif antara user yang sama.
         |--------------------------------------------------------------------------
         */
         $existingConsultation = Consultation::where(function ($query) use ($user, $receiverId) {
 
-            $query
-                ->where(function ($q) use ($user, $receiverId) {
+            $query->where(function ($q) use ($user, $receiverId) {
 
-                    $q->where('caller_id', $user->id)
-                        ->where('receiver_id', $receiverId);
+                $q->where('caller_id', $user->id)
+                    ->where('receiver_id', $receiverId);
 
-                })
-                ->orWhere(function ($q) use ($user, $receiverId) {
+            })->orWhere(function ($q) use ($user, $receiverId) {
 
-                    $q->where('caller_id', $receiverId)
-                        ->where('receiver_id', $user->id);
+                $q->where('caller_id', $receiverId)
+                    ->where('receiver_id', $user->id);
 
-                });
+            });
 
         })
             ->whereIn('status', [
@@ -250,18 +263,13 @@ class ConsultationController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | AUTO END CONSULTATION LAMA
+        | AKHIRI KONSULTASI LAMA
         |--------------------------------------------------------------------------
         */
         if ($existingConsultation) {
 
             $duration = 0;
 
-            /*
-            |--------------------------------------------------------------------------
-            | HITUNG DURASI
-            |--------------------------------------------------------------------------
-            */
             if ($existingConsultation->started_at) {
 
                 $duration = now()->diffInSeconds(
@@ -269,21 +277,16 @@ class ConsultationController extends Controller
                 );
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | UPDATE STATUS MENJADI ENDED
-            |--------------------------------------------------------------------------
-            */
             $existingConsultation->update([
-                'status' => 'ended',
-                'ended_at' => now(),
-                'duration' => $duration,
+                'status'    => 'ended',
+                'ended_at'  => now(),
+                'duration'  => $duration,
             ]);
         }
 
         /*
         |--------------------------------------------------------------------------
-        | MEMBUAT CHANNEL NAME AGORA
+        | GENERATE CHANNEL AGORA
         |--------------------------------------------------------------------------
         */
         $agora = AgoraService::generateCallData(
@@ -293,16 +296,17 @@ class ConsultationController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | MEMBUAT CONSULTATION BARU
+        | SIMPAN CONSULTATION
         |--------------------------------------------------------------------------
         */
         $consultation = Consultation::create([
-            'caller_id' => $user->id,
-            'receiver_id' => $receiverId,
+            'session_id'   => $sessionId,
+            'caller_id'    => $user->id,
+            'receiver_id'  => $receiverId,
             'channel_name' => $agora['channel_name'],
-            'token' => $agora['token'],
-            'call_type' => 'video',
-            'status' => 'calling',
+            'token'        => $agora['token'],
+            'call_type'    => 'video',
+            'status'       => 'calling',
         ]);
 
         /*
@@ -312,12 +316,13 @@ class ConsultationController extends Controller
         */
         Notification::create([
             'user_id' => $receiverId,
-            'title' => 'Incoming Video Call',
-            'body' => $user->name.' memanggil Anda',
-            'type' => 'incoming_call',
-            'data' => [
+            'title'   => 'Incoming Video Call',
+            'body'    => $user->name . ' memanggil Anda',
+            'type'    => 'incoming_call',
+            'data'    => [
                 'consultation_id' => $consultation->id,
-                'channel_name' => $consultation->channel_name,
+                'session_id'      => $sessionId,
+                'channel_name'    => $consultation->channel_name,
             ],
         ]);
 
@@ -327,9 +332,9 @@ class ConsultationController extends Controller
         |--------------------------------------------------------------------------
         */
         return response()->json([
-            'status' => true,
-            'message' => 'Permintaan konsultasi berhasil dikirim',
-            'data' => $consultation,
+            'status'  => true,
+            'message' => 'Permintaan konsultasi berhasil dikirim.',
+            'data'    => $consultation,
         ]);
     }
 
