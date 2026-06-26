@@ -35,4 +35,24 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Agora RTC
+    |--------------------------------------------------------------------------
+    |
+    | Konfigurasi Agora digunakan untuk:
+    | - Video Call
+    | - Voice Call
+    | - Real-Time Communication
+    |
+    | App ID digunakan oleh Flutter.
+    | App Certificate hanya digunakan di Laravel untuk generate token.
+    |
+    */
+
+    'agora' => [
+        'app_id' => env('AGORA_APP_ID'),
+        'app_certificate' => env('AGORA_APP_CERTIFICATE'),
+    ],
+
 ];

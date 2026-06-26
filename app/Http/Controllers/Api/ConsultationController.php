@@ -6,18 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Consultation;
 use App\Models\Notification;
 use App\Models\User;
+use App\Services\Agora\AgoraService;
 use Illuminate\Http\Request;
 
 class ConsultationController extends Controller
 {
-    /**
-     * --------------------------------------------------------------------------
-     * LIST RIWAYAT KONSULTASI
-     * --------------------------------------------------------------------------
-     * Menampilkan seluruh riwayat konsultasi/video call
-     * berdasarkan user yang sedang login.
-     * --------------------------------------------------------------------------
-     */
     public function index(Request $request)
     {
         /*
@@ -31,18 +24,22 @@ class ConsultationController extends Controller
         |--------------------------------------------------------------------------
         | AMBIL DATA KONSULTASI
         |--------------------------------------------------------------------------
-        | Menampilkan consultation dimana user menjadi:
-        | - caller
-        | - receiver
+        | Menampilkan seluruh riwayat konsultasi dimana user menjadi:
+        | - Caller
+        | - Receiver
         |--------------------------------------------------------------------------
         */
         $consultations = Consultation::with([
             'caller',
             'receiver',
         ])
-            ->where('caller_id', $user->id)
-            ->orWhere('receiver_id', $user->id)
-            ->orderBy('created_at', 'desc')
+            ->where(function ($query) use ($user) {
+
+                $query->where('caller_id', $user->id)
+                    ->orWhere('receiver_id', $user->id);
+
+            })
+            ->latest()
             ->get();
 
         /*
@@ -57,14 +54,6 @@ class ConsultationController extends Controller
         ]);
     }
 
-    /**
-     * --------------------------------------------------------------------------
-     * DETAIL KONSULTASI
-     * --------------------------------------------------------------------------
-     * Menampilkan detail consultation berdasarkan ID.
-     * Hanya caller atau receiver yang dapat mengakses.
-     * --------------------------------------------------------------------------
-     */
     public function consultationDetail(Request $request, $id)
     {
         /*
@@ -76,7 +65,9 @@ class ConsultationController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | AMBIL DETAIL CONSULTATION
+        | AMBIL DETAIL KONSULTASI
+        |--------------------------------------------------------------------------
+        | Hanya caller atau receiver yang dapat melihat detail konsultasi.
         |--------------------------------------------------------------------------
         */
         $consultation = Consultation::with([
@@ -88,6 +79,7 @@ class ConsultationController extends Controller
 
                 $query->where('caller_id', $user->id)
                     ->orWhere('receiver_id', $user->id);
+
             })
             ->first();
 
@@ -116,17 +108,6 @@ class ConsultationController extends Controller
         ]);
     }
 
-    /**
-     * --------------------------------------------------------------------------
-     * REQUEST VIDEO CALL
-     * --------------------------------------------------------------------------
-     * Membuat permintaan video call baru.
-     *
-     * Jika user adalah:
-     * - konseli  → otomatis mencari konselor berdasarkan puskesmas
-     * - selain itu → receiver dipilih manual
-     * --------------------------------------------------------------------------
-     */
     public function requestCall(Request $request)
     {
         /*
@@ -151,7 +132,9 @@ class ConsultationController extends Controller
             $receiver = User::where([
                 'puskesmas_id' => $user->puskesmas_id,
                 'role' => 'konselor',
-            ])->first();
+            ])
+                ->where('is_active', 1)
+                ->first();
 
             /*
             |--------------------------------------------------------------------------
@@ -185,7 +168,7 @@ class ConsultationController extends Controller
                 'receiver_id' => 'required|exists:users,id',
             ]);
 
-            $receiverId = $request->input('receiver_id');
+            $receiverId = $request->receiver_id;
 
             /*
             |--------------------------------------------------------------------------
@@ -219,6 +202,19 @@ class ConsultationController extends Controller
                     'message' => 'Penerima konsultasi tidak ditemukan',
                 ], 404);
             }
+
+            /*
+            |--------------------------------------------------------------------------
+            | RECEIVER TIDAK AKTIF
+            |--------------------------------------------------------------------------
+            */
+            if (! $receiver->is_active) {
+
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Penerima konsultasi sedang tidak aktif',
+                ], 400);
+            }
         }
 
         /*
@@ -230,18 +226,25 @@ class ConsultationController extends Controller
         */
         $existingConsultation = Consultation::where(function ($query) use ($user, $receiverId) {
 
-            $query->where('caller_id', $user->id)
-                ->where('receiver_id', $receiverId);
+            $query
+                ->where(function ($q) use ($user, $receiverId) {
 
-        })->orWhere(function ($query) use ($user, $receiverId) {
+                    $q->where('caller_id', $user->id)
+                        ->where('receiver_id', $receiverId);
 
-            $query->where('caller_id', $receiverId)
-                ->where('receiver_id', $user->id);
+                })
+                ->orWhere(function ($q) use ($user, $receiverId) {
 
-        })->whereIn('status', [
-            'calling',
-            'accepted',
-        ])
+                    $q->where('caller_id', $receiverId)
+                        ->where('receiver_id', $user->id);
+
+                });
+
+        })
+            ->whereIn('status', [
+                'calling',
+                'accepted',
+            ])
             ->latest()
             ->first();
 
@@ -283,21 +286,10 @@ class ConsultationController extends Controller
         | MEMBUAT CHANNEL NAME AGORA
         |--------------------------------------------------------------------------
         */
-        $channelName =
-            'consult_'.
-            $user->id.'_'.
-            $receiverId.'_'.
-            time();
-
-        /*
-        |--------------------------------------------------------------------------
-        | TOKEN AGORA
-        |--------------------------------------------------------------------------
-        | Sementara menggunakan TEMP_TOKEN.
-        | Nanti dapat diganti menggunakan AgoraService.
-        |--------------------------------------------------------------------------
-        */
-        $token = 'TEMP_TOKEN';
+        $agora = AgoraService::generateCallData(
+            $user->id,
+            $receiverId
+        );
 
         /*
         |--------------------------------------------------------------------------
@@ -307,8 +299,8 @@ class ConsultationController extends Controller
         $consultation = Consultation::create([
             'caller_id' => $user->id,
             'receiver_id' => $receiverId,
-            'channel_name' => $channelName,
-            'token' => $token,
+            'channel_name' => $agora['channel_name'],
+            'token' => $agora['token'],
             'call_type' => 'video',
             'status' => 'calling',
         ]);
@@ -325,7 +317,7 @@ class ConsultationController extends Controller
             'type' => 'incoming_call',
             'data' => [
                 'consultation_id' => $consultation->id,
-                'channel_name' => $channelName,
+                'channel_name' => $consultation->channel_name,
             ],
         ]);
 
@@ -341,13 +333,6 @@ class ConsultationController extends Controller
         ]);
     }
 
-    /**
-     * --------------------------------------------------------------------------
-     * ACCEPT VIDEO CALL
-     * --------------------------------------------------------------------------
-     * Receiver menerima panggilan video.
-     * --------------------------------------------------------------------------
-     */
     public function acceptCall(Request $request)
     {
         /*
@@ -407,7 +392,7 @@ class ConsultationController extends Controller
         | VALIDASI STATUS
         |--------------------------------------------------------------------------
         */
-        if ($consultation->status != 'calling') {
+        if ($consultation->status !== 'calling') {
 
             return response()->json([
                 'status' => false,
@@ -434,7 +419,7 @@ class ConsultationController extends Controller
             'user_id' => $consultation->caller_id,
             'title' => 'Video Call Diterima',
             'body' => $user->name.' menerima panggilan Anda',
-            'type' => 'consultation',
+            'type' => 'call_accepted',
             'data' => [
                 'consultation_id' => $consultation->id,
                 'channel_name' => $consultation->channel_name,
@@ -456,13 +441,6 @@ class ConsultationController extends Controller
         ]);
     }
 
-    /**
-     * --------------------------------------------------------------------------
-     * REJECT VIDEO CALL
-     * --------------------------------------------------------------------------
-     * Receiver menolak panggilan video.
-     * --------------------------------------------------------------------------
-     */
     public function rejectCall(Request $request)
     {
         /*
@@ -489,9 +467,20 @@ class ConsultationController extends Controller
         $consultation = Consultation::with([
             'caller',
             'receiver',
-        ])->findOrFail(
-            $request->consultation_id
-        );
+        ])->find($request->consultation_id);
+
+        /*
+        |--------------------------------------------------------------------------
+        | JIKA CONSULTATION TIDAK DITEMUKAN
+        |--------------------------------------------------------------------------
+        */
+        if (! $consultation) {
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Konsultasi tidak ditemukan',
+            ], 404);
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -511,7 +500,7 @@ class ConsultationController extends Controller
         | VALIDASI STATUS
         |--------------------------------------------------------------------------
         */
-        if ($consultation->status != 'calling') {
+        if ($consultation->status !== 'calling') {
 
             return response()->json([
                 'status' => false,
@@ -539,7 +528,7 @@ class ConsultationController extends Controller
             'user_id' => $consultation->caller_id,
             'title' => 'Video Call Ditolak',
             'body' => $user->name.' menolak panggilan Anda',
-            'type' => 'missed_call',
+            'type' => 'call_rejected',
             'data' => [
                 'consultation_id' => $consultation->id,
                 'channel_name' => $consultation->channel_name,
@@ -554,6 +543,146 @@ class ConsultationController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Panggilan berhasil ditolak',
+            'data' => $consultation->fresh([
+                'caller',
+                'receiver',
+            ]),
+        ]);
+    }
+
+    public function endCall(Request $request)
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | USER LOGIN
+        |--------------------------------------------------------------------------
+        */
+        $user = $request->attributes->get('user');
+
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDASI INPUT
+        |--------------------------------------------------------------------------
+        */
+        $request->validate([
+            'consultation_id' => 'required|exists:consultations,id',
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | AMBIL CONSULTATION
+        |--------------------------------------------------------------------------
+        */
+        $consultation = Consultation::with([
+            'caller',
+            'receiver',
+        ])->find($request->consultation_id);
+
+        /*
+        |--------------------------------------------------------------------------
+        | JIKA CONSULTATION TIDAK DITEMUKAN
+        |--------------------------------------------------------------------------
+        */
+        if (! $consultation) {
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Konsultasi tidak ditemukan',
+            ], 404);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDASI AKSES
+        |--------------------------------------------------------------------------
+        | Hanya caller atau receiver yang dapat mengakhiri panggilan.
+        |--------------------------------------------------------------------------
+        */
+        if (
+            $consultation->caller_id != $user->id &&
+            $consultation->receiver_id != $user->id
+        ) {
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Anda tidak memiliki akses untuk mengakhiri panggilan ini',
+            ], 403);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDASI STATUS
+        |--------------------------------------------------------------------------
+        */
+        if (! in_array($consultation->status, [
+            'calling',
+            'accepted',
+        ], true)) {
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Panggilan sudah berakhir',
+            ], 400);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | HITUNG DURASI
+        |--------------------------------------------------------------------------
+        */
+        $duration = 0;
+
+        if ($consultation->started_at) {
+
+            $duration = now()->diffInSeconds(
+                $consultation->started_at
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | UPDATE CONSULTATION
+        |--------------------------------------------------------------------------
+        */
+        $consultation->update([
+            'status' => 'ended',
+            'ended_at' => now(),
+            'duration' => $duration,
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | TENTUKAN PENERIMA NOTIFIKASI
+        |--------------------------------------------------------------------------
+        */
+        $receiverId = $consultation->caller_id == $user->id
+            ? $consultation->receiver_id
+            : $consultation->caller_id;
+
+        /*
+        |--------------------------------------------------------------------------
+        | SIMPAN NOTIFICATION
+        |--------------------------------------------------------------------------
+        */
+        Notification::create([
+            'user_id' => $receiverId,
+            'title' => 'Video Call Berakhir',
+            'body' => $user->name.' mengakhiri panggilan',
+            'type' => 'call_ended',
+            'data' => [
+                'consultation_id' => $consultation->id,
+                'channel_name' => $consultation->channel_name,
+            ],
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESPONSE
+        |--------------------------------------------------------------------------
+        */
+        return response()->json([
+            'status' => true,
+            'message' => 'Panggilan berhasil diakhiri',
             'data' => $consultation->fresh([
                 'caller',
                 'receiver',

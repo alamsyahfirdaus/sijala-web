@@ -2,99 +2,98 @@
 
 namespace App\Services\Agora;
 
-use Exception;
+use App\Services\Agora\DynamicKey\RtcTokenBuilder2;
 
 class AgoraService
 {
     /**
      * --------------------------------------------------------------------------
+     * DEFAULT TOKEN EXPIRE TIME
+     * --------------------------------------------------------------------------
+     */
+    public const TOKEN_EXPIRE_SECONDS = 3600;
+
+    /**
+     * --------------------------------------------------------------------------
+     * GET AGORA APP ID
+     * --------------------------------------------------------------------------
+     */
+    public static function getAppId(): string
+    {
+        return (string) config('services.agora.app_id');
+    }
+
+    /**
+     * --------------------------------------------------------------------------
+     * GET AGORA APP CERTIFICATE
+     * --------------------------------------------------------------------------
+     */
+    protected static function getAppCertificate(): string
+    {
+        return (string) config('services.agora.app_certificate');
+    }
+
+    /**
+     * --------------------------------------------------------------------------
+     * VALIDATE AGORA CONFIGURATION
+     * --------------------------------------------------------------------------
+     *
+     * @throws \Exception
+     *                    --------------------------------------------------------------------------
+     */
+    protected static function validateConfiguration(): void
+    {
+        if (blank(self::getAppId())) {
+            throw new \Exception(
+                'AGORA_APP_ID belum dikonfigurasi.'
+            );
+        }
+
+        if (blank(self::getAppCertificate())) {
+            throw new \Exception(
+                'AGORA_APP_CERTIFICATE belum dikonfigurasi.'
+            );
+        }
+    }
+
+    /**
+     * --------------------------------------------------------------------------
      * GENERATE RTC TOKEN
      * --------------------------------------------------------------------------
-     * Membuat token RTC Agora untuk kebutuhan:
+     *
+     * Digunakan untuk:
      * - Video Call
      * - Voice Call
-     * - Real-Time Communication
+     * - Real-Time Communication (RTC)
      *
-     * Token akan digunakan oleh Flutter saat melakukan:
      *
-     * engine.joinChannel(
-     *   token: token,
-     *   channelId: channelName,
-     *   uid: uid,
-     *   options: ...
-     * );
      *
-     * --------------------------------------------------------------------------
-     *
-     * @param string $channelName
-     * Nama channel Agora.
-     *
-     * @param int|string $uid
-     * UID user Agora.
-     * Gunakan 0 jika UID akan dibuat otomatis oleh Agora.
-     *
-     * @param int $expireSeconds
-     * Masa berlaku token dalam detik.
-     *
-     * @return string
-     *
-     * @throws Exception
-     * --------------------------------------------------------------------------
+     * @throws \Exception
+     *                    --------------------------------------------------------------------------
      */
     public static function generateRtcToken(
         string $channelName,
         int|string $uid = 0,
-        int $expireSeconds = 3600
+        int $expireSeconds = self::TOKEN_EXPIRE_SECONDS
     ): string {
 
-        $appId = env('AGORA_APP_ID');
-        $appCertificate = env('AGORA_APP_CERTIFICATE');
+        self::validateConfiguration();
 
-        /*
-        |--------------------------------------------------------------------------
-        | Validasi Konfigurasi Agora
-        |--------------------------------------------------------------------------
-        */
-        if (empty($appId) || empty($appCertificate)) {
-            throw new Exception(
-                'AGORA_APP_ID atau AGORA_APP_CERTIFICATE belum dikonfigurasi pada file .env'
-            );
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Validasi Channel
-        |--------------------------------------------------------------------------
-        */
-        if (empty(trim($channelName))) {
-            throw new Exception(
+        if (blank(trim($channelName))) {
+            throw new \Exception(
                 'Nama channel Agora tidak boleh kosong.'
             );
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Expired Timestamp
-        |--------------------------------------------------------------------------
-        */
-        $currentTimestamp = time();
+        $expireTimestamp = time() + $expireSeconds;
 
-        $privilegeExpiredTs =
-            $currentTimestamp +
-            $expireSeconds;
-
-        /*
-        |--------------------------------------------------------------------------
-        | Generate RTC Token
-        |--------------------------------------------------------------------------
-        */
         return RtcTokenBuilder2::buildTokenWithUid(
-            $appId,
-            $appCertificate,
+            self::getAppId(),
+            self::getAppCertificate(),
             $channelName,
             (string) $uid,
-            ServiceRtc::ROLE_PUBLISHER,
-            $privilegeExpiredTs
+            RtcTokenBuilder2::ROLE_PUBLISHER,
+            $expireTimestamp
         );
     }
 
@@ -102,24 +101,18 @@ class AgoraService
      * --------------------------------------------------------------------------
      * GENERATE VIDEO CALL TOKEN
      * --------------------------------------------------------------------------
-     * Shortcut khusus Video Call SIJALA.
      *
-     * Masa berlaku default:
-     * 1 Jam
-     * --------------------------------------------------------------------------
      *
-     * @param string $channelName
-     * @return string
-     * --------------------------------------------------------------------------
+     *
+     * @throws \Exception
+     *                    --------------------------------------------------------------------------
      */
     public static function generateVideoCallToken(
         string $channelName
     ): string {
 
         return self::generateRtcToken(
-            channelName: $channelName,
-            uid: 0,
-            expireSeconds: 3600
+            channelName: $channelName
         );
     }
 
@@ -127,42 +120,30 @@ class AgoraService
      * --------------------------------------------------------------------------
      * GENERATE VOICE CALL TOKEN
      * --------------------------------------------------------------------------
-     * Digunakan jika suatu saat aplikasi
-     * membutuhkan Voice Call tanpa video.
-     * --------------------------------------------------------------------------
      *
-     * @param string $channelName
-     * @return string
-     * --------------------------------------------------------------------------
+     *
+     *
+     * @throws \Exception
+     *                    --------------------------------------------------------------------------
      */
     public static function generateVoiceCallToken(
         string $channelName
     ): string {
 
         return self::generateRtcToken(
-            channelName: $channelName,
-            uid: 0,
-            expireSeconds: 3600
+            channelName: $channelName
         );
     }
 
     /**
      * --------------------------------------------------------------------------
-     * GENERATE CHANNEL NAME
+     * GENERATE UNIQUE CHANNEL
      * --------------------------------------------------------------------------
+     *
      * Format:
      *
      * consult_{caller}_{receiver}_{timestamp}
      *
-     * Contoh:
-     *
-     * consult_5_12_1748500000
-     *
-     * --------------------------------------------------------------------------
-     *
-     * @param int $callerId
-     * @param int $receiverId
-     * @return string
      * --------------------------------------------------------------------------
      */
     public static function generateChannelName(
@@ -171,7 +152,7 @@ class AgoraService
     ): string {
 
         return sprintf(
-            'consult_%s_%s_%s',
+            'consult_%d_%d_%d',
             $callerId,
             $receiverId,
             time()
@@ -182,18 +163,11 @@ class AgoraService
      * --------------------------------------------------------------------------
      * GENERATE FIXED CHANNEL
      * --------------------------------------------------------------------------
-     * Digunakan jika satu konsultasi
-     * harus selalu masuk ke channel yang sama.
      *
-     * Contoh:
+     * Format:
      *
      * consult_5_12
      *
-     * --------------------------------------------------------------------------
-     *
-     * @param int $callerId
-     * @param int $receiverId
-     * @return string
      * --------------------------------------------------------------------------
      */
     public static function generateFixedChannel(
@@ -203,13 +177,13 @@ class AgoraService
 
         $users = [
             $callerId,
-            $receiverId
+            $receiverId,
         ];
 
         sort($users);
 
         return sprintf(
-            'consult_%s_%s',
+            'consult_%d_%d',
             $users[0],
             $users[1]
         );
@@ -217,20 +191,52 @@ class AgoraService
 
     /**
      * --------------------------------------------------------------------------
-     * GET TOKEN EXPIRATION
-     * --------------------------------------------------------------------------
-     * Digunakan untuk mengirim informasi
-     * kapan token akan berakhir.
-     * --------------------------------------------------------------------------
-     *
-     * @param int $expireSeconds
-     * @return int
+     * GET TOKEN EXPIRED TIMESTAMP
      * --------------------------------------------------------------------------
      */
     public static function getExpiredTimestamp(
-        int $expireSeconds = 3600
+        int $expireSeconds = self::TOKEN_EXPIRE_SECONDS
     ): int {
 
         return time() + $expireSeconds;
+    }
+
+    /**
+     * --------------------------------------------------------------------------
+     * GENERATE COMPLETE CALL DATA
+     * --------------------------------------------------------------------------
+     *
+     * Digunakan oleh ConsultationController.
+     *
+     *
+     *
+     * @throws \Exception
+     *                    --------------------------------------------------------------------------
+     */
+    public static function generateCallData(
+        int $callerId,
+        int $receiverId
+    ): array {
+
+        $channelName = self::generateChannelName(
+            $callerId,
+            $receiverId
+        );
+
+        return [
+
+            'app_id' => self::getAppId(),
+
+            'channel_name' => $channelName,
+
+            'token' => self::generateVideoCallToken(
+                $channelName
+            ),
+
+            'uid' => 0,
+
+            'expired_at' => self::getExpiredTimestamp(),
+
+        ];
     }
 }

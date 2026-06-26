@@ -1,21 +1,19 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ConsultationController;
+use App\Http\Controllers\Api\CounselingChatController;
 use App\Http\Controllers\Api\CounselingController;
-use App\Http\Controllers\Api\CounselorController;
 use App\Http\Controllers\Api\ElderlyCounseleeController;
 use App\Http\Controllers\Api\EmpowermentController;
+use App\Http\Controllers\Api\EvaluationController;
 use App\Http\Controllers\Api\FallRiskController;
 use App\Http\Controllers\Api\PuskesmasController;
 use App\Http\Controllers\Api\QaController;
-use App\Http\Controllers\Api\CounselingChatController;
 use App\Http\Controllers\Api\RegionController;
-use App\Http\Controllers\Api\EvaluationController;
-use App\Http\Controllers\Api\ConsultationController;
 use App\Http\Controllers\Api\UserDeviceController;
-use Illuminate\Http\Request;
+use App\Services\Agora\AgoraService;
 use Illuminate\Support\Facades\Route;
-use Symfony\Component\Routing\Router;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,10 +27,25 @@ use Symfony\Component\Routing\Router;
 Route::get('/ping', function () {
     return response()->json([
         'status' => true,
-        'message' => 'API OK'
+        'message' => 'API OK',
     ]);
 });
 
+Route::get('/agora/test', function () {
+
+    $channel = 'test_channel';
+
+    $token = AgoraService::generateVideoCallToken($channel);
+
+    return response()->json([
+        'status' => true,
+        'app_id' => AgoraService::getAppId(),
+        'channel' => $channel,
+        'token' => $token,
+        'expired_at' => AgoraService::getExpiredTimestamp(),
+    ]);
+
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -51,7 +64,6 @@ Route::prefix('puskesmas')->group(function () {
     Route::match(['get', 'post'], '/search', [PuskesmasController::class, 'search']);
 });
 
-
 /*
 |--------------------------------------------------------------------------
 | PROTECTED API (BUTUH LOGIN)
@@ -63,10 +75,10 @@ Route::get('/image/{filename}', function ($filename) {
     $filename = basename($filename);
 
     // Path file di folder public/images
-    $path = public_path('images/' . $filename);
+    $path = public_path('images/'.$filename);
 
     // Jika file tidak ditemukan
-    if (!file_exists($path)) {
+    if (! file_exists($path)) {
         return response()->json([
             'status' => false,
             'message' => 'File tidak ditemukan',
@@ -110,7 +122,7 @@ Route::middleware('api.auth')->group(function () {
         Route::get('/count/{counseleeId?}', [CounselingController::class, 'countCounselingSessions']);
         Route::get('/{elderlyCounseleeId}/show', [CounselingController::class, 'getCounselingSessionsById']);
         Route::get('/today', [CounselingController::class, 'getTodayCounselingSessions']);
-        Route::get('/statistics',[CounselingController::class, 'getCounselingStatistics']);
+        Route::get('/statistics', [CounselingController::class, 'getCounselingStatistics']);
         Route::match(['post', 'put'], '/{counselingSessionId}/complete', [CounselingController::class, 'completeCounselingSession']);
     });
 
