@@ -28,6 +28,7 @@ return new class extends Migration
             // Jenis notifikasi
             $table->enum('type', [
                 'incoming_call',
+                'call_accepted',
                 'missed_call',
                 'message',
                 'consultation',

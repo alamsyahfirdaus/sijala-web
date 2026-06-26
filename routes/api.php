@@ -163,7 +163,10 @@ Route::middleware('api.auth')->group(function () {
     Route::prefix('consultations')->group(function () {
         Route::get('/', [ConsultationController::class, 'index']);
         Route::get('/{id}/show', [ConsultationController::class, 'consultationDetail']);
+        // Video Call
         Route::post('/request-call', [ConsultationController::class, 'requestCall']);
+        Route::get('/incoming-call', [ConsultationController::class, 'incomingCall']);
+        Route::get('/{id}/status', [ConsultationController::class, 'callStatus']);
         Route::post('/accept-call', [ConsultationController::class, 'acceptCall']);
         Route::post('/reject-call', [ConsultationController::class, 'rejectCall']);
         Route::post('/end-call', [ConsultationController::class, 'endCall']);
