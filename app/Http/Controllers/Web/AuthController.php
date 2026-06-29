@@ -24,15 +24,15 @@ class AuthController extends Controller
             'password' => ['required', 'string', 'min:6'],
         ], [
             'username.required' => 'Username wajib diisi.',
-            'username.min' => 'Username minimal 3 karakter.',
-            'username.max' => 'Username maksimal 50 karakter.',
+            'username.min'      => 'Username minimal 3 karakter.',
+            'username.max'      => 'Username maksimal 50 karakter.',
 
             'password.required' => 'Password wajib diisi.',
-            'password.min' => 'Password minimal 6 karakter.',
+            'password.min'      => 'Password minimal 6 karakter.',
         ]);
 
         // =========================================================
-        // CEK USER
+        // CEK USER BERDASARKAN USERNAME
         // =========================================================
         $user = User::where('username', $request->username)->first();
 
@@ -52,7 +52,17 @@ class AuthController extends Controller
         }
 
         // =========================================================
-        // LOGIN
+        // CEK ROLE
+        // HANYA ADMIN YANG BOLEH LOGIN KE WEB ADMIN
+        // =========================================================
+        if ($user->role !== 'admin') {
+            return back()
+                ->withInput($request->only('username'))
+                ->with('error', 'Anda tidak memiliki hak akses ke halaman administrator.');
+        }
+
+        // =========================================================
+        // PROSES LOGIN
         // =========================================================
         if (! Auth::attempt([
             'username' => $request->username,
@@ -66,26 +76,40 @@ class AuthController extends Controller
 
         // =========================================================
         // REGENERATE SESSION
+        // MENCEGAH SESSION FIXATION
         // =========================================================
         $request->session()->regenerate();
 
         // =========================================================
-        // REDIRECT DASHBOARD
+        // REDIRECT KE DASHBOARD
         // =========================================================
         return redirect()
             ->intended(route('home'))
-            ->with('success', 'Login berhasil.');
+            ->with('success', 'Selamat datang, ' . Auth::user()->name . '.');
     }
 
     public function logout(Request $request)
     {
+        // =========================================================
+        // LOGOUT USER
+        // =========================================================
         Auth::logout();
 
+        // =========================================================
+        // HAPUS SEMUA SESSION
+        // =========================================================
         $request->session()->invalidate();
+
+        // =========================================================
+        // GENERATE TOKEN BARU
+        // =========================================================
         $request->session()->regenerateToken();
 
+        // =========================================================
+        // REDIRECT KE HALAMAN LOGIN
+        // =========================================================
         return redirect()
             ->route('landing')
-            ->with('success', 'Logout berhasil.');
+            ->with('success', 'Anda berhasil logout.');
     }
 }

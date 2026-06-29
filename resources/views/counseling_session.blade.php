@@ -69,7 +69,9 @@
                         <th>Tanggal</th>
                         <th>Risiko Jatuh</th>
                         <th>Perberdayaan Keluarga</th>
-                        <th style="width: 5%;">Aksi</th>
+                        @if (Auth::user()->username == 'alamsyahfirdaus')
+                            <th style="width: 5%;">Aksi</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
@@ -98,31 +100,33 @@
                                     -
                                 @endif
                             </td>
-                            <td>
-                                <div class="btn-group btn-group-sm">
-                                    <button type="button" class="btn btn-primary dropdown-toggle dropdown-menu-right"
-                                        data-bs-toggle="dropdown" aria-expanded="false">
-                                        Aksi
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a href="javascript:void(0)" class="dropdown-item btn-edit-score"
-                                                data-type="fall-risk" data-id="{{$screening['fallRisk']->id }}"
-                                                data-score="{{ $screening['fallRisk']->total_score ?? 0 }}">
-                                                Ubah Skor Risiko Jatuh
-                                            </a></li>
-                                        <li>
-                                            <hr class="dropdown-divider" />
-                                        </li>
-                                        <li>
-                                            <a href="javascript:void(0)" class="dropdown-item btn-edit-score"
-                                                data-type="empowerment" data-id="{{ $screening['empowerment']->id }}"
-                                                data-score="{{ $screening['empowerment']->total_score ?? 0 }}">
-                                                Ubah Skor Pemberdayaan
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </td>
+                            @if (Auth::user()->username == 'alamsyahfirdaus')
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-primary dropdown-toggle dropdown-menu-right"
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                            Aksi
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a href="javascript:void(0)" class="dropdown-item btn-edit-score"
+                                                    data-type="fall-risk" data-id="{{ $screening['fallRisk']->id }}"
+                                                    data-score="{{ $screening['fallRisk']->total_score ?? 0 }}">
+                                                    Ubah Skor Risiko Jatuh
+                                                </a></li>
+                                            <li>
+                                                <hr class="dropdown-divider" />
+                                            </li>
+                                            <li>
+                                                <a href="javascript:void(0)" class="dropdown-item btn-edit-score"
+                                                    data-type="empowerment" data-id="{{ $screening['empowerment']->id }}"
+                                                    data-score="{{ $screening['empowerment']->total_score ?? 0 }}">
+                                                    Ubah Skor Pemberdayaan
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            @endif
                         </tr>
                     @endforeach
                 </tbody>
@@ -143,7 +147,9 @@
                         <th>Topik</th>
                         <th>Skor</th>
                         <th>Kategori</th>
-                        <th style="width: 5%;">Aksi</th>
+                        @if (Auth::user()->username == 'alamsyahfirdaus')
+                            <th style="width: 5%;">Aksi</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
@@ -174,21 +180,23 @@
                             <td>
                                 {{ $evaluation->category ?? '-' }}
                             </td>
-                            <td>
-                                <div class="btn-group btn-group-sm">
-                                    <button type="button" class="btn btn-primary dropdown-toggle dropdown-menu-right"
-                                        data-bs-toggle="dropdown" aria-expanded="false">
-                                        Aksi
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a href="javascript:void(0)" class="dropdown-item btn-edit-score"
-                                                data-type="evaluation" data-id="{{ $evaluation->id }}"
-                                                data-score="{{ $evaluation->total_score }}">
-                                                Ubah Skor
-                                            </a></li>
-                                    </ul>
-                                </div>
-                            </td>
+                            @if (Auth::user()->username == 'alamsyahfirdaus')
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-primary dropdown-toggle dropdown-menu-right"
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                            Aksi
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a href="javascript:void(0)" class="dropdown-item btn-edit-score"
+                                                    data-type="evaluation" data-id="{{ $evaluation->id }}"
+                                                    data-score="{{ $evaluation->total_score }}">
+                                                    Ubah Skor
+                                                </a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            @endif
                         </tr>
                     @endforeach
                 </tbody>
