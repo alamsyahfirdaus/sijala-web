@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\PuskesmasController;
 use App\Http\Controllers\Api\QaController;
 use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\UserDeviceController;
+use App\Http\Controllers\Api\PresentationController;
 use App\Services\Agora\AgoraService;
 use Illuminate\Support\Facades\Route;
 
@@ -170,6 +171,14 @@ Route::middleware('api.auth')->group(function () {
         Route::post('/accept-call', [ConsultationController::class, 'acceptCall']);
         Route::post('/reject-call', [ConsultationController::class, 'rejectCall']);
         Route::post('/end-call', [ConsultationController::class, 'endCall']);
+    });
+
+    Route::prefix('presentation')->group(function () {
+        Route::post('/share', [PresentationController::class, 'share']);
+        Route::get('/status/{session}', [PresentationController::class, 'status']);
+        Route::post('/pause', [PresentationController::class, 'pause']);
+        Route::post('/resume', [PresentationController::class, 'resume']);
+        Route::post('/stop', [PresentationController::class, 'stop']);
     });
 });
 
