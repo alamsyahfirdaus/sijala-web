@@ -15,51 +15,116 @@ return new class extends Migration
 
             $table->id();
 
-            // Sesi Konseling
-            $table->foreignId('consultation_session_id')
-                ->nullable()
-                ->constrained('counseling_sessions')
-                ->nullOnDelete();
+            /*
+            |--------------------------------------------------------------------------
+            | CONSULTATION
+            |--------------------------------------------------------------------------
+            | Setiap presentasi selalu terhubung dengan satu video call.
+            |--------------------------------------------------------------------------
+            */
+            $table->foreignId('consultation_id')
+                ->constrained('consultations')
+                ->cascadeOnDelete();
 
-            // Materi Edukasi
+            /*
+            |--------------------------------------------------------------------------
+            | EDUCATION CONTENT
+            |--------------------------------------------------------------------------
+            | Materi edukasi yang dibagikan oleh konselor.
+            |--------------------------------------------------------------------------
+            */
             $table->foreignId('education_content_id')
-                ->nullable()
                 ->constrained('education_contents')
-                ->nullOnDelete();
+                ->cascadeOnDelete();
 
-            // Konselor yang membagikan
+            /*
+            |--------------------------------------------------------------------------
+            | PRESENTER
+            |--------------------------------------------------------------------------
+            | User (Konselor) yang membagikan materi.
+            |--------------------------------------------------------------------------
+            */
             $table->foreignId('presenter_id')
-                ->nullable()
+                ->comment('User yang membagikan presentasi')
                 ->constrained('users')
-                ->nullOnDelete();
+                ->cascadeOnDelete();
 
-            // Status Presentasi
+            /*
+            |--------------------------------------------------------------------------
+            | PRESENTATION STATUS
+            |--------------------------------------------------------------------------
+            */
             $table->enum('status', [
                 'playing',
                 'paused',
                 'stopped',
             ])->default('playing');
 
-            // Posisi video (detik)
-            $table->unsignedInteger('current_position')->default(0);
+            /*
+            |--------------------------------------------------------------------------
+            | CURRENT POSITION
+            |--------------------------------------------------------------------------
+            | Posisi materi (detik) apabila berupa video atau slide.
+            |--------------------------------------------------------------------------
+            */
+            $table->unsignedInteger('current_position')
+                ->default(0);
 
-            // Presentasi masih aktif?
-            $table->boolean('is_active')->default(true);
+            /*
+            |--------------------------------------------------------------------------
+            | ACTIVE FLAG
+            |--------------------------------------------------------------------------
+            */
+            $table->boolean('is_active')
+                ->default(true);
 
-            // Waktu mulai
+            /*
+            |--------------------------------------------------------------------------
+            | METADATA
+            |--------------------------------------------------------------------------
+            | Menyimpan informasi tambahan apabila diperlukan.
+            |--------------------------------------------------------------------------
+            */
+            $table->json('metadata')
+                ->nullable();
+
+            /*
+            |--------------------------------------------------------------------------
+            | START / END TIME
+            |--------------------------------------------------------------------------
+            */
             $table->timestamp('started_at')->nullable();
 
-            // Waktu selesai
             $table->timestamp('ended_at')->nullable();
 
             $table->timestamps();
 
-            // Index
-            $table->index('consultation_session_id');
+            /*
+            |--------------------------------------------------------------------------
+            | INDEX
+            |--------------------------------------------------------------------------
+            */
+
+            // Polling status presentasi
+            $table->index([
+                'consultation_id',
+                'is_active',
+            ]);
+
+            // Pause / Resume / Stop
+            $table->index([
+                'consultation_id',
+                'status',
+            ]);
+
+            // Relasi materi
             $table->index('education_content_id');
+
+            // Riwayat presenter
             $table->index('presenter_id');
-            $table->index('status');
-            $table->index('is_active');
+
+            // Riwayat berdasarkan waktu
+            $table->index('started_at');
         });
     }
 

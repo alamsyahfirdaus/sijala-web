@@ -175,7 +175,7 @@ Route::middleware('api.auth')->group(function () {
 
     Route::prefix('presentation')->group(function () {
         Route::post('/share', [PresentationController::class, 'share']);
-        Route::get('/status/{session}', [PresentationController::class, 'status']);
+        Route::get('/status/{consultationId}', [PresentationController::class, 'status']);
         Route::post('/pause', [PresentationController::class, 'pause']);
         Route::post('/resume', [PresentationController::class, 'resume']);
         Route::post('/stop', [PresentationController::class, 'stop']);
