@@ -18,8 +18,8 @@ class CounselingSessionsSeeder extends Seeder
                 'elderly_counselee_id' => 1,
 
                 // Relasi ke user konselor pada tabel users
-                // Pastikan ID 2 adalah user dengan role konselor
-                'counselor_id' => 2,
+                // Pastikan ID 3 adalah user dengan role konselor
+                'counselor_id' => 3,
 
                 // Jenis layanan konseling
                 // chat = konseling melalui pesan teks

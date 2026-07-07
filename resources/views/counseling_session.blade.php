@@ -46,7 +46,9 @@
                 <li
                     class="list-group-item d-flex justify-content-between px-0 {{ $counseling->elderlyCounselee->health_problems ? 'border-bottom' : 'pb-0' }}">
                     <span>Wilayah</span>
-                    <span>Puskesmas {{ $counseling->counselor->puskesmas->name }}</span>
+                    <span>
+                        {{ $counseling->counselor?->puskesmas?->name ? 'Puskesmas ' . $counseling->counselor->puskesmas->name : '-' }}
+                    </span>
                 </li>
             </ul>
             @if ($counseling->elderlyCounselee->health_problems)
