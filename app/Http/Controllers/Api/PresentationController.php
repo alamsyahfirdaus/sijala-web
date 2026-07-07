@@ -97,27 +97,69 @@ class PresentationController extends Controller
             ], 500);
         }
     }
-
+    
     /*
     |--------------------------------------------------------------------------
     | GET PRESENTATION STATUS
     |--------------------------------------------------------------------------
     */
 
-    public function status($consultationId)
+    public function status(int $consultationId)
     {
         try {
 
+            /*
+            |--------------------------------------------------------------------------
+            | DEBUG REQUEST
+            |--------------------------------------------------------------------------
+            */
+
+            Log::info('GET PRESENTATION STATUS', [
+                'consultation_id' => $consultationId,
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | VALIDASI KONSULTASI
+            |--------------------------------------------------------------------------
+            */
+
+            $consultation = Consultation::find($consultationId);
+
+            if (!$consultation) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Video call tidak ditemukan.',
+                ], 404);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | AMBIL PRESENTASI AKTIF
+            |--------------------------------------------------------------------------
+            */
+
             $presentation = ConsultationPresentation::with([
-                'educationContent',
-                'presenter',
-            ])
+                    'consultation',
+                    'educationContent',
+                    'presenter',
+                ])
                 ->active()
                 ->where('consultation_id', $consultationId)
-                ->latest()
+                ->latest('id')
                 ->first();
 
+            /*
+            |--------------------------------------------------------------------------
+            | BELUM ADA PRESENTASI
+            |--------------------------------------------------------------------------
+            */
+
             if (!$presentation) {
+
+                Log::info('PRESENTATION NOT FOUND', [
+                    'consultation_id' => $consultationId,
+                ]);
 
                 return response()->json([
                     'success' => true,
@@ -125,6 +167,27 @@ class PresentationController extends Controller
                     'data'    => null,
                 ]);
             }
+
+            /*
+            |--------------------------------------------------------------------------
+            | DEBUG RESULT
+            |--------------------------------------------------------------------------
+            */
+
+            Log::info('PRESENTATION FOUND', [
+                'presentation_id' => $presentation->id,
+                'consultation_id' => $presentation->consultation_id,
+                'education_content_id' => $presentation->education_content_id,
+                'presenter_id' => $presentation->presenter_id,
+                'status' => $presentation->status,
+                'is_active' => $presentation->is_active,
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | RESPONSE
+            |--------------------------------------------------------------------------
+            */
 
             return response()->json([
                 'success' => true,
@@ -134,18 +197,36 @@ class PresentationController extends Controller
 
         } catch (\Throwable $e) {
 
+            /*
+            |--------------------------------------------------------------------------
+            | LOG ERROR LENGKAP
+            |--------------------------------------------------------------------------
+            */
+
             Log::error('GET PRESENTATION STATUS ERROR', [
-                'message' => $e->getMessage(),
-                'line'    => $e->getLine(),
+                'consultation_id' => $consultationId,
+                'message'         => $e->getMessage(),
+                'line'            => $e->getLine(),
+                'file'            => $e->getFile(),
+                'trace'           => $e->getTraceAsString(),
             ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | RESPONSE ERROR
+            |--------------------------------------------------------------------------
+            | Saat debugging tampilkan pesan asli agar mudah mencari penyebab.
+            | Setelah production bisa diganti menjadi:
+            | 'Terjadi kesalahan server.'
+            |--------------------------------------------------------------------------
+            */
 
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan server.',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
-
     /*
     |--------------------------------------------------------------------------
     | STOP PRESENTATION

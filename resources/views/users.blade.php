@@ -10,94 +10,421 @@
 
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Daftar {{ $title }}</h3>
+
+            <h3 class="card-title mb-0">
+                Daftar {{ $title }}
+            </h3>
+
+            <div class="card-tools">
+                <div class="btn-group btn-group-sm">
+
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        <i class="bx bx-menu me-1"></i> Aksi
+                    </button>
+
+                    <ul class="dropdown-menu dropdown-menu-end">
+
+                        <li>
+                            <a href="javascript:void(0)" class="dropdown-item" id="btnAdd" data-bs-toggle="modal"
+                                data-bs-target="#userModal">
+                                Tambah Pengguna
+                            </a>
+                        </li>
+
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+
+                        <li>
+                            <button href="javascript:void(0)" class="dropdown-item" id="btnEdit" disabled>
+                                Ubah Pengguna
+                            </button>
+                        </li>
+
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+
+                        <li>
+                            <a href="javascript:void(0)" class="dropdown-item text-danger"
+                                data-url="{{ route('user.bulk-delete') }}" id="btnDelete" disabled>
+                                Hapus Pengguna Terpilih
+                            </a>
+                        </li>
+
+                    </ul>
+
+                </div>
+            </div>
+
         </div>
         <div class="card-body table-responsive">
             <table id="table" class="table table-hover align-middle">
                 <thead>
                     <tr>
-                        <th style="width: 5%;">No</th>
-                        <th>Nama</th>
-                        <th>Jenis Kelamin</th>
-                        <th>Nomor HP</th>
+                        <th style="width: 5%; text-align: center;">
+                            <input class="form-check-input" type="checkbox" id="check-all" />
+                        </th>
+                        {{-- <th style="width: 5%;">No</th> --}}
+                        <th>Nama<span style="font-size: 10px; color: #fff;">_</span>Lengkap</th>
+                        <th>Jenis<span style="font-size: 10px; color: #fff;">_</span>Kelamin</th>
+                        <th>Nomor<span style="font-size: 10px; color: #fff;">_</span>HP</th>
                         <th>Role</th>
-                        <th style="width: 5%;">Aksi</th>
+                        <th>Wilayah</th>
+                        {{-- <th style="width: 5%;">Aksi</th> --}}
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($users as $index => $user)
                         <tr>
-                            <td style="text-align: center;">{{ $index + 1 }}</td>
+                            <td class="text-center">
+
+                                <input type="checkbox" class="form-check-input check-item" value="{{ encrypt($user->id) }}"
+                                    data-id="{{ encrypt($user->id) }}"
+                                    data-url="1"
+                                    data-name="{{ $user->name }}" data-username="{{ $user->username }}"
+                                    data-gender="{{ $user->gender }}" data-phone="{{ $user->phone }}"
+                                    data-role="{{ $user->role }}" data-puskesmas="{{ $user->puskesmas_id }}">
+                            </td>
+                            {{-- <td class="text-center">{{ $loop->iteration }}</td> --}}
                             <td>
-                                <a href="javascript:void(0)" class="text-decoration-none">
-                                    {{ $user->name }}
-                                </a>
+                                {{ $user->name }}
                                 <br>
                                 <span class="text-muted" style="font-size: 12px;">Username:
                                     {{ $user->username }}</span>
                             </td>
-                            <td> {{ $user->gender ? ($user->gender == 'L' ? 'Laki-laki' : 'Perempuan') : '-' }}
+                            <td> {{ $user->gender ? ($user->gender == 'L' ? 'Laki-laki' : ($user->gender == 'P' ? 'Perempuan' : '-')) : '-' }}
                             </td>
                             <td>{{ $user->phone ?? '-' }}</td>
                             <td>{{ ucwords($user->role) }}</td>
-                            <td>
+                            <td>Puskesmas {{ $user->puskesmas->name ?? '-' }}
+                                <br>
+                                <span class="text-muted"
+                                    style="font-size: 12px;">{{ $user->puskesmas->village->name ?? '-' }},
+                                    {{ $user->puskesmas->village->district->name ?? '-' }},
+                                    {{ $user->puskesmas->village->district->regency->name ?? '-' }}</span>
+                            </td>
+                            {{-- <td>
                                 <div class="btn-group btn-group-sm">
                                     <button type="button" class="btn btn-primary dropdown-toggle dropdown-menu-right"
                                         data-bs-toggle="dropdown" aria-expanded="false">
                                         Aksi
                                     </button>
                                     <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="javascript:void(0)">Lihat Detail</a></li>
+                                        <li>
+                                            <a class="dropdown-item" href="{{ route('user.show', encrypt($user->id)) }}">
+                                                <i class="bx bx-show me-1"></i> Lihat Detail
+                                            </a>
+                                        </li>
                                         <li>
                                             <hr class="dropdown-divider" />
                                         </li>
                                         <li>
-                                            <a class="dropdown-item" href="javascript:void(0)">Hapus</a>
+                                            <a class="dropdown-item" href="{{ route('user.delete', encrypt($user->id)) }}"
+                                                onclick="return confirm('Apakah Anda yakin ingin menghapus pengguna ini?')">
+                                                <i class="bx bx-trash me-1"></i> Hapus
+                                            </a>
                                         </li>
                                     </ul>
                                 </div>
-                            </td>
+                            </td> --}}
                         </tr>
                     @endforeach
                 </tbody>
             </table>
         </div>
     </div>
-    {{-- @push('scripts')
-        <script>
-            $(document).ready(function() {
 
-                $('#userTable').DataTable({
+    <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
 
-                    responsive: true,
-                    pageLength: 10,
-                    lengthMenu: [
-                        [10, 25, 50, 100, -1],
-                        [10, 25, 50, 100, "Semua"]
-                    ],
+            <form id="userForm" method="POST">
+                @csrf
 
-                    language: {
-                        processing: "Sedang memproses...",
-                        search: "Pencarian:",
-                        lengthMenu: "Tampilkan _MENU_ data per halaman",
-                        info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-                        infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
-                        infoFiltered: "(disaring dari _MAX_ total data)",
-                        zeroRecords: "Data tidak ditemukan",
-                        emptyTable: "Tidak ada data tersedia",
-                        loadingRecords: "Memuat data...",
-                        paginate: {
-                            first: '<i class="bi bi-chevron-bar-left"></i>',
-                            previous: '<i class="bi bi-chevron-left"></i>',
-                            next: '<i class="bi bi-chevron-right"></i>',
-                            last: '<i class="bi bi-chevron-bar-right"></i>'
-                        }
-                    }
+                <input type="hidden" name="_method" id="form_method" value="POST">
+                <input type="hidden" name="id" id="user_id">
+
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="userModalLabel">
+                            Tambah Pengguna
+                        </h5>
+
+                        <button type="button" class="btn-close" data-bs-dismiss="modal">
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nama Lengkap</label>
+                                <input type="text" class="form-control" id="name" name="name">
+                                <div class="invalid-feedback"></div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Username</label>
+                                <input type="text" class="form-control" id="username" name="username">
+                                <div class="invalid-feedback"></div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" name="password">
+                                <small class="text-muted" id="passwordInfo">
+                                    Kosongkan jika tidak ingin mengubah password.
+                                </small>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Konfirmasi Password</label>
+                                <input type="password" class="form-control" id="password_confirmation"
+                                    name="password_confirmation">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Jenis Kelamin</label>
+                                <select class="form-select" id="gender" name="gender">
+                                    <option value="">-- Pilih --</option>
+                                    <option value="L">Laki-laki</option>
+                                    <option value="P">Perempuan</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nomor HP</label>
+                                <input type="text" class="form-control" id="phone" name="phone">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Role</label>
+                                <select class="form-select" id="role" name="role">
+                                    <option value="">-- Pilih Role --</option>
+                                    <option value="konseli">Konseli</option>
+                                    <option value="konselor">Konselor</option>
+                                </select>
+                            </div>
+
+                            {{-- <div class="col-md-6 mb-3">
+                                <label class="form-label">Puskesmas</label>
+
+                                <select class="form-select" id="puskesmas_id" name="puskesmas_id">
+
+                                    <option value="">-- Pilih Puskesmas --</option>
+
+                                    @foreach ($puskesmas as $item)
+                                        <option value="{{ $item->id }}">
+                                            {{ $item->name }}
+                                        </option>
+                                    @endforeach
+
+                                </select>
+                            </div> --}}
+
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                            Batal
+                        </button>
+
+                        <button type="submit" class="btn btn-primary btn-sm" id="btnSaveUser">
+                            Simpan
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+    <script>
+        $(function() {
+
+            /*
+            |--------------------------------------------------------------------------
+            | UPDATE SELECTION
+            |--------------------------------------------------------------------------
+            */
+
+            function updateSelection() {
+
+                const total = $('.check-item').length;
+                const checked = $('.check-item:checked').length;
+
+                $('#check-all').prop(
+                    'checked',
+                    total > 0 && total === checked
+                );
+
+                // Edit
+                $('#btnEdit')
+                    .prop('disabled', checked !== 1)
+                    .toggleClass('text-primary', checked === 1)
+                    .toggleClass('text-secondary', checked !== 1);
+
+                // Delete
+                $('#btnDelete')
+                    .prop('disabled', checked === 0)
+                    .toggleClass('text-success', checked > 0)
+                    .toggleClass('text-danger', checked === 0)
+                    .html(
+                        (checked > 0 ?
+                            'Hapus ' + checked + ' Pengguna' :
+                            'Hapus Pengguna Terpilih')
+                    );
+
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | TAMBAH
+            |--------------------------------------------------------------------------
+            */
+
+            $('#btnAdd').on('click', function() {
+
+                $('#userModalLabel').text('Tambah Pengguna');
+
+                $('#userForm')[0].reset();
+
+                $('#userForm')
+                    .attr('action', $(this).data('url'));
+
+                $('#form_method').val('POST');
+
+                $('#user_id').val('');
+
+                $('#userModal').modal('show');
+
+            });
+
+            /*
+            |--------------------------------------------------------------------------
+            | UBAH
+            |--------------------------------------------------------------------------
+            */
+
+            $('#btnEdit').on('click', function() {
+
+                const item = $('.check-item:checked');
+
+                if (item.length !== 1) {
+                    return;
+                }
+
+                $('#userModalLabel').text('Ubah Pengguna');
+
+                $('#user_id').val(item.data('id'));
+
+                $('#name').val(item.data('name'));
+                $('#username').val(item.data('username'));
+                $('#gender').val(item.data('gender'));
+                $('#phone').val(item.data('phone'));
+                $('#role').val(item.data('role'));
+                $('#puskesmas_id').val(item.data('puskesmas'));
+
+                $('#password').val('');
+                $('#password_confirmation').val('');
+
+                $('#userForm')
+                    .attr('action', item.data('url'));
+
+                $('#form_method').val('PUT');
+
+                $('#userModal').modal('show');
+
+            });
+
+            /*
+            |--------------------------------------------------------------------------
+            | BULK DELETE
+            |--------------------------------------------------------------------------
+            */
+
+            $('#btnDelete').on('click', function() {
+
+                const checked = $('.check-item:checked');
+
+                if (checked.length === 0) {
+                    alert('Silakan pilih minimal satu pengguna.');
+                    return;
+                }
+
+                if (!confirm(
+                        'Apakah Anda yakin ingin menghapus ' +
+                        checked.length +
+                        ' pengguna yang dipilih?'
+                    )) {
+                    return;
+                }
+
+                const form = $('<form>', {
+                    method: 'POST',
+                    action: $(this).data('url')
+                });
+
+                form.append(
+                    $('<input>', {
+                        type: 'hidden',
+                        name: '_token',
+                        value: $('meta[name="csrf-token"]').attr('content')
+                    })
+                );
+
+                checked.each(function() {
+
+                    form.append(
+                        $('<input>', {
+                            type: 'hidden',
+                            name: 'ids[]',
+                            value: $(this).val()
+                        })
+                    );
 
                 });
 
-            });
-        </script>
-    @endpush --}}
+                $('body').append(form);
 
+                form.submit();
+
+            });
+
+            /*
+            |--------------------------------------------------------------------------
+            | CHECKBOX
+            |--------------------------------------------------------------------------
+            */
+
+            $('#check-all').on('change', function() {
+
+                $('.check-item').prop(
+                    'checked',
+                    $(this).is(':checked')
+                );
+
+                updateSelection();
+
+            });
+
+            $(document).on('change', '.check-item', function() {
+
+                updateSelection();
+
+            });
+
+            /*
+            |--------------------------------------------------------------------------
+            | INIT
+            |--------------------------------------------------------------------------
+            */
+
+            updateSelection();
+
+        });
+    </script>
 @endsection

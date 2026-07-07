@@ -18,6 +18,22 @@ class UserSeeder extends Seeder
             // ADMIN
             // =====================
             [
+                'name' => 'Alamsyah Firdaus',
+                'username' => 'alamsyahfirdaus',
+                'email' => 'alamsyah.firdaus.af31@gmail.com',
+                'password' => Hash::make('123456'),
+                'role' => 'admin',
+                'phone' => NULL,
+                'gender' => NULL,
+                'birth_place' => NULL,
+                'birth_date' => NULL,
+                'puskesmas_id' => NULL,
+                'is_active' => true,
+                'created_at' => NULL,
+                'updated_at' => NULL,
+            ],
+
+            [
                 'name' => 'Admin Jaga Lansia',
                 'username' => 'admin',
                 'email' => 'admin@jagalansia.id',

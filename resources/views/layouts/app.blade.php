@@ -95,21 +95,9 @@
             font-size: 12px;
         }
 
-        /* .table-responsive {
-            overflow-x: auto;
+        .auto-dismiss {
+            transition: all .5s ease;
         }
-
-        @media (max-width: 768px) {
-
-            .dataTables_wrapper {
-                font-size: 13px;
-            }
-
-            table.dataTable td,
-            table.dataTable th {
-                white-space: nowrap;
-            }
-        } */
     </style>
 
     @stack('styles')
@@ -153,7 +141,29 @@
 
             <div class="app-content">
                 <div class="container-fluid">
+                    @if (session('success'))
+                        <div class="alert alert-success alert-dismissible fade show auto-dismiss" role="alert">
+                            {{ session('success') }}
+                        </div>
+                    @endif
 
+                    @if (session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show auto-dismiss" role="alert">
+                            {{ session('error') }}
+                        </div>
+                    @endif
+
+                    @if (session('warning'))
+                        <div class="alert alert-warning alert-dismissible fade show auto-dismiss" role="alert">
+                            {{ session('warning') }}
+                        </div>
+                    @endif
+
+                    @if (session('info'))
+                        <div class="alert alert-info alert-dismissible fade show auto-dismiss" role="alert">
+                            {{ session('info') }}
+                        </div>
+                    @endif
                     @yield('content')
 
                 </div>
@@ -170,13 +180,10 @@
 
             $('#table, .datatable').DataTable({
 
-                responsive: {
-                    details: {
-                        type: 'inline'
-                    }
-                },
-
+                responsive: true,
                 autoWidth: false,
+
+                order: [],
 
                 pageLength: 10,
 
@@ -184,6 +191,12 @@
                     [10, 25, 50, 100, -1],
                     [10, 25, 50, 100, "Semua"]
                 ],
+
+                columnDefs: [{
+                    targets: 0,
+                    orderable: false,
+                    searchable: false
+                }],
 
                 language: {
                     processing: "Sedang memproses...",
@@ -205,6 +218,21 @@
 
             });
 
+            setTimeout(function() {
+
+                $('.auto-dismiss').css({
+                    transition: 'all .5s ease',
+                    opacity: 0,
+                    transform: 'translateY(-10px)'
+                });
+
+                setTimeout(function() {
+                    $('.auto-dismiss').slideUp(300, function() {
+                        $(this).remove();
+                    });
+                }, 500);
+
+            }, 5000);
         });
     </script>
 

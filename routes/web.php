@@ -60,6 +60,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index'])->name('users');
+        Route::get('{id}/show', [UserController::class, 'show'])->name('user.show');
+        Route::match(['delete', 'get', 'post'], '{id}/delete', [UserController::class, 'destroy'])->name('user.delete');
+        Route::post('/bulk-delete', [UserController::class, 'bulkDelete'])->name('user.bulk-delete');
     });
 
     Route::prefix('counselings')->group(function () {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Contracts\Encryption\DecryptException;
 
 class UserController extends Controller
 {
@@ -13,24 +14,79 @@ class UserController extends Controller
     {
         $title = 'Pengguna';
 
-        $users = User::where('role', '!=', 'admin')
+        $users = User::with([
+                'puskesmas.village.district.regency.province'
+            ])
+            ->where('role', '!=', 'admin')
             ->orderBy('name')
             ->get();
 
         return view('users', compact('title', 'users'));
     }
 
-    // public function getCounseleeList()
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'ids' => ['required', 'array'],
+        ]);
+
+        $ids = collect($request->ids)
+            ->map(function ($id) {
+                try {
+                    return decrypt($id);
+                } catch (DecryptException $e) {
+                    return null;
+                }
+            })
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return back()->with('error', 'Tidak ada pengguna yang dipilih.');
+        }
+
+        $deleted = User::query()
+            ->whereIn('id', $ids)
+            ->where('role', '!=', 'admin')
+            ->whereKeyNot(Auth::id())
+            ->delete();
+
+        return back()->with(
+            'success',
+            "{$deleted} pengguna berhasil dihapus."
+        );
+    }
+
+    // public function show($id)
     // {
-    //     $title = 'Konseli';
-    //     $users = User::where('role', 'konseli')->get();
-    //     return view('users', compact('title', 'users'));
+    //     try {
+    //         $id = decrypt($id);
+
+    //         $title = 'Pengguna';
+
+    //         $user = User::with([
+    //             'puskesmas.village.district.regency.province'
+    //         ])->findOrFail($id);
+
+    //         return view('user_detail', compact('title', 'user'));
+    //     } catch (DecryptException $e) {
+    //         abort(404);
+    //     }
     // }
 
-    // public function getCounselorList()
+    // public function destroy($id)
     // {
-    //     $title = 'Konselor';
-    //     $users = User::where('role', 'konselor')->get();
-    //     return view('users', compact('title', 'users'));
+    //     try {
+    //         $id = decrypt($id);
+
+    //         $user = User::findOrFail($id);
+    //         $user->delete();
+
+    //         return redirect()->route('users')
+    //             ->with('success', 'Pengguna berhasil dihapus.');
+    //     } catch (DecryptException $e) {
+    //         abort(404);
+    //     }
     // }
 }

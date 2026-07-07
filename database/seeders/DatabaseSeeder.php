@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
             PuskesmasSeeder::class,
             UserSeeder::class,
             ElderlySeeder::class,
-            EducationContentsSeeder::class,
+            // EducationContentsSeeder::class,
             ElderlyFallRiskQuestionsSeeder::class,
             FamilyEmpowermentQuestionsSeeder::class,
             QaQuestionSeeder::class,
