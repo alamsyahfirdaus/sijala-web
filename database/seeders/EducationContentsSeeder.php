@@ -12,9 +12,6 @@ class EducationContentsSeeder extends Seeder
      */
     public function run(): void
     {
-        // Hapus data lama agar tidak duplikat
-        DB::table('education_contents')->truncate();
-
         $data = [
 
             // ======================================================
@@ -28,7 +25,6 @@ class EducationContentsSeeder extends Seeder
             [
                 'title' => 'Pencegahan Jatuh pada Lansia',
                 'category' => 'poster',
-                // File tersedia di public/images/pencegahan_jatuh.jpg
                 'file_path' => 'pencegahan_jatuh.jpg',
                 'description' => 'Materi edukasi mengenai faktor risiko jatuh dan langkah-langkah pencegahan yang dapat dilakukan di rumah maupun lingkungan sekitar.',
             ],
@@ -36,7 +32,6 @@ class EducationContentsSeeder extends Seeder
             [
                 'title' => 'Penggunaan Alat Bantu Jalan yang Benar',
                 'category' => 'poster',
-                // File tersedia di public/images/alat_bantu_jalan.jpg
                 'file_path' => 'alat_bantu_jalan.jpg',
                 'description' => 'Panduan penggunaan alat bantu jalan seperti tongkat, walker, dan kursi roda agar lansia dapat bergerak dengan aman dan mandiri.',
             ],
@@ -91,7 +86,6 @@ class EducationContentsSeeder extends Seeder
             [
                 'title' => 'Cara Berkomunikasi dengan Lansia',
                 'category' => 'poster',
-                // File tersedia di public/images/komunikasi_lansia.jpg
                 'file_path' => 'komunikasi_lansia.jpg',
                 'description' => 'Materi edukasi mengenai teknik komunikasi yang sabar, empatik, dan efektif untuk membangun hubungan yang baik dengan lansia.',
             ],
@@ -99,22 +93,25 @@ class EducationContentsSeeder extends Seeder
             [
                 'title' => 'Masalah Psikologis Keluarga dalam Merawat Lansia',
                 'category' => 'poster',
-                // File tersedia di public/images/psikologis_keluarga.jpg
                 'file_path' => 'psikologis_keluarga.jpg',
                 'description' => 'Materi edukasi tentang tantangan emosional yang dapat dialami keluarga serta strategi menghadapi stres dalam merawat lansia.',
             ],
         ];
 
         foreach ($data as $item) {
-            DB::table('education_contents')->insert([
-                'title'       => $item['title'],
-                'category'    => $item['category'],
-                'file_path'   => $item['file_path'],
-                'description' => $item['description'],
-                'is_active'   => true,
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ]);
+            DB::table('education_contents')->updateOrInsert(
+                [
+                    'title' => $item['title'],
+                ],
+                [
+                    'category'    => $item['category'],
+                    'file_path'   => $item['file_path'],
+                    'description' => $item['description'],
+                    'is_active'   => true,
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ]
+            );
         }
     }
 }
