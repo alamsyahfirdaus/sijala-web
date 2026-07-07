@@ -61,7 +61,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index'])->name('users');
         Route::get('{id}/show', [UserController::class, 'show'])->name('user.show');
-        Route::match(['delete', 'get', 'post'], '{id}/delete', [UserController::class, 'destroy'])->name('user.delete');
+        Route::match(['post', 'put'], 'save', [UserController::class, 'save'])->name('user.save');
+        Route::match(['delete', 'post'], '{id}/delete', [UserController::class, 'destroy'])->name('user.delete');
         Route::post('/bulk-delete', [UserController::class, 'bulkDelete'])->name('user.bulk-delete');
     });
 
@@ -69,6 +70,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/', [CounselingController::class, 'index'])->name('counselings');
         Route::get('/{id}/session', [CounselingController::class, 'session'])->name('counseling.session');
         Route::match(['post', 'put'], '/scores/update', [CounselingController::class, 'updateScore'])->name('scores.update');
+        Route::match(['delete', 'post'], '{id}/delete', [CounselingController::class, 'destroy'])->name('counseling.delete');
     });
 
     Route::prefix('reports')->group(function () {

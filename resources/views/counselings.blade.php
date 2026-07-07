@@ -46,7 +46,11 @@
                                             <hr class="dropdown-divider" />
                                         </li>
                                         <li>
-                                            <a class="dropdown-item" href="javascript:void(0)">Hapus</a>
+                                            <a href="javascript:void(0)" class="dropdown-item text-danger btnDelete"
+                                                data-url="{{ route('counseling.delete', encrypt($session->id)) }}"
+                                                data-name="{{ $session->elderlyCounselee->elderly_name ?? '-' }}">
+                                                Hapus
+                                            </a>
                                         </li>
                                     </ul>
                                 </div>
@@ -57,4 +61,41 @@
             </table>
         </div>
     </div>
+    <script>
+        $(function() {
+
+            $(document).on('click', '.btnDelete', function() {
+
+                const action = $(this).data('url');
+                const name = $(this).data('name');
+
+                if (!confirm(
+                        'Apakah Anda yakin ingin menghapus data konseling "' +
+                        name +
+                        '"?'
+                    )) {
+                    return;
+                }
+
+                const form = $('<form>', {
+                    method: 'POST',
+                    action: action
+                });
+
+                form.append(
+                    $('<input>', {
+                        type: 'hidden',
+                        name: '_token',
+                        value: $('meta[name="csrf-token"]').attr('content')
+                    })
+                );
+
+                $('body').append(form);
+
+                form.submit();
+
+            });
+
+        });
+    </script>
 @endsection

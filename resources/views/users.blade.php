@@ -81,9 +81,7 @@
                             <td class="text-center">
 
                                 <input type="checkbox" class="form-check-input check-item" value="{{ encrypt($user->id) }}"
-                                    data-id="{{ encrypt($user->id) }}"
-                                    data-url="1"
-                                    data-name="{{ $user->name }}" data-username="{{ $user->username }}"
+                                    data-id="{{ encrypt($user->id) }}" data-name="{{ $user->name }}"
                                     data-gender="{{ $user->gender }}" data-phone="{{ $user->phone }}"
                                     data-role="{{ $user->role }}" data-puskesmas="{{ $user->puskesmas_id }}">
                             </td>
@@ -137,114 +135,83 @@
     </div>
 
     <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-
-            <form id="userForm" method="POST">
-                @csrf
-
-                <input type="hidden" name="_method" id="form_method" value="POST">
-                <input type="hidden" name="id" id="user_id">
-
-                <div class="modal-content">
-
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="userModalLabel">
-                            Tambah Pengguna
-                        </h5>
-
-                        <button type="button" class="btn-close" data-bs-dismiss="modal">
-                        </button>
-                    </div>
-
-                    <div class="modal-body">
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Nama Lengkap</label>
-                                <input type="text" class="form-control" id="name" name="name">
-                                <div class="invalid-feedback"></div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Username</label>
-                                <input type="text" class="form-control" id="username" name="username">
-                                <div class="invalid-feedback"></div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Password</label>
-                                <input type="password" class="form-control" id="password" name="password">
-                                <small class="text-muted" id="passwordInfo">
-                                    Kosongkan jika tidak ingin mengubah password.
-                                </small>
-                                <div class="invalid-feedback"></div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Konfirmasi Password</label>
-                                <input type="password" class="form-control" id="password_confirmation"
-                                    name="password_confirmation">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Jenis Kelamin</label>
-                                <select class="form-select" id="gender" name="gender">
-                                    <option value="">-- Pilih --</option>
-                                    <option value="L">Laki-laki</option>
-                                    <option value="P">Perempuan</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Nomor HP</label>
-                                <input type="text" class="form-control" id="phone" name="phone">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Role</label>
-                                <select class="form-select" id="role" name="role">
-                                    <option value="">-- Pilih Role --</option>
-                                    <option value="konseli">Konseli</option>
-                                    <option value="konselor">Konselor</option>
-                                </select>
-                            </div>
-
-                            {{-- <div class="col-md-6 mb-3">
-                                <label class="form-label">Puskesmas</label>
-
-                                <select class="form-select" id="puskesmas_id" name="puskesmas_id">
-
-                                    <option value="">-- Pilih Puskesmas --</option>
-
-                                    @foreach ($puskesmas as $item)
-                                        <option value="{{ $item->id }}">
-                                            {{ $item->name }}
-                                        </option>
-                                    @endforeach
-
-                                </select>
-                            </div> --}}
-
-                        </div>
-
-                    </div>
-
-                    <div class="modal-footer">
-
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
-                            Batal
-                        </button>
-
-                        <button type="submit" class="btn btn-primary btn-sm" id="btnSaveUser">
-                            Simpan
-                        </button>
-
-                    </div>
-
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userModalLabel">#</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-
-            </form>
-
+                <div class="modal-body">
+                    <form id="userForm" method="POST" action="{{ route('user.save') }}">
+                        @csrf
+                        <input type="hidden" name="_method" id="form_method" value="POST">
+                        <input type="hidden" name="id" id="user_id">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Nama Lengkap</label>
+                            <input type="text" class="form-control" id="name" name="name"
+                                placeholder="Nama Lengkap" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label">Jenis Kelamin</label>
+                            <select class="form-select" id="gender" name="gender">
+                                <option value="">-- Pilih --</option>
+                                <option value="L">Laki-laki</option>
+                                <option value="P">Perempuan</option>
+                            </select>
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label">Nomor HP</label>
+                            <input type="text" class="form-control" id="phone" name="phone" placeholder="Nomor HP"
+                                autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label">Role</label>
+                            <select class="form-select" id="role" name="role">
+                                <option value="">-- Pilih Role --</option>
+                                <option value="konseli">Konseli</option>
+                                <option value="konselor">Konselor</option>
+                            </select>
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label">Puskesmas</label>
+                            <select class="form-select select2" id="puskesmas_id" name="puskesmas_id">
+                                <option value="">-- Pilih Puskesmas --</option>
+                                @foreach ($puskesmas as $item)
+                                    <option value="{{ $item->id }}">
+                                        {{ $item->name }} - {{ $item->village->district->name ?? '-' }},
+                                        {{ $item->village->district->regency->name ?? '-' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="invalid-feedback"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary btn-sm" id="btnSaveUser">Simpan</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         $(function() {
 
+            $('#userModal').on('shown.bs.modal', function() {
+
+                $('#puskesmas_id').select2({
+                    theme: 'bootstrap-5',
+                    placeholder: 'Pilih Puskesmas',
+                    allowClear: true,
+                    dropdownParent: $('#userModal')
+                });
+
+            });
             /*
             |--------------------------------------------------------------------------
             | UPDATE SELECTION
@@ -292,9 +259,6 @@
 
                 $('#userForm')[0].reset();
 
-                $('#userForm')
-                    .attr('action', $(this).data('url'));
-
                 $('#form_method').val('POST');
 
                 $('#user_id').val('');
@@ -322,7 +286,6 @@
                 $('#user_id').val(item.data('id'));
 
                 $('#name').val(item.data('name'));
-                $('#username').val(item.data('username'));
                 $('#gender').val(item.data('gender'));
                 $('#phone').val(item.data('phone'));
                 $('#role').val(item.data('role'));
@@ -330,9 +293,6 @@
 
                 $('#password').val('');
                 $('#password_confirmation').val('');
-
-                $('#userForm')
-                    .attr('action', item.data('url'));
 
                 $('#form_method').val('PUT');
 
@@ -424,6 +384,124 @@
             */
 
             updateSelection();
+
+
+            $('#btnSaveUser').on('click', function(e) {
+
+                e.preventDefault();
+
+                // Reset validasi
+                $('#userForm .form-control, #userForm .form-select')
+                    .removeClass('is-invalid');
+
+                $('#userForm .invalid-feedback').html('');
+
+                let valid = true;
+
+                /*
+                |--------------------------------------------------------------------------
+                | Nama
+                |--------------------------------------------------------------------------
+                */
+                if ($('#name').val().trim() === '') {
+
+                    $('#name')
+                        .addClass('is-invalid')
+                        .next('.invalid-feedback')
+                        .html('Nama lengkap wajib diisi.');
+
+                    valid = false;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Jenis Kelamin
+                |--------------------------------------------------------------------------
+                */
+                if ($('#gender').val() === '') {
+
+                    $('#gender')
+                        .addClass('is-invalid');
+
+                    $('#gender')
+                        .closest('.form-group')
+                        .find('.invalid-feedback')
+                        .html('Jenis kelamin wajib dipilih.');
+
+                    valid = false;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Nomor HP
+                |--------------------------------------------------------------------------
+                */
+                if ($('#phone').val().trim() === '') {
+
+                    $('#phone')
+                        .addClass('is-invalid')
+                        .next('.invalid-feedback')
+                        .html('Nomor HP wajib diisi.');
+
+                    valid = false;
+
+                } else if (!/^[0-9]{10,15}$/.test($('#phone').val().trim())) {
+
+                    $('#phone')
+                        .addClass('is-invalid')
+                        .next('.invalid-feedback')
+                        .html('Nomor HP tidak valid.');
+
+                    valid = false;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Role
+                |--------------------------------------------------------------------------
+                */
+                if ($('#role').val() === '') {
+
+                    $('#role')
+                        .addClass('is-invalid');
+
+                    $('#role')
+                        .closest('.form-group')
+                        .find('.invalid-feedback')
+                        .html('Role wajib dipilih.');
+
+                    valid = false;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Puskesmas
+                |--------------------------------------------------------------------------
+                */
+                if ($('#puskesmas_id').val() === '' || $('#puskesmas_id').val() === null) {
+
+                    $('#puskesmas_id')
+                        .addClass('is-invalid');
+
+                    $('#puskesmas_id')
+                        .closest('.form-group')
+                        .find('.invalid-feedback')
+                        .html('Puskesmas wajib dipilih.');
+
+                    valid = false;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Submit
+                |--------------------------------------------------------------------------
+                */
+                if (valid) {
+                    $('#userForm').submit();
+                }
+
+            });
+
 
         });
     </script>

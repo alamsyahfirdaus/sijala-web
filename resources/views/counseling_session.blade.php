@@ -28,8 +28,7 @@
                 </li>
                 <li class="list-group-item d-flex justify-content-between px-0">
                     <span>Konseli</span>
-                    <span><a href=""
-                            class="text-decoration-none">{{ $counseling->elderlyCounselee->counselee->name }}</a></span>
+                    <span>{{ $counseling->elderlyCounselee->counselee->name }}</span>
                 </li>
                 <li class="list-group-item d-flex justify-content-between px-0">
                     <span>Lama Merawat</span>
@@ -41,7 +40,7 @@
                 </li>
                 <li class="list-group-item d-flex justify-content-between px-0">
                     <span>Konselor</span>
-                    <span><a href="" class="text-decoration-none">{{ $counseling->counselor->name }}</a></span>
+                    <span>{{ $counseling->counselor->name }}</span>
                 </li>
                 <li
                     class="list-group-item d-flex justify-content-between px-0 {{ $counseling->elderlyCounselee->health_problems ? 'border-bottom' : 'pb-0' }}">

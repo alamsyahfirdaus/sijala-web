@@ -332,4 +332,33 @@ class CounselingController extends Controller
             );
         }
     }
+
+    public function destroy($id)
+    {
+        try {
+
+            $id = decrypt($id);
+
+            $session = CounselingSession::findOrFail($id);
+
+            $session->delete();
+
+            return redirect()
+                ->route('counselings')
+                ->with('success', 'Data konseling berhasil dihapus.');
+
+        } catch (DecryptException $e) {
+
+            return redirect()
+                ->route('counselings')
+                ->with('error', 'Data tidak ditemukan.');
+
+        } catch (\Throwable $e) {
+
+            return redirect()
+                ->route('counselings')
+                ->with('error', 'Data gagal dihapus.');
+
+        }
+    }
 }
