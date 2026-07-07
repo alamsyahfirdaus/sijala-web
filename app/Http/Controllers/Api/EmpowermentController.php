@@ -76,9 +76,24 @@ class EmpowermentController extends Controller
 
             /*
             |--------------------------------------------------------------------------
+            | VALIDASI JUMLAH PERTANYAAN
+            |--------------------------------------------------------------------------
+            */
+
+            $totalQuestion = EmpowermentQuestion::whereNotNull('dimension_id')->count();
+
+            if (count($request->answers) !== $totalQuestion) {
+                throw new \Exception(
+                    'Seluruh pertanyaan harus dijawab sebelum dikirim.'
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
             | INISIALISASI
             |--------------------------------------------------------------------------
             */
+
             $totalScore = 0;
             $answersData = [];
 
@@ -86,6 +101,7 @@ class EmpowermentController extends Controller
             |--------------------------------------------------------------------------
             | PERHITUNGAN SKOR
             |--------------------------------------------------------------------------
+            |
             | Favorable
             | STS = 1
             | TS  = 2
@@ -102,11 +118,15 @@ class EmpowermentController extends Controller
 
             foreach ($request->answers as $item) {
 
-                $question = EmpowermentQuestion::findOrFail($item['question_id']);
+                $question = EmpowermentQuestion::find($item['question_id']);
+
+                if (!$question) {
+                    throw new \Exception('Pertanyaan tidak ditemukan.');
+                }
 
                 $answer = (int) $item['answer'];
 
-                // Reverse scoring
+                // Reverse Scoring
                 $score = $question->is_favorable
                     ? $answer
                     : (5 - $answer);
@@ -124,10 +144,6 @@ class EmpowermentController extends Controller
             |--------------------------------------------------------------------------
             | INTERPRETASI HASIL
             |--------------------------------------------------------------------------
-            | Rentang Skor:
-            | Minimum : 35
-            | Maksimum: 140
-            |--------------------------------------------------------------------------
             */
 
             if ($totalScore <= 70) {
@@ -136,10 +152,10 @@ class EmpowermentController extends Controller
 
                 $interpretation =
                     'Tingkat pemberdayaan keluarga tergolong rendah. '
-                    . 'Keluarga masih memerlukan pendampingan, edukasi, dan peningkatan '
+                    . 'Keluarga masih memerlukan pendampingan, edukasi, serta peningkatan '
                     . 'kemampuan dalam mengenali masalah kesehatan, mengambil keputusan, '
-                    . 'merawat anggota keluarga, memodifikasi lingkungan, serta '
-                    . 'memanfaatkan fasilitas pelayanan kesehatan.';
+                    . 'merawat anggota keluarga, memodifikasi lingkungan, dan memanfaatkan '
+                    . 'fasilitas pelayanan kesehatan.';
 
             } elseif ($totalScore <= 105) {
 
@@ -147,10 +163,9 @@ class EmpowermentController extends Controller
 
                 $interpretation =
                     'Tingkat pemberdayaan keluarga tergolong sedang. '
-                    . 'Keluarga telah menunjukkan kemampuan dalam mendukung perawatan '
+                    . 'Keluarga telah memiliki kemampuan dalam mendukung perawatan '
                     . 'kesehatan anggota keluarga, namun masih diperlukan penguatan '
-                    . 'pada beberapa aspek melalui edukasi, motivasi, dan pendampingan '
-                    . 'secara berkelanjutan.';
+                    . 'melalui edukasi, motivasi, dan pendampingan secara berkelanjutan.';
 
             } else {
 
@@ -159,9 +174,9 @@ class EmpowermentController extends Controller
                 $interpretation =
                     'Tingkat pemberdayaan keluarga tergolong tinggi. '
                     . 'Keluarga memiliki kemampuan yang baik dalam mengenali masalah '
-                    . 'kesehatan, mengambil keputusan, memberikan perawatan, menciptakan '
-                    . 'lingkungan yang aman, serta memanfaatkan fasilitas pelayanan '
-                    . 'kesehatan secara optimal.';
+                    . 'kesehatan, mengambil keputusan, memberikan perawatan, '
+                    . 'menciptakan lingkungan yang aman, serta memanfaatkan fasilitas '
+                    . 'pelayanan kesehatan secara optimal.';
             }
 
             /*
@@ -183,7 +198,7 @@ class EmpowermentController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | HAPUS DETAIL JAWABAN LAMA
+            | HAPUS JAWABAN LAMA
             |--------------------------------------------------------------------------
             */
 
@@ -194,20 +209,21 @@ class EmpowermentController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | SIMPAN DETAIL JAWABAN
+            | PERSIAPKAN BULK INSERT
             |--------------------------------------------------------------------------
             */
 
-            collect($answersData)->each(function ($answer) use ($empowerment) {
+            $now = now();
 
-                EmpowermentAnswer::create([
-                    'empowerment_id' => $empowerment->id,
-                    'question_id'    => $answer['question_id'],
-                    'answer'         => $answer['answer'],
-                    'score'          => $answer['score'],
-                ]);
+            foreach ($answersData as &$answer) {
 
-            });
+                $answer['empowerment_id'] = $empowerment->id;
+                $answer['created_at'] = $now;
+                $answer['updated_at'] = $now;
+
+            }
+
+            EmpowermentAnswer::insert($answersData);
 
             DB::commit();
 
@@ -237,9 +253,14 @@ class EmpowermentController extends Controller
 
             DB::rollBack();
 
+            \Log::error('Empowerment Assessment Error', [
+                'message' => $e->getMessage(),
+                'trace'   => $e->getTraceAsString(),
+            ]);
+
             return response()->json([
                 'status'  => false,
-                'message' => $e->getMessage(),
+                'message' => 'Terjadi kesalahan saat menyimpan data pemberdayaan keluarga.',
             ], 500);
         }
     }
