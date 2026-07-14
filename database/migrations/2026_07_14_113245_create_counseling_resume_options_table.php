@@ -11,61 +11,48 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('counseling_sessions', function (Blueprint $table) {
+        Schema::create('counseling_resume_options', function (Blueprint $table) {
 
             // ==================================================
             // PRIMARY KEY
             // ==================================================
             $table->id();
-            // ID unik untuk setiap sesi konseling.
 
             // ==================================================
-            // RELASI LANSIA YANG DIDAMPINGI
+            // KATEGORI
+            // NULL = DATA INI ADALAH KATEGORI
+            // NOT NULL = ITEM YANG BERADA PADA KATEGORI
             // ==================================================
-            $table->foreignId('elderly_counselee_id')
-                ->constrained('elderly_counselee')
+            $table->foreignId('category_id')
+                ->nullable()
+                ->constrained('counseling_resume_options')
                 ->cascadeOnDelete();
 
             // ==================================================
-            // RELASI KONSELOR
+            // NAMA KATEGORI / ITEM
             // ==================================================
-            $table->foreignId('counselor_id')
-                ->comment('user_id')
-                ->nullable()
-                ->constrained('users')
-                ->nullOnDelete();
+            $table->string('title');
 
             // ==================================================
-            // JENIS LAYANAN
+            // DESKRIPSI
             // ==================================================
-            $table->enum('service_mode', ['chat', 'video'])
-                ->default('chat');
+            $table->text('description')
+                ->nullable();
 
             // ==================================================
-            // STATUS SESI
+            // URUTAN TAMPIL
             // ==================================================
-            $table->enum('status', [
-                'ongoing',
-                'completed',
-            ])->default('ongoing');
-            
-            // ==================================================
-            // CATATAN KONSELOR / TINDAK LANJUT
-            // ==================================================
-            $table->text('note')->nullable();
+            $table->unsignedSmallInteger('sort_order')
+                ->default(1);
 
             // ==================================================
-            // RESUME KONSELING
+            // STATUS AKTIF
             // ==================================================
-            $table->json('resume')->nullable();
+            $table->boolean('is_active')
+                ->default(true);
 
             // ==================================================
-            // PENANDA SESI TERAKHIR
-            // ==================================================
-            $table->boolean('is_latest')->default(false);
-
-            // ==================================================
-            // TIMESTAMP 
+            // TIMESTAMP
             // ==================================================
             $table->timestamps();
         });
@@ -76,6 +63,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('counseling_sessions');
+        Schema::dropIfExists('counseling_resume_options');
     }
 };

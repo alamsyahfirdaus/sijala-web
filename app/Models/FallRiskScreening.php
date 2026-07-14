@@ -13,4 +13,9 @@ class FallRiskScreening extends Model
     protected $primaryKey = 'id';
 
     protected $guarded = [];
+
+    public function session()
+    {
+        return $this->belongsTo(CounselingSession::class, 'counseling_session_id');
+    }
 }

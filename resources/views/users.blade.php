@@ -96,12 +96,18 @@
                             </td>
                             <td>{{ $user->phone ?? '-' }}</td>
                             <td>{{ ucwords($user->role) }}</td>
-                            <td>Puskesmas {{ $user->puskesmas->name ?? '-' }}
-                                <br>
-                                <span class="text-muted"
-                                    style="font-size: 12px;">{{ $user->puskesmas->village->name ?? '-' }},
-                                    {{ $user->puskesmas->village->district->name ?? '-' }},
-                                    {{ $user->puskesmas->village->district->regency->name ?? '-' }}</span>
+                            <td>
+                                @if ($user->puskesmas)
+                                    Puskesmas {{ $user->puskesmas->name }}
+                                    <br>
+                                    <span class="text-muted" style="font-size: 12px;">
+                                        {{ $user->puskesmas->village->name ?? '-' }},
+                                        {{ $user->puskesmas->village->district->name ?? '-' }},
+                                        {{ $user->puskesmas->village->district->regency->name ?? '-' }}
+                                    </span>
+                                @else
+                                    -
+                                @endif
                             </td>
                             {{-- <td>
                                 <div class="btn-group btn-group-sm">

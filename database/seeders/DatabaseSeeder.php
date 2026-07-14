@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             CounselingChatsSeeder::class,
             CounselingChatMessagesSeeder::class,
             EvaluationSeeder::class,
+            CounselingResumeOptionSeeder::class,
         ]);
     }
 }

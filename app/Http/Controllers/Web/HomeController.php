@@ -3,7 +3,15 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\CounselingSession;
+use App\Models\EducationContent;
+use App\Models\ElderlyCounselee;
+use App\Models\EmpowermentAssessment;
+use App\Models\FallRiskScreening;
+use App\Models\Puskesmas;
+use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
@@ -37,6 +45,82 @@ class HomeController extends Controller
 
     public function home()
     {
-        return view('index');
+        // =====================================================
+        // PRE TEST - RISIKO JATUH
+        // =====================================================
+        $fallRiskPreTest = FallRiskScreening::whereIn('id', function ($query) {
+            $query->selectRaw('MIN(id)')
+                ->from('elderly_fall_risk_screenings')
+                ->groupBy('counseling_session_id');
+        });
+
+        // =====================================================
+        // POST TEST - RISIKO JATUH
+        // =====================================================
+        $fallRiskPostTest = FallRiskScreening::whereIn('id', function ($query) {
+            $query->selectRaw('MAX(id)')
+                ->from('elderly_fall_risk_screenings')
+                ->groupBy('counseling_session_id');
+        });
+
+        // =====================================================
+        // PRE TEST - PEMBERDAYAAN KELUARGA
+        // =====================================================
+        $empowermentPreTest = EmpowermentAssessment::whereIn('id', function ($query) {
+            $query->selectRaw('MIN(id)')
+                ->from('family_empowerment_assessments')
+                ->groupBy('counseling_session_id');
+        });
+
+        // =====================================================
+        // POST TEST - PEMBERDAYAAN KELUARGA
+        // =====================================================
+        $empowermentPostTest = EmpowermentAssessment::whereIn('id', function ($query) {
+            $query->selectRaw('MAX(id)')
+                ->from('family_empowerment_assessments')
+                ->groupBy('counseling_session_id');
+        });
+
+        // =====================================================
+        // KATEGORI GRAFIK
+        // =====================================================
+        $testCategories = [
+            'Pre-Test',
+            'Post-Test',
+        ];
+
+        // =====================================================
+        // DATA GRAFIK
+        // =====================================================
+        $fallRiskChart = [
+            $fallRiskPreTest->count(),
+            $fallRiskPostTest->count(),
+        ];
+
+        $empowermentChart = [
+            $empowermentPreTest->count(),
+            $empowermentPostTest->count(),
+        ];
+
+        // =====================================================
+        // RETURN VIEW
+        // =====================================================
+        return view('home', [
+
+            // =================================================
+            // INFO BOX
+            // =================================================
+            'totalKonselor'  => User::where('role', 'konselor')->count(),
+            'totalKonseli'   => User::where('role', 'konseli')->count(),
+            'totalLansia'    => ElderlyCounselee::count(),
+            'totalPuskesmas' => Puskesmas::count(),
+
+            // =================================================
+            // GRAFIK
+            // =================================================
+            'testCategories'   => $testCategories,
+            'fallRiskChart'    => $fallRiskChart,
+            'empowermentChart' => $empowermentChart,
+        ]);
     }
 }

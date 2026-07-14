@@ -22,7 +22,7 @@
         <div class="card-body table-responsive">
             <div class="row mb-md-3 mb-2">
 
-                <div class="col-md-4 mb-2 mb-md-0">
+                <div class="col-md-5 mb-2 mb-md-0">
                     <select class="form-select select2" id="start_date" name="start_date">
                         <option value="">Tanggal Awal</option>
 
@@ -36,7 +36,7 @@
                     <div class="invalid-feedback d-block" id="start_date_error"></div>
                 </div>
 
-                <div class="col-md-4 mb-2 mb-md-0">
+                <div class="col-md-5 mb-2 mb-md-0">
                     <select class="form-select select2" id="end_date" name="end_date">
                         <option value="">Tanggal Akhir</option>
 
@@ -50,53 +50,70 @@
                     <div class="invalid-feedback d-block" id="end_date_error"></div>
                 </div>
 
-                <div class="col-md-4 text-md-end mb-2 mb-md-0">
+                <div class="col-md-2 text-md-end mb-2 mb-md-0">
                     <div class="btn-group" style="width: 100%;">
+                        <button type="button" id="filter-date" class="btn btn-primary">Filter</button>
+                        <button type="button" id="export-excel" class="btn btn-success">Excel</button>
 
-                        <button type="button" id="filter-date" class="btn btn-primary">
-                            <i class="bi bi-search"></i>
-                            Filter
-                        </button>
-
-                        <button type="button" id="export-excel" class="btn btn-success">
-                            <i class="bi bi-file-earmark-excel-fill"></i>
-                            Excel
-                        </button>
-
-                        <button type="button" id="export-pdf" class="btn btn-danger">
+                        {{-- <button type="button" id="export-pdf" class="btn btn-danger">
                             <i class="bi bi-file-earmark-pdf-fill"></i>
                             PDF
-                        </button>
+                        </button> --}}
 
                     </div>
                 </div>
 
             </div>
 
-            @if ($report == 'elderly')
+            @if ($report == 'counselee')
+                <table class="table table-bordered table-striped datatable" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Nama<span style="font-size: 10px; color: #fff;">_</span>Konseli</th>
+                            <th>Jenis<span style="font-size: 10px; color: #fff;">_</span>Kelamin</th>
+                            <th>Usia</th>
+                            <th>Nomor<span style="font-size: 10px; color: #fff;">_</span>HP</th>
+                            <th>Jml.<span style="font-size: 10px; color: #fff;">_</span>Sesi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($data['counselees'] as $index => $counselee)
+                            <tr>
+                                <td>{{ $index + 1 }}</td>
+                                <td>{{ $counselee['name'] }}</td>
+                                <td>{{ $counselee['gender'] }}</td>
+                                <td>{{ $counselee['age'] }}</td>
+                                <td>{{ $counselee['phone'] }}</td>
+                                <td>{{ $counselee['jml_counselings'] }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @elseif ($report == 'elderly')
                 <table class="table table-bordered table-striped datatable" style="width: 100%;">
 
                     <thead>
                         <tr>
-                            <th width="5%">No</th>
-                            <th>Nama Lansia</th>
-                            <th>Jenis Kelamin</th>
+                            <th>No</th>
+                            <th>Nama<span style="font-size: 10px; color: #fff;">_</span>Lansia</th>
+                            <th>Jenis<span style="font-size: 10px; color: #fff;">_</span>Kelamin</th>
                             <th>Usia</th>
-                            <th>Konseli</th>
-                            <th>Lama Merawat</th>
+                            <th>Puskesmas</th>
                         </tr>
                     </thead>
 
                     <tbody>
                         @foreach ($data['elderlies'] as $index => $elderly)
                             <tr>
-                                <td style="text-align: center;">{{ $index + 1 }}</td>
+                                <td>{{ $index + 1 }}</td>
                                 <td>{{ $elderly['elderly_name'] }}</td>
-                                <td>{{ $elderly['elderly_gender'] == 'L' ? 'Laki-Laki' : ($elderly['elderly_gender'] == 'P' ? 'Perempuan' : '-') }}
-                                </td>
+                                <td>{{ $elderly['elderly_gender'] }}</td>
                                 <td>{{ $elderly['elderly_age'] }} Tahun</td>
+                                <td>{{ $elderly['puskesmas'] }}</td>
+                                {{-- <td>{{ $elderly['has_fallen'] }}</td>
                                 <td>{{ $elderly['counselee_name'] }}</td>
-                                <td>{{ $elderly['care_duration_months'] }} Bulan</td>
+                                <td>{{ $elderly['care_duration_months'] }} Bulan</td> --}}
                             </tr>
                         @endforeach
                     </tbody>
@@ -107,22 +124,25 @@
 
                     <thead>
                         <tr>
-                            <th width="5%">No</th>
-                            <th>Nama Konselor</th>
-                            <th>Nomor HP</th>
+                            <th>No</th>
+                            <th>Nama<span style="font-size: 10px; color: #fff;">_</span>Konselor</th>
+                            <th>Jenis<span style="font-size: 10px; color: #fff;">_</span>Kelamin</th>
+                            <th>Nomor<span style="font-size: 10px; color: #fff;">_</span>HP</th>
+                            <th>Ditangani</th>
                             <th>Puskesmas</th>
-                            <th>Total Konseling</th>
                         </tr>
                     </thead>
 
                     <tbody>
                         @foreach ($data['counselors'] as $index => $counselor)
                             <tr>
-                                <td style="text-align: center;">{{ $index + 1 }}</td>
+                                <td>{{ $index + 1 }}</td>
                                 <td>{{ $counselor['name'] }}</td>
+                                <td>{{ $counselor['gender'] }}</td>
                                 <td>{{ $counselor['phone'] }}</td>
-                                <td>{{ $counselor['puskesmas_name'] }}</td>
-                                <td>{{ $counselor['total_counselings'] }}</td>
+                                <td>{{ $counselor['total_elderlies'] }}</td>
+                                <td title="{{ $counselor['puskesmas'] }}">
+                                    {{ \Illuminate\Support\Str::limit($counselor['puskesmas'], 25) }}</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -133,30 +153,27 @@
 
                     <thead>
                         <tr>
-                            <th width="5%">No</th>
+                            <th>No</th>
                             <th>Konseli</th>
+                            <th>Lansia</th>
                             <th>Konselor</th>
-                            <th>Total Sesi</th>
+                            <th>Puskesmas</th>
+                            <th>Total<span style="font-size: 10px; color: #fff;">_</span>Sesi</th>
+                            <th>Konseling<span style="font-size: 10px; color: #fff;">_</span>Terakhir</th>
                         </tr>
                     </thead>
 
                     <tbody>
                         @foreach ($data['counselings'] as $counseling)
                             <tr>
-
-                                <td style="text-align: center;">{{ $loop->iteration }}</td>
-
-                                <td>
-                                    {{ $counseling['counselee_name'] }}
-                                </td>
-
-                                <td>
-                                    {{ $counseling['counselor_name'] }}
-                                </td>
-
-                                <td>
-                                    {{ $counseling['total_sessions'] }}
-                                </td>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $counseling['counselee_name'] }}</td>
+                                <td>{{ $counseling['elderly_name'] }}</td>
+                                <td>{{ $counseling['counselor_name'] }}</td>
+                                <td title="{{ $counseling['puskesmas'] }}">
+                                    {{ \Illuminate\Support\Str::limit($counseling['puskesmas'], 25) }}</td>
+                                <td>{{ $counseling['total_sessions'] }}</td>
+                                <td>{{ $counseling['last_counseling_date'] }}</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -166,38 +183,61 @@
                 <table class="table table-bordered table-striped datatable" style="width: 100%;">
                     <thead>
                         <tr>
-                            <th width="5%">No</th>
+                            <th>No</th>
                             <th>Konseli</th>
-                            <th>Tanggal Skrining</th>
+                            <th>Lansia</th>
                             <th>Risiko Jatuh</th>
-                            <th>Pemberdayaan Keluarga</th>
+                            <th>Selisih</th>
+                            <th>Pemberdayaan</th>
+                            <th>Selisih</th>
                         </tr>
                     </thead>
 
                     <tbody>
                         @foreach ($data['screenings'] as $screening)
                             <tr>
-
                                 <td>{{ $loop->iteration }}</td>
-
+                                <td>{{ $screening['counselee_name'] }}</td>
+                                <td>{{ $screening['elderly_name'] }}</td>
                                 <td>
-                                    {{ $screening['counselee_name'] }}
+                                    <span>{{ $screening['fall_risk_pre_test'] !== '-' ? 'Pre ' . $screening['fall_risk_pre_test'] : '-' }}</span>
+                                    <span> | </span>
+                                    <span>{{ $screening['fall_risk_post_test'] !== '-' ? 'Post ' . $screening['fall_risk_post_test'] : '-' }}</span>
+                                </td>
+                                <td style="text-align: center;">
+                                    @if ($screening['fall_risk_difference'] === '-')
+                                        <span>-</span>
+                                    @elseif ($screening['fall_risk_difference'] < 0)
+                                        <span class="text-success">
+                                            {{ $screening['fall_risk_difference'] }}
+                                        </span>
+                                    @elseif ($screening['fall_risk_difference'] > 0)
+                                        <span class="text-danger">
+                                            +{{ $screening['fall_risk_difference'] }}
+                                        </span>
+                                    @else
+                                        <span>0</span>
+                                    @endif
                                 </td>
                                 <td>
-                                    {{ \Carbon\Carbon::parse($screening['screening_date'])->translatedFormat('d F Y') }}
+                                    <span>{{ $screening['empowerment_pre_test'] !== '-' ? 'Pre ' . $screening['empowerment_pre_test'] : '-' }}</span>
+                                    <span> | </span>
+                                    <span>{{ $screening['empowerment_post_test'] !== '-' ? 'Post ' . $screening['empowerment_post_test'] : '-' }}</span>
                                 </td>
-                                <td>
-                                    {{ $screening['fall_risk_score'] }}
-                                    <span class="text-muted">
-                                        ({{ $screening['fall_risk_category'] }})
-                                    </span>
-                                </td>
-
-                                <td>
-                                    {{ $screening['empowerment_score'] }}
-                                    <span class="text-muted">
-                                        ({{ $screening['empowerment_category'] }})
-                                    </span>
+                                <td style="text-align: center;">
+                                    @if ($screening['empowerment_difference'] === '-')
+                                        <span>-</span>
+                                    @elseif ($screening['empowerment_difference'] > 0)
+                                        <span class="text-success">
+                                            +{{ $screening['empowerment_difference'] }}
+                                        </span>
+                                    @elseif ($screening['empowerment_difference'] < 0)
+                                        <span class="text-danger">
+                                            {{ $screening['empowerment_difference'] }}
+                                        </span>
+                                    @else
+                                        <span>0</span>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
@@ -209,7 +249,7 @@
 
                     <thead>
                         <tr>
-                            <th width="5%">No</th>
+                            <th>No</th>
                             <th>Konseli</th>
                             <th>Tgl.<span style="font-size: 10px; color: #fff;">_</span>Evaluasi</th>
                             <th>Topik</th>
@@ -222,7 +262,7 @@
                         @foreach ($data['evaluations'] as $evaluation)
                             <tr>
 
-                                <td class="text-center">
+                                <td>
                                     {{ $loop->iteration }}
                                 </td>
 
@@ -239,7 +279,7 @@
                                 </td>
 
                                 <td>
-                                    {{ round($evaluation['percentage'])}}
+                                    {{ round($evaluation['percentage']) }}
                                     <span class="text-muted">
                                         ({{ $evaluation['category'] }})
                                     </span>
@@ -253,9 +293,9 @@
                                     {{ $evaluation['category'] }}
                                 </td> --}}
 
-                                <td>
-                                    {{ $evaluation['interpretation'] }}
-                                </td>
+
+                                <td title="{{ $evaluation['interpretation'] }}">
+                                    {{ \Illuminate\Support\Str::limit($evaluation['interpretation'], 50) }}</td>
 
                             </tr>
                         @endforeach
@@ -265,6 +305,22 @@
             @endif
         </div>
     </div>
+
+    <style>
+        table.dataTable thead th {
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        table.dataTable thead th:first-child {
+            width: 5%;
+        }
+
+        table.dataTable tbody td:first-child {
+            text-align: center;
+        }
+    </style>
+
     <script>
         $(document).ready(function() {
             $('#start_date').select2({

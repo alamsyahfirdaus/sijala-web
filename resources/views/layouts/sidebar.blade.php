@@ -42,6 +42,7 @@
 
                 @php
                     $reports = [
+                        ['slug' => 'counselee', 'name' => 'Konseli'],
                         ['slug' => 'elderly', 'name' => 'Lansia'],
                         ['slug' => 'counselor', 'name' => 'Konselor'],
                         ['slug' => 'counseling', 'name' => 'Konseling'],

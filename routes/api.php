@@ -124,6 +124,7 @@ Route::middleware('api.auth')->group(function () {
         Route::get('/{elderlyCounseleeId}/show', [CounselingController::class, 'getCounselingSessionsById']);
         Route::get('/today', [CounselingController::class, 'getTodayCounselingSessions']);
         Route::get('/statistics', [CounselingController::class, 'getCounselingStatistics']);
+        Route::get('/resume', [CounselingController::class, 'getCounselingResumeOptions']);
         Route::match(['post', 'put'], '/{counselingSessionId}/complete', [CounselingController::class, 'completeCounselingSession']);
     });
 

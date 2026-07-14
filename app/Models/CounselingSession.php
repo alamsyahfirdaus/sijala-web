@@ -14,6 +14,11 @@ class CounselingSession extends Model
 
     protected $guarded = [];
 
+    protected $casts = [
+        'resume' => 'array',
+        'is_latest' => 'boolean',
+    ];
+
     public function counselor()
     {
         return $this->belongsTo(User::class, 'counselor_id', 'id');

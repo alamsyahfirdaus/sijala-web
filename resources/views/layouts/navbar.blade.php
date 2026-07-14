@@ -4,64 +4,63 @@
 
         <ul class="navbar-nav">
             <li class="nav-item">
-                <a class="nav-link"
-                   data-lte-toggle="sidebar"
-                   href="javascript:void(0)">
+                <a class="nav-link" data-lte-toggle="sidebar" href="javascript:void(0)">
                     <i class="bi bi-list"></i>
                 </a>
             </li>
         </ul>
 
-        <ul class="navbar-nav ms-auto">
+        @php
+            $name = Auth::user()->name;
 
+            $initials = collect(explode(' ', trim($name)))
+                ->filter()
+                ->map(fn($word) => strtoupper(substr($word, 0, 1)))
+                ->take(2)
+                ->implode('');
+        @endphp
+
+        <ul class="navbar-nav ms-auto">
             <li class="nav-item dropdown">
 
-                <a class="nav-link dropdown-toggle"
-                   data-bs-toggle="dropdown"
-                   href="javascript:void(0)">
+                <a class="nav-link dropdown-toggle d-flex align-items-center" href="javascript:void(0)" role="button"
+                    data-bs-toggle="dropdown" aria-expanded="false">
 
-                    <i class="bi bi-person-circle me-2"></i>
+                    <div class="user-avatar me-2">
+                        {{ $initials }}
+                    </div>
 
-                    {{ Auth::user()->name }}
+                    <span>{{ $name }}</span>
 
                 </a>
 
                 <ul class="dropdown-menu dropdown-menu-end">
 
                     <li>
-                        <a class="dropdown-item"
-                           href="javascript:void(0)">
+                        <a class="dropdown-item" href="#">
                             <i class="bi bi-person me-2"></i>
                             Profil
                         </a>
                     </li>
 
-                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
 
                     <li>
-
-                        <form action="{{ route('logout') }}"
-                              method="POST">
-
+                        <form method="POST" action="{{ route('logout') }}">
                             @csrf
 
-                            <button class="dropdown-item text-danger">
-
+                            <button type="submit" class="dropdown-item text-danger">
                                 <i class="bi bi-box-arrow-right me-2"></i>
                                 Logout
-
                             </button>
-
                         </form>
-
                     </li>
 
                 </ul>
 
             </li>
-
         </ul>
-
     </div>
-
 </nav>

@@ -205,6 +205,15 @@
         </div>
     </div>
 
+    <div class="card mt-3">
+        <div class="card-header">
+            <h3 class="card-title">Resume Konselor</h3>
+        </div>
+        <div class="card-body">
+
+        </div>
+    </div>
+
     <div class="modal fade" id="scoreModal" tabindex="-1" aria-labelledby="scoreModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <form action="{{ route('scores.update') }}" id="scoreForm" method="POST">

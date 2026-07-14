@@ -98,6 +98,21 @@
         .auto-dismiss {
             transition: all .5s ease;
         }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #f59e0b !important;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+            user-select: none;
+        }
     </style>
 
     @stack('styles')
@@ -234,7 +249,7 @@
 
             }, 5000);
 
-            
+
         });
     </script>
 

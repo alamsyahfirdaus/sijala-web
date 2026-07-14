@@ -63,4 +63,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(CounselingSession::class, 'counselor_id', 'id');
     }
+
+    public function elderlies()
+    {
+        return $this->hasMany(ElderlyCounselee::class, 'counselee_id');
+    }
 }

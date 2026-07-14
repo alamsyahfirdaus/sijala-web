@@ -18,4 +18,9 @@ class ElderlyCounselee extends Model
     {
         return $this->belongsTo(User::class, 'counselee_id');
     }
+
+    public function counselingSessions()
+    {
+        return $this->hasMany(CounselingSession::class, 'elderly_counselee_id', 'id');
+    }
 }

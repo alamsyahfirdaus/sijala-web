@@ -9,6 +9,7 @@ use App\Models\EmpowermentAssessment;
 use App\Models\FallRiskScreening;
 use App\Models\EducationContent;
 use App\Models\Evaluation;
+use App\Models\CounselingResumeOption;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -577,7 +578,40 @@ class CounselingController extends Controller
         ]);
     }
 
-    public function completeCounselingSession(Request $request, $counselingSessionId) 
+    public function getCounselingResumeOptions()
+    {
+        $categories = CounselingResumeOption::with([
+                'items:id,category_id,title'
+            ])
+            ->whereNull('category_id')
+            ->where('is_active', true)
+            ->orderBy('sort_order', 'asc')
+            ->get([
+                'id',
+                'title',
+            ]);
+
+        $data = $categories->map(function ($category) {
+            return [
+                'id' => $category->id,
+                'title' => $category->title,
+                'items' => $category->items->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'title' => $item->title,
+                    ];
+                })->values(),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar pilihan resume konseling berhasil diambil.',
+            'data' => $data->values(),
+        ]);
+    }
+
+    public function completeCounselingSession(Request $request, $counselingSessionId)
     {
         // =====================================================
         // USER LOGIN
@@ -601,15 +635,22 @@ class CounselingController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
+                'resume' => 'required|array|min:1',
+                'resume.*' => 'integer|distinct|exists:counseling_resume_options,id',
                 'note' => 'required|string|max:5000',
                 'needs_follow_up' => 'required|boolean',
             ],
             [
-                'note.required' =>
-                    'Tindak lanjut konseling wajib diisi.',
+                'resume.required' => 'Resume konseling wajib dipilih.',
+                'resume.array' => 'Format resume konseling tidak valid.',
+                'resume.min' => 'Pilih minimal satu resume konseling.',
+                'resume.*.distinct' => 'Pilihan resume tidak boleh duplikat.',
+                'resume.*.exists' => 'Pilihan resume konseling tidak valid.',
 
-                'needs_follow_up.required' =>
-                    'Status sesi lanjutan wajib dipilih.',
+                'note.required' => 'Tindak lanjut konseling wajib diisi.',
+                'note.max' => 'Tindak lanjut maksimal 5000 karakter.',
+
+                'needs_follow_up.required' => 'Status sesi lanjutan wajib dipilih.',
             ]
         );
 
@@ -624,6 +665,11 @@ class CounselingController extends Controller
         DB::beginTransaction();
 
         try {
+
+            // =================================================
+            // AMBIL USER INPUT
+            // =================================================
+            $needsFollowUp = $request->boolean('needs_follow_up');
 
             // =================================================
             // AMBIL SESI
@@ -647,6 +693,26 @@ class CounselingController extends Controller
             }
 
             // =================================================
+            // VALIDASI ITEM RESUME
+            // Pastikan yang dipilih adalah ITEM,
+            // bukan kategori.
+            // =================================================
+            $invalidResume = CounselingResumeOption::whereIn(
+                    'id',
+                    $request->resume
+                )
+                ->whereNull('category_id')
+                ->exists();
+
+            if ($invalidResume) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Resume yang dipilih tidak valid.',
+                    'data' => null,
+                ], 422);
+            }
+
+            // =================================================
             // HITUNG JUMLAH SESI KONSELING
             // =================================================
             $totalSessions = CounselingSession::where(
@@ -658,53 +724,67 @@ class CounselingController extends Controller
             // =================================================
             // APAKAH SESI PERTAMA ATAU TERAKHIR
             // =================================================
-            $mustValidateCompletion = $totalSessions == 1 || $session->is_latest == 1;
+            $mustValidateCompletion =
+                $totalSessions == 1 ||
+                $session->is_latest == 1;
 
             // =================================================
             // VALIDASI KELENGKAPAN
-            // Hanya untuk sesi pertama atau sesi terakhir, harus dipastikan sudah lengkap
             // =================================================
-            if ($mustValidateCompletion && !$this->isCounselingSessionCompleted($session->id)) 
-            {
+            if (
+                $mustValidateCompletion &&
+                !$this->isCounselingSessionCompleted($session->id)
+            ) {
                 return response()->json([
                     'success' => false,
-                    'message' =>
-                        'Skrining Risiko Jatuh dan Asesmen Pemberdayaan harus diselesaikan terlebih dahulu.',
+                    'message' => 'Skrining Risiko Jatuh dan Asesmen Pemberdayaan harus diselesaikan terlebih dahulu.',
                     'data' => null,
                 ], 422);
             }
 
             // =================================================
+            // FORMAT DATA RESUME
+            // =================================================
+            $resume = collect($request->resume)
+                ->map(fn ($id) => (int) $id)
+                ->unique()
+                ->sort()
+                ->values()
+                ->toArray();
+
+            // =================================================
             // UPDATE SESI
             // =================================================
-            $session->note = trim(
-                $request->note
-            );
-
+            $session->resume = $resume;
+            $session->note = trim($request->note);
             $session->status = 'completed';
-            $session->updated_at = now();
             $session->is_latest = 0;
+            $session->updated_at = now();
+
             $session->save();
 
+            // =================================================
+            // BUAT SESI LANJUTAN
+            // =================================================
             $newSession = null;
 
-            if ($request->needs_follow_up) {
-                // =================================================
-                // BUAT SESI BARU UNTUK SESI TERAKHIR
-                // =================================================
+            if ($needsFollowUp) {
+
                 $newSession = CounselingSession::create([
                     'elderly_counselee_id' =>
                         $session->elderly_counselee_id,
-    
+
                     'counselor_id' =>
                         $session->counselor_id,
 
                     'service_mode' =>
                         $session->service_mode,
 
-                    'status' => 'ongoing',
+                    'status' =>
+                        'ongoing',
 
-                    'is_latest' => 1,
+                    'is_latest' =>
+                        1,
                 ]);
             }
 
@@ -715,13 +795,28 @@ class CounselingController extends Controller
             // =================================================
             return response()->json([
                 'success' => true,
-                'message' => 'Tindak lanjut berhasil disimpan dan sesi konseling telah diselesaikan.',
+                'message' => 'Resume konseling berhasil disimpan dan sesi konseling telah diselesaikan.',
                 'data' => [
-                    'counseling_session_id' => $session->id,
-                    'status' => $session->status,
-                    'note' => $session->note,
+                    'counseling_session_id' =>
+                        $session->id,
+
+                    'resume' =>
+                        $session->resume,
+
+                    'status' =>
+                        $session->status,
+
+                    'note' =>
+                        $session->note,
+
+                    'needs_follow_up' =>
+                        $needsFollowUp,
+
+                    'next_counseling_session_id' =>
+                        optional($newSession)->id,
                 ],
             ]);
+
         } catch (\Exception $e) {
 
             DB::rollBack();
