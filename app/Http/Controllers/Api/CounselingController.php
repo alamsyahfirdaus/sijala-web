@@ -715,8 +715,6 @@ class CounselingController extends Controller
                 // =============================================
                 $session->note = $request->note ? trim($request->note) : null;
                 $session->status = 'completed';
-                $session->is_latest = $session->is_latest;
-
             } else {
 
                 // =============================================
