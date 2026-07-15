@@ -60,157 +60,187 @@
     </div>
 
     <div class="card mt-3">
-        <div class="card-header">
-            <h3 class="card-title">Hasil Skrining</h3>
+        <div class="card-header border-bottom-0">
+            @php
+                $tabs = [
+                    'skrining' => 'Hasil Skrining',
+                    'evaluasi' => 'Hasil Evaluasi',
+                    'resume' => 'Resume Konselor',
+                    'tindak-lanjut' => 'Tindak Lanjut',
+                ];
+            @endphp
+
+            <ul class="nav nav-tabs counseling-tabs" id="counselingTab" role="tablist">
+                @foreach ($tabs as $id => $label)
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link {{ $loop->first ? 'active' : '' }}" id="{{ $id }}-tab"
+                            data-bs-toggle="tab" data-bs-target="#{{ $id }}" type="button" role="tab"
+                            aria-controls="{{ $id }}" aria-selected="{{ $loop->first ? 'true' : 'false' }}">
+                            {{ $label }}
+                        </button>
+                    </li>
+                @endforeach
+            </ul>
         </div>
-        <div class="card-body table-responsive">
-            <table class="table table-hover align-middle datatable">
-                <thead>
-                    <tr>
-                        <th>Tanggal</th>
-                        <th>Risiko Jatuh</th>
-                        <th>Perberdayaan Keluarga</th>
-                        @if (Auth::user()->username == 'alamsyahfirdaus')
-                            <th style="width: 5%;">Aksi</th>
-                        @endif
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($screenings as $index => $screening)
-                        <tr>
-                            <td>
-                                {{ \Carbon\Carbon::parse($screening['session']->updated_at)->translatedFormat('d F Y') }}
-                            </td>
-                            <td>
-                                @if ($screening['fallRisk'])
-                                    {{ $screening['fallRisk']->total_score }}
-                                    <span class="text-muted">
-                                        ({{ $screening['fallRisk']->risk_level }})
-                                    </span>
-                                @else
-                                    -
-                                @endif
-                            </td>
-                            <td>
-                                @if ($screening['empowerment'])
-                                    {{ $screening['empowerment']->total_score }}
-                                    <span class="text-muted">
-                                        ({{ $screening['empowerment']->empowerment_level }})
-                                    </span>
-                                @else
-                                    -
-                                @endif
-                            </td>
-                            @if (Auth::user()->username == 'alamsyahfirdaus')
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <button type="button" class="btn btn-primary dropdown-toggle dropdown-menu-right"
-                                            data-bs-toggle="dropdown" aria-expanded="false">
-                                            Aksi
-                                        </button>
-                                        <ul class="dropdown-menu">
-                                            <li><a href="javascript:void(0)" class="dropdown-item btn-edit-score"
-                                                    data-type="fall-risk" data-id="{{ $screening['fallRisk']->id }}"
-                                                    data-score="{{ $screening['fallRisk']->total_score ?? 0 }}">
-                                                    Ubah Skor Risiko Jatuh
-                                                </a></li>
-                                            <li>
-                                                <hr class="dropdown-divider" />
-                                            </li>
-                                            <li>
-                                                <a href="javascript:void(0)" class="dropdown-item btn-edit-score"
-                                                    data-type="empowerment" data-id="{{ $screening['empowerment']->id }}"
-                                                    data-score="{{ $screening['empowerment']->total_score ?? 0 }}">
-                                                    Ubah Skor Pemberdayaan
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </td>
-                            @endif
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
+        <div class="card-body pt-0">
+            <div class="tab-content mt-3" id="counselingTabContent">
 
-    <div class="card mt-3">
-        <div class="card-header">
-            <h3 class="card-title">Hasil Evaluasi</h3>
-        </div>
-        <div class="card-body table-responsive">
-            <table class="table table-hover align-middle datatable">
-                <thead>
-                    <tr>
-                        <th>Sesi</th>
-                        <th>Tanggal</th>
-                        <th>Topik</th>
-                        <th>Skor</th>
-                        <th>Kategori</th>
-                        @if (Auth::user()->username == 'alamsyahfirdaus')
-                            <th style="width: 5%;">Aksi</th>
-                        @endif
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($evaluations as $evaluation)
-                        <tr>
-                            <td>
-                                Sesi {{ $sessionNumbers[$evaluation->counseling_session_id] ?? '-' }}
-                            </td>
+                @foreach ($tabs as $id => $label)
+                    <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="{{ $id }}"
+                        role="tabpanel" aria-labelledby="{{ $id }}-tab">
 
-                            <td>
-                                {{ \Carbon\Carbon::parse($evaluation->created_at)->translatedFormat('d F Y') }}
-                            </td>
+                        @switch($id)
+                            @case('skrining')
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle datatable">
+                                        <thead>
+                                            <tr>
+                                                <th>Tanggal</th>
+                                                <th>Risiko Jatuh</th>
+                                                <th>Perberdayaan Keluarga</th>
+                                                @if (Auth::user()->username == 'alamsyahfirdaus')
+                                                    <th style="width: 5%;">Aksi</th>
+                                                @endif
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($screenings as $index => $screening)
+                                                <tr>
+                                                    <td>
+                                                        {{ \Carbon\Carbon::parse($screening['session']->updated_at)->translatedFormat('d F Y') }}
+                                                    </td>
+                                                    <td>
+                                                        @if ($screening['fallRisk'])
+                                                            {{ $screening['fallRisk']->total_score }}
+                                                            <span class="text-muted">
+                                                                ({{ $screening['fallRisk']->risk_level }})
+                                                            </span>
+                                                        @else
+                                                            -
+                                                        @endif
+                                                    </td>
+                                                    <td>{{ $screening['empowerment'] ? $screening['empowerment']->total_score : '-' }}
+                                                    </td>
+                                                    @if (Auth::user()->username == 'alamsyahfirdaus')
+                                                        <td>
+                                                            <div class="btn-group btn-group-sm">
+                                                                <button type="button"
+                                                                    class="btn btn-primary dropdown-toggle dropdown-menu-right"
+                                                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                                                    Aksi
+                                                                </button>
+                                                                <ul class="dropdown-menu">
+                                                                    <li><a href="javascript:void(0)"
+                                                                            class="dropdown-item btn-edit-score"
+                                                                            data-type="fall-risk"
+                                                                            data-id="{{ $screening['fallRisk']->id }}"
+                                                                            data-score="{{ $screening['fallRisk']->total_score ?? 0 }}">
+                                                                            Ubah Skor Risiko Jatuh
+                                                                        </a></li>
+                                                                    <li>
+                                                                        <hr class="dropdown-divider" />
+                                                                    </li>
+                                                                    <li>
+                                                                        <a href="javascript:void(0)"
+                                                                            class="dropdown-item btn-edit-score"
+                                                                            data-type="empowerment"
+                                                                            data-id="{{ $screening['empowerment']->id }}"
+                                                                            data-score="{{ $screening['empowerment']->total_score ?? 0 }}">
+                                                                            Ubah Skor Pemberdayaan
+                                                                        </a>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        </td>
+                                                    @endif
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @break
 
-                            <td>
-                                {{ $evaluation->topic->topic ?? '-' }}
-                            </td>
+                            @case('evaluasi')
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle datatable">
+                                        <thead>
+                                            <tr>
+                                                <th>Sesi</th>
+                                                <th>Tanggal</th>
+                                                <th>Topik</th>
+                                                <th>Skor</th>
+                                                <th>Kategori</th>
+                                                @if (Auth::user()->username == 'alamsyahfirdaus')
+                                                    <th style="width: 5%;">Aksi</th>
+                                                @endif
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($evaluations as $evaluation)
+                                                <tr>
+                                                    <td>
+                                                        Sesi {{ $sessionNumbers[$evaluation->counseling_session_id] ?? '-' }}
+                                                    </td>
 
-                            <td>
-                                {{ round($evaluation->percentage) }}
-                                {{-- {{ $evaluation->total_score ?? '-' }}
+                                                    <td>
+                                                        {{ \Carbon\Carbon::parse($evaluation->created_at)->translatedFormat('d F Y') }}
+                                                    </td>
 
-                                @if ($evaluation->percentage)
-                                    <span class="text-muted">
-                                        ({{ number_format($evaluation->percentage, 1) }}%)
-                                    </span>
-                                @endif --}}
-                            </td>
-                            <td>
-                                {{ $evaluation->category ?? '-' }}
-                            </td>
-                            @if (Auth::user()->username == 'alamsyahfirdaus')
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <button type="button" class="btn btn-primary dropdown-toggle dropdown-menu-right"
-                                            data-bs-toggle="dropdown" aria-expanded="false">
-                                            Aksi
-                                        </button>
-                                        <ul class="dropdown-menu">
-                                            <li><a href="javascript:void(0)" class="dropdown-item btn-edit-score"
-                                                    data-type="evaluation" data-id="{{ $evaluation->id }}"
-                                                    data-score="{{ $evaluation->total_score }}">
-                                                    Ubah Skor
-                                                </a></li>
-                                        </ul>
-                                    </div>
-                                </td>
-                            @endif
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
+                                                    <td>
+                                                        {{ $evaluation->topic->topic ?? '-' }}
+                                                    </td>
 
-    <div class="card mt-3">
-        <div class="card-header">
-            <h3 class="card-title">Resume Konselor</h3>
-        </div>
-        <div class="card-body">
+                                                    <td>
+                                                        {{ round($evaluation->percentage) }}
+                                                    </td>
+                                                    <td>
+                                                        {{ $evaluation->category ?? '-' }}
+                                                    </td>
+                                                    @if (Auth::user()->username == 'alamsyahfirdaus')
+                                                        <td>
+                                                            <div class="btn-group btn-group-sm">
+                                                                <button type="button"
+                                                                    class="btn btn-primary dropdown-toggle dropdown-menu-right"
+                                                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                                                    Aksi
+                                                                </button>
+                                                                <ul class="dropdown-menu">
+                                                                    <li><a href="javascript:void(0)"
+                                                                            class="dropdown-item btn-edit-score"
+                                                                            data-type="evaluation" data-id="{{ $evaluation->id }}"
+                                                                            data-score="{{ $evaluation->total_score }}">
+                                                                            Ubah Skor
+                                                                        </a></li>
+                                                                </ul>
+                                                            </div>
+                                                        </td>
+                                                    @endif
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @break
 
+                            {{-- ========================================= --}}
+                            {{-- RESUME KONSELOR --}}
+                            {{-- ========================================= --}}
+                            @case('resume')
+                                RESUME KONSELOR
+                            @break
+
+                            {{-- ========================================= --}}
+                            {{-- TINDAK LANJUT --}}
+                            {{-- ========================================= --}}
+                            @case('tindak-lanjut')
+                                TINDAK LANJUT
+                            @break
+                        @endswitch
+
+                    </div>
+                @endforeach
+
+            </div>
         </div>
     </div>
 
@@ -247,6 +277,38 @@
             </form>
         </div>
     </div>
+
+    <style>
+        .counseling-tabs {
+            gap: 10px;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 12px;
+        }
+
+        .counseling-tabs .nav-link {
+            border: none;
+            border-radius: 12px;
+            padding: 9px 18px;
+            color: #6c757d;
+            background: #f8f9fa;
+            transition: .25s;
+        }
+
+        .counseling-tabs .nav-link i {
+            font-size: 14px;
+        }
+
+        .counseling-tabs .nav-link:hover {
+            background: #fff7df;
+            color: #d98c00;
+            transform: translateY(-2px);
+        }
+
+        .counseling-tabs .nav-link.active {
+            background: #FFC107;
+            color: #fff;
+        }
+    </style>
 
     <script>
         $(document).ready(function() {

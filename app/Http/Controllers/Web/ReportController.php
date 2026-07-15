@@ -604,7 +604,7 @@ class ReportController extends Controller
                             'Pendamping/Konseli' => $item['counselee_name'],
                             'Lama Merawat' => $item['care_duration_months'],
                             'Pernah Jatuh' => $item['has_fallen'],
-                            'Masalah Kesehatan' => $item['health_problems'] ?? '-',
+                            'Kondisi Kesehatan' => $item['health_problems'] ?? '-',
                             'Puskesmas' => $item['puskesmas'],
                             'Tanggal Terdaftar' => Carbon::parse(
                                 $item['created_at']
