@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\CounselingSession;
-use App\Models\ElderlyCounselee;
-use App\Models\EmpowermentAssessment;
-use App\Models\FallRiskScreening;
-use App\Models\EducationContent;
-use App\Models\Evaluation;
 use App\Models\CounselingResumeOption;
+use App\Models\CounselingSession;
+use App\Models\EducationContent;
+use App\Models\EmpowermentAssessment;
+use App\Models\Evaluation;
+use App\Models\FallRiskScreening;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -40,9 +39,9 @@ class CounselingController extends Controller
     private function getCounselingSessionsForCounselee($user)
     {
         $sessions = CounselingSession::with([
-                'elderlyCounselee.counselee',
-                'counselor',
-            ])
+            'elderlyCounselee.counselee',
+            'counselor',
+        ])
             ->whereHas('elderlyCounselee', function ($query) use ($user) {
                 $query->where('counselee_id', $user->id);
             })
@@ -90,9 +89,9 @@ class CounselingController extends Controller
     private function getCounselingSessionsForCounselor($user)
     {
         $sessions = CounselingSession::with([
-                'elderlyCounselee.counselee',
-                'counselor',
-            ])
+            'elderlyCounselee.counselee',
+            'counselor',
+        ])
             ->where('counselor_id', $user->id)
             ->orderBy('created_at', 'asc')
             ->get();
@@ -107,7 +106,7 @@ class CounselingController extends Controller
                 $counselee = $elderlyCounselee->counselee ?? null;
 
                 return [
-                    'elderly_counselee_id' =>  $elderlyCounselee->id ?? null,
+                    'elderly_counselee_id' => $elderlyCounselee->id ?? null,
 
                     // ================= DATA KONSELI =================
                     'counselee_id' => $elderlyCounselee->counselee_id ?? null,
@@ -149,7 +148,7 @@ class CounselingController extends Controller
         ]);
     }
 
-    public function getCounselingSessionsById(Request $request, $elderlyCounseleeId) 
+    public function getCounselingSessionsById(Request $request, $elderlyCounseleeId)
     {
         $user = $request->attributes->get('user');
 
@@ -168,9 +167,9 @@ class CounselingController extends Controller
         // AMBIL DATA SESI KONSELING
         // =========================================================
         $sessions = CounselingSession::with([
-                'elderlyCounselee.counselee',
-                'counselor',
-            ])
+            'elderlyCounselee.counselee',
+            'counselor',
+        ])
             ->where('elderly_counselee_id', $elderlyCounseleeId)
             ->where('counselor_id', $user->id)
             ->orderBy('created_at', 'desc')
@@ -206,47 +205,35 @@ class CounselingController extends Controller
             // =====================================================
             // DATA KONSELI
             // =====================================================
-            'elderly_counselee_id' =>
-                $elderlyCounselee->id ?? null,
+            'elderly_counselee_id' => $elderlyCounselee->id ?? null,
 
-            'counselee_id' =>
-                $elderlyCounselee->counselee_id ?? null,
+            'counselee_id' => $elderlyCounselee->counselee_id ?? null,
 
-            'counselee_name' =>
-                $counselee->name ?? null,
+            'counselee_name' => $counselee->name ?? null,
 
-            'counselee_phone' =>
-                $counselee->phone ?? null,
+            'counselee_phone' => $counselee->phone ?? null,
 
             // =====================================================
             // DATA LANSIA
             // =====================================================
-            'elderly_name' =>
-                $elderlyCounselee->elderly_name ?? null,
+            'elderly_name' => $elderlyCounselee->elderly_name ?? null,
 
-            'elderly_gender' =>
-                $elderlyCounselee->elderly_gender ?? null,
+            'elderly_gender' => $elderlyCounselee->elderly_gender ?? null,
 
-            'elderly_age' =>
-                $elderlyCounselee->elderly_age ?? null,
+            'elderly_age' => $elderlyCounselee->elderly_age ?? null,
 
-            'health_problems' =>
-                $elderlyCounselee->health_problems ?? null,
+            'health_problems' => $elderlyCounselee->health_problems ?? null,
 
-            'has_fallen' =>
-                $elderlyCounselee->has_fallen ?? null,
+            'has_fallen' => $elderlyCounselee->has_fallen ?? null,
 
             // =====================================================
             // DATA KONSELOR
             // =====================================================
-            'counselor_id' =>
-                $firstSession->counselor_id,
+            'counselor_id' => $firstSession->counselor_id,
 
-            'counselor_name' =>
-                optional($firstSession->counselor)->name,
+            'counselor_name' => optional($firstSession->counselor)->name,
 
-            'counselor_phone' =>
-                optional($firstSession->counselor)->phone,
+            'counselor_phone' => optional($firstSession->counselor)->phone,
 
             // =====================================================
             // RINGKASAN
@@ -278,8 +265,8 @@ class CounselingController extends Controller
                 // HASIL EVALUASI
                 // ============================================
                 $evaluations = Evaluation::with([
-                        'topic:id,topic'
-                    ])
+                    'topic:id,topic',
+                ])
                     ->where(
                         'counseling_session_id',
                         $session->id
@@ -294,49 +281,39 @@ class CounselingController extends Controller
                     // ========================================
                     'id' => $session->id,
 
-                    'service_mode' =>
-                        $session->service_mode,
+                    'service_mode' => $session->service_mode,
 
-                    'status' =>
-                        $session->status,
-                    
-                    'is_latest' =>
-                        $session->is_latest ? true : false,
+                    'status' => $session->status,
 
-                    'created_at' =>
-                        optional(
-                            $session->created_at
-                        )->format('d-m-Y H:i'),
-                    
-                    'updated_at' =>
-                        optional(
-                            $session->updated_at
-                        )->format('d-m-Y H:i'),
+                    'is_latest' => $session->is_latest ? true : false,
+
+                    'created_at' => optional(
+                        $session->created_at
+                    )->format('d-m-Y H:i'),
+
+                    'updated_at' => optional(
+                        $session->updated_at
+                    )->format('d-m-Y H:i'),
 
                     // ========================================
                     // STATUS PENYELESAIAN
                     // ========================================
-                    'is_completed' =>
-                        $this->isCounselingSessionCompleted(
-                            $session->id
-                        ),
+                    'is_completed' => $this->isCounselingSessionCompleted(
+                        $session->id
+                    ),
 
                     // ========================================
                     // SCREENING RISIKO JATUH
                     // ========================================
                     'fall_risk' => $fallRisk
                         ? [
-                            'id' =>
-                                $fallRisk->id,
+                            'id' => $fallRisk->id,
 
-                            'total_score' =>
-                                $fallRisk->total_score,
+                            'total_score' => $fallRisk->total_score,
 
-                            'risk_level' =>
-                                $fallRisk->risk_level,
+                            'risk_level' => $fallRisk->risk_level,
 
-                            'interpretation' =>
-                                $fallRisk->interpretation,
+                            'interpretation' => $fallRisk->interpretation,
                         ]
                         : null,
 
@@ -345,17 +322,13 @@ class CounselingController extends Controller
                     // ========================================
                     'empowerment' => $empowerment
                         ? [
-                            'id' =>
-                                $empowerment->id,
+                            'id' => $empowerment->id,
 
-                            'total_score' =>
-                                $empowerment->total_score,
+                            'total_score' => $empowerment->total_score,
 
-                            'empowerment_level' =>
-                                $empowerment->empowerment_level,
+                            'empowerment_level' => $empowerment->empowerment_level,
 
-                            'interpretation' =>
-                                $empowerment->interpretation ?? null,
+                            'interpretation' => $empowerment->interpretation ?? null,
                         ]
                         : null,
 
@@ -366,38 +339,28 @@ class CounselingController extends Controller
                         function ($evaluation) {
 
                             return [
-                                'id' =>
-                                    $evaluation->id,
+                                'id' => $evaluation->id,
 
-                                'evaluation_topic_id' =>
-                                    $evaluation->evaluation_topic_id,
+                                'evaluation_topic_id' => $evaluation->evaluation_topic_id,
 
-                                'topic' =>
-                                    optional(
-                                        $evaluation->topic
-                                    )->topic,
+                                'topic' => optional(
+                                    $evaluation->topic
+                                )->topic,
 
-                                'total_questions' =>
-                                    $evaluation->total_questions,
+                                'total_questions' => $evaluation->total_questions,
 
-                                'correct_answers' =>
+                                'correct_answers' => $evaluation->correct_answers,
+
+                                'wrong_answers' => $evaluation->total_questions -
                                     $evaluation->correct_answers,
 
-                                'wrong_answers' =>
-                                    $evaluation->total_questions -
-                                    $evaluation->correct_answers,
+                                'total_score' => $evaluation->total_score,
 
-                                'total_score' =>
-                                    $evaluation->total_score,
+                                'percentage' => $evaluation->percentage,
 
-                                'percentage' =>
-                                    $evaluation->percentage,
+                                'category' => $evaluation->category,
 
-                                'category' =>
-                                    $evaluation->category,
-
-                                'interpretation' =>
-                                    $evaluation->interpretation ?? null,
+                                'interpretation' => $evaluation->interpretation ?? null,
                             ];
                         }
                     )->values(),
@@ -410,8 +373,7 @@ class CounselingController extends Controller
         // =========================================================
         return response()->json([
             'success' => true,
-            'message' =>
-                'Detail sesi konseling berhasil diambil.',
+            'message' => 'Detail sesi konseling berhasil diambil.',
             'data' => $data,
         ]);
     }
@@ -439,7 +401,7 @@ class CounselingController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Jumlah sesi konseling berhasil dihitung.',
-            'total'   => $total,
+            'total' => $total,
         ]);
     }
 
@@ -470,9 +432,9 @@ class CounselingController extends Controller
         // lalu memilih hanya record terakhir (id terbesar)
         // untuk setiap elderly_counselee_id.
         $sessions = CounselingSession::with([
-                'elderlyCounselee.counselee',
-                'counselor',
-            ])
+            'elderlyCounselee.counselee',
+            'counselor',
+        ])
             ->where('counselor_id', $user->id)
             ->whereDate('created_at', Carbon::today())
             ->orderBy('id', 'desc')
@@ -581,8 +543,8 @@ class CounselingController extends Controller
     public function getCounselingResumeOptions()
     {
         $categories = CounselingResumeOption::with([
-                'items:id,category_id,title'
-            ])
+            'items:id,category_id,title',
+        ])
             ->whereNull('category_id')
             ->where('is_active', true)
             ->orderBy('sort_order', 'asc')
@@ -637,8 +599,10 @@ class CounselingController extends Controller
             [
                 'resume' => 'required|array|min:1',
                 'resume.*' => 'integer|distinct|exists:counseling_resume_options,id',
-                'note' => 'required|string|max:5000',
-                'needs_follow_up' => 'required|boolean',
+
+                'note' => 'nullable|string|max:5000',
+
+                'needs_follow_up' => 'nullable|boolean',
             ],
             [
                 'resume.required' => 'Resume konseling wajib dipilih.',
@@ -647,10 +611,7 @@ class CounselingController extends Controller
                 'resume.*.distinct' => 'Pilihan resume tidak boleh duplikat.',
                 'resume.*.exists' => 'Pilihan resume konseling tidak valid.',
 
-                'note.required' => 'Tindak lanjut konseling wajib diisi.',
                 'note.max' => 'Tindak lanjut maksimal 5000 karakter.',
-
-                'needs_follow_up.required' => 'Status sesi lanjutan wajib dipilih.',
             ]
         );
 
@@ -667,24 +628,13 @@ class CounselingController extends Controller
         try {
 
             // =================================================
-            // AMBIL USER INPUT
-            // =================================================
-            $needsFollowUp = $request->boolean('needs_follow_up');
-
-            // =================================================
             // AMBIL SESI
             // =================================================
-            $session = CounselingSession::where(
-                    'id',
-                    $counselingSessionId
-                )
-                ->where(
-                    'counselor_id',
-                    $user->id
-                )
+            $session = CounselingSession::where('id', $counselingSessionId)
+                ->where('counselor_id', $user->id)
                 ->first();
 
-            if (!$session) {
+            if (! $session) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Sesi konseling tidak ditemukan.',
@@ -694,13 +644,11 @@ class CounselingController extends Controller
 
             // =================================================
             // VALIDASI ITEM RESUME
-            // Pastikan yang dipilih adalah ITEM,
-            // bukan kategori.
             // =================================================
             $invalidResume = CounselingResumeOption::whereIn(
-                    'id',
-                    $request->resume
-                )
+                'id',
+                $request->resume
+            )
                 ->whereNull('category_id')
                 ->exists();
 
@@ -713,27 +661,21 @@ class CounselingController extends Controller
             }
 
             // =================================================
-            // HITUNG JUMLAH SESI KONSELING
+            // VALIDASI SKRINING
             // =================================================
             $totalSessions = CounselingSession::where(
-                    'elderly_counselee_id',
-                    $session->elderly_counselee_id
-                )
+                'elderly_counselee_id',
+                $session->elderly_counselee_id
+            )
                 ->count();
 
-            // =================================================
-            // APAKAH SESI PERTAMA ATAU TERAKHIR
-            // =================================================
             $mustValidateCompletion =
                 $totalSessions == 1 ||
                 $session->is_latest == 1;
 
-            // =================================================
-            // VALIDASI KELENGKAPAN
-            // =================================================
             if (
                 $mustValidateCompletion &&
-                !$this->isCounselingSessionCompleted($session->id)
+                ! $this->isCounselingSessionCompleted($session->id)
             ) {
                 return response()->json([
                     'success' => false,
@@ -743,7 +685,7 @@ class CounselingController extends Controller
             }
 
             // =================================================
-            // FORMAT DATA RESUME
+            // FORMAT RESUME
             // =================================================
             $resume = collect($request->resume)
                 ->map(fn ($id) => (int) $id)
@@ -753,67 +695,88 @@ class CounselingController extends Controller
                 ->toArray();
 
             // =================================================
-            // UPDATE SESI
+            // STATUS SESI
+            // TRUE  = MASIH ADA SESI BERIKUTNYA
+            // FALSE = SESI TERAKHIR
+            // =================================================
+            $needsFollowUp = $request->boolean('needs_follow_up');
+
+            $isLastSession = ! $needsFollowUp;
+
+            // =================================================
+            // UPDATE DATA SESI
             // =================================================
             $session->resume = $resume;
-            $session->note = trim($request->note);
-            $session->status = 'completed';
-            $session->is_latest = 0;
-            $session->updated_at = now();
 
+            if ($isLastSession) {
+
+                // =============================================
+                // SESI TERAKHIR
+                // =============================================
+                $session->note = $request->note ? trim($request->note) : null;
+                $session->status = 'completed';
+                $session->is_latest = $session->is_latest;
+
+            } else {
+
+                // =============================================
+                // SESI MASIH BERLANJUT
+                // =============================================
+                if (! $request->filled('note')) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Tindak lanjut konseling wajib diisi.',
+                        'data' => null,
+                    ], 422);
+                }
+
+                $session->note = trim($request->note);
+                $session->status = 'completed';
+                $session->is_latest = 0;
+            }
+
+            $session->updated_at = now();
             $session->save();
 
             // =================================================
-            // BUAT SESI LANJUTAN
+            // BUAT SESI BERIKUTNYA
             // =================================================
             $newSession = null;
 
-            if ($needsFollowUp) {
+            if (! $isLastSession) {
 
                 $newSession = CounselingSession::create([
-                    'elderly_counselee_id' =>
-                        $session->elderly_counselee_id,
 
-                    'counselor_id' =>
-                        $session->counselor_id,
+                    'elderly_counselee_id' => $session->elderly_counselee_id,
 
-                    'service_mode' =>
-                        $session->service_mode,
+                    'counselor_id' => $session->counselor_id,
 
-                    'status' =>
-                        'ongoing',
+                    'service_mode' => $session->service_mode,
 
-                    'is_latest' =>
-                        1,
+                    'status' => 'ongoing',
+
+                    'is_latest' => 1,
                 ]);
             }
 
             DB::commit();
 
-            // =================================================
-            // RESPONSE
-            // =================================================
             return response()->json([
                 'success' => true,
                 'message' => 'Resume konseling berhasil disimpan dan sesi konseling telah diselesaikan.',
                 'data' => [
-                    'counseling_session_id' =>
-                        $session->id,
 
-                    'resume' =>
-                        $session->resume,
+                    'counseling_session_id' => $session->id,
 
-                    'status' =>
-                        $session->status,
+                    'resume' => $session->resume,
 
-                    'note' =>
-                        $session->note,
+                    'status' => $session->status,
 
-                    'needs_follow_up' =>
-                        $needsFollowUp,
+                    'note' => $session->note,
 
-                    'next_counseling_session_id' =>
-                        optional($newSession)->id,
+                    'needs_follow_up' => $needsFollowUp,
+
+                    'next_counseling_session_id' => optional($newSession)->id,
                 ],
             ]);
 
@@ -829,14 +792,14 @@ class CounselingController extends Controller
         }
     }
 
-    public function showEducationContents() 
+    public function showEducationContents()
     {
         $contents = EducationContent::where('is_active', 1)->get();
 
         return response()->json([
             'status' => true,
             'message' => 'Daftar konten edukasi berhasil diambil',
-            'data'  => $contents
+            'data' => $contents,
         ]);
     }
 }
