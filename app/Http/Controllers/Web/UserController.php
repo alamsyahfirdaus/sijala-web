@@ -3,15 +3,15 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\Puskesmas;
+use App\Models\User;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Contracts\Encryption\DecryptException;
 
 class UserController extends Controller
 {
@@ -20,15 +20,15 @@ class UserController extends Controller
         $title = 'Pengguna';
 
         $users = User::with([
-                'puskesmas.village.district.regency.province'
-            ])
+            'puskesmas.village.district.regency.province',
+        ])
             ->where('role', '!=', 'admin')
             ->orderByDesc('id')
             ->get();
 
         $puskesmas = Puskesmas::with([
-                'village.district.regency'
-            ])
+            'village.district.regency',
+        ])
             ->orderBy('name')
             ->get();
 
@@ -37,6 +37,134 @@ class UserController extends Controller
             'users',
             'puskesmas'
         ));
+    }
+
+    public function profile()
+    {
+        $title = 'Profil';
+        $user = Auth::user();
+        $users = User::orderBy('name')->get();
+
+        return view('profile', compact(
+            'title',
+            'user',
+            'users',
+        ));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDASI
+        |--------------------------------------------------------------------------
+        */
+        $request->validate([
+            'user_id' => [
+                'required',
+            ],
+
+            'username' => [
+                'required',
+                'string',
+                'min:4',
+                'max:50',
+            ],
+
+            'password' => [
+                'nullable',
+                'string',
+                'min:8',
+            ],
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+
+            /*
+            |--------------------------------------------------------------------------
+            | DECRYPT USER
+            |--------------------------------------------------------------------------
+            */
+            $user = User::findOrFail(
+                decrypt($request->user_id)
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | VALIDASI USERNAME
+            |--------------------------------------------------------------------------
+            */
+            validator(
+                ['username' => trim($request->username)],
+                [
+                    'username' => [
+                        Rule::unique('users', 'username')
+                            ->ignore($user->id),
+                    ],
+                ],
+                [
+                    'username.unique' => 'Username sudah digunakan.',
+                ]
+            )->validate();
+
+            /*
+            |--------------------------------------------------------------------------
+            | UPDATE USERNAME
+            |--------------------------------------------------------------------------
+            */
+            $user->username = trim($request->username);
+
+            /*
+            |--------------------------------------------------------------------------
+            | UPDATE PASSWORD (OPSIONAL)
+            |--------------------------------------------------------------------------
+            */
+            if ($request->filled('password')) {
+
+                $user->password = Hash::make(
+                    $request->password
+                );
+            }
+
+            $user->save();
+
+            DB::commit();
+
+            return redirect()
+                ->route('profile')
+                ->with(
+                    'success',
+                    Auth::id() == $user->id
+                        ? 'Profil berhasil diperbarui.'
+                        : "Akun {$user->name} berhasil diperbarui."
+                );
+
+        } catch (DecryptException $e) {
+
+            DB::rollBack();
+
+            return redirect()
+                ->route('profile')
+                ->with(
+                    'error',
+                    'Data pengguna tidak valid.'
+                );
+
+        } catch (\Throwable $e) {
+
+            DB::rollBack();
+
+            report($e);
+
+            return redirect()
+                ->route('profile')
+                ->with(
+                    'error',
+                    'Terjadi kesalahan saat memperbarui profil.'
+                );
+        }
     }
 
     public function bulkDelete(Request $request)
@@ -124,7 +252,7 @@ class UserController extends Controller
                 $message = 'Pengguna berhasil diperbarui.';
             } else {
 
-                $user = new User();
+                $user = new User;
 
                 /*
                 |--------------------------------------------------------------------------
@@ -146,7 +274,7 @@ class UserController extends Controller
                 while (
                     User::where('username', $username)->exists()
                 ) {
-                    $username = $baseUsername . $counter++;
+                    $username = $baseUsername.$counter++;
                 }
 
                 $user->username = $username;
@@ -202,7 +330,7 @@ class UserController extends Controller
 
         }
     }
-    
+
     // public function show($id)
     // {
     //     try {

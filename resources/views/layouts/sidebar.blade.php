@@ -19,7 +19,7 @@
 
             <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" data-accordion="false" role="menu">
                 <li class="nav-item">
-                    <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
+                    <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') || request()->routeIs('profile') ? 'active' : '' }}">
                         <i class="nav-icon bi bi-house-door-fill"></i>
                         <p>Beranda</p>
                     </a>

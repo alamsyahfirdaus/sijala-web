@@ -192,7 +192,6 @@
                             <th>Selisih</th>
                         </tr>
                     </thead>
-
                     <tbody>
                         @foreach ($data['screenings'] as $screening)
                             <tr>
@@ -251,52 +250,26 @@
                         <tr>
                             <th>No</th>
                             <th>Konseli</th>
-                            <th>Tgl.<span style="font-size: 10px; color: #fff;">_</span>Evaluasi</th>
+                            <th>Lansia</th>
+                            <th>Konselor</th>
                             <th>Topik</th>
-                            <th>Hasil<span style="font-size: 10px; color: #fff;">_</span>Evaluasi</th>
-                            <th>Keterangan</th>
+                            <th>Skor</th>
+                            <th>Kategori</th>
+                            <th>Tgl.<span style="font-size: 10px; color: #fff;">_</span>Evaluasi</th>
                         </tr>
                     </thead>
 
                     <tbody>
                         @foreach ($data['evaluations'] as $evaluation)
                             <tr>
-
-                                <td>
-                                    {{ $loop->iteration }}
-                                </td>
-
-                                <td>
-                                    {{ $evaluation['counselee_name'] }}
-                                </td>
-
-                                <td>
-                                    {{ \Carbon\Carbon::parse($evaluation['evaluation_date'])->translatedFormat('d F Y') }}
-                                </td>
-
-                                <td>
-                                    {{ $evaluation['topic_name'] }}
-                                </td>
-
-                                <td>
-                                    {{ round($evaluation['percentage']) }}
-                                    <span class="text-muted">
-                                        ({{ $evaluation['category'] }})
-                                    </span>
-                                </td>
-
-                                {{-- <td>
-                                    Skor {{ $evaluation['score'] }}
-                                    <span class="text-muted">
-                                        ({{ $evaluation['percentage'] }}%)
-                                    </span>
-                                    {{ $evaluation['category'] }}
-                                </td> --}}
-
-
-                                <td title="{{ $evaluation['interpretation'] }}">
-                                    {{ \Illuminate\Support\Str::limit($evaluation['interpretation'], 50) }}</td>
-
+                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $evaluation['counselee_name'] }}</td>
+                                <td>{{ $evaluation['elderly_name'] }}</td>
+                                <td>{{ $evaluation['counselor_name'] }}</td>
+                                <td>{{ $evaluation['topic_name'] }}</td>
+                                <td style="text-align: center;">{{ $evaluation['score'] }}</td>
+                                <td>{{ $evaluation['category'] }}</td>
+                                <td>{{ \Carbon\Carbon::parse($evaluation['evaluation_date'])->translatedFormat('d F Y') }}</td>
                             </tr>
                         @endforeach
                     </tbody>

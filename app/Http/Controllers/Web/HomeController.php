@@ -8,6 +8,7 @@ use App\Models\EducationContent;
 use App\Models\ElderlyCounselee;
 use App\Models\EmpowermentAssessment;
 use App\Models\FallRiskScreening;
+use App\Models\Evaluation;
 use App\Models\Puskesmas;
 use App\Models\User;
 use Carbon\Carbon;
@@ -40,7 +41,12 @@ class HomeController extends Controller
             }
         );
 
-        return view('dashboard', compact('videos'));
+        $posters = EducationContent::where('category', 'poster')->get();
+
+        return view('dashboard', compact(
+            'videos',
+            'posters'
+        ));
     }
 
     public function home()
@@ -103,6 +109,36 @@ class HomeController extends Controller
         ];
 
         // =====================================================
+        // HASIL EVALUASI PER TOPIK
+        // =====================================================
+        $evaluationData = Evaluation::query()
+            ->join(
+                'evaluation_topics',
+                'evaluation_topics.id',
+                '=',
+                'evaluations.evaluation_topic_id'
+            )
+            ->selectRaw("
+                evaluation_topics.topic,
+                AVG(evaluations.total_score) AS average_score
+            ")
+            ->groupBy(
+                'evaluation_topics.id',
+                'evaluation_topics.topic'
+            )
+            ->orderBy('evaluation_topics.topic')
+            ->get();
+
+        $evaluationCategories = $evaluationData
+            ->pluck('topic')
+            ->toArray();
+
+        $evaluationChart = $evaluationData
+            ->pluck('average_score')
+            ->map(fn ($score) => round($score, 2))
+            ->toArray();
+
+        // =====================================================
         // RETURN VIEW
         // =====================================================
         return view('home', [
@@ -116,11 +152,17 @@ class HomeController extends Controller
             'totalPuskesmas' => Puskesmas::count(),
 
             // =================================================
-            // GRAFIK
+            // GRAFIK SKRINING RISIKO JATUH & PEMBERDAYAAN KELUARGA
             // =================================================
             'testCategories'   => $testCategories,
             'fallRiskChart'    => $fallRiskChart,
             'empowermentChart' => $empowermentChart,
+
+            // =================================================
+            // GRAFIK HASIL EVALUASI
+            // =================================================
+            'evaluationCategories' => $evaluationCategories,
+            'evaluationChart'      => $evaluationChart,
         ]);
     }
 }

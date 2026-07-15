@@ -475,7 +475,7 @@ class ReportController extends Controller
 
             ->with([
                 'topic',
-                'session.counselor',
+                'session.counselor.puskesmas.village.district.regency',
                 'session.elderlyCounselee.counselee',
             ])
 
@@ -502,30 +502,60 @@ class ReportController extends Controller
             ->get()
 
             ->map(function ($item) {
+
+                $session = $item->session;
+                $elderly = $session?->elderlyCounselee;
+                $counselor = $session?->counselor;
+
                 return [
 
                     'id' => $item->id,
 
-                    'counselee_name' => $item->session?->elderlyCounselee?->counselee?->name ?? '-',
+                    // Konseli
+                    'counselee_name' => $elderly?->counselee?->name ?? '-',
 
-                    'elderly_name' => $item->session?->elderlyCounselee?->elderly_name ?? '-',
+                    // Lansia
+                    'elderly_name' => $elderly?->elderly_name ?? '-',
 
-                    'counselor_name' => $item->session?->counselor?->name ?? '-',
+                    'gender' => match ($elderly?->elderly_gender) {
+                        'L' => 'Laki-Laki',
+                        'P' => 'Perempuan',
+                        default => '-',
+                    },
 
+                    'age' => $elderly?->elderly_age
+                        ? $elderly->elderly_age . ' Tahun'
+                        : '-',
+
+                    // Konselor
+                    'counselor_name' => $counselor?->name ?? '-',
+
+                    // Puskesmas
+                    'puskesmas' => $counselor?->puskesmas
+                        ? collect([
+                            $counselor->puskesmas->name,
+                            $counselor->puskesmas->village?->name,
+                            $counselor->puskesmas->village?->district?->name,
+                            $counselor->puskesmas->village?->district?->regency?->name,
+                        ])->filter()->implode(', ')
+                        : '-',
+
+                    // Evaluasi
                     'topic_name' => $item->topic?->topic ?? '-',
 
                     'score' => $item->total_score ?? '-',
 
-                    'category' => $item->category ?? '-',
+                    'percentage' => $item->percentage
+                        ? $item->percentage . '%'
+                        : '-',
 
-                    'percentage' => $item->percentage ?? '-',
+                    'category' => $item->category ?? '-',
 
                     'interpretation' => $item->interpretation ?? '-',
 
-                    // 'notes' =>
-                    //     $item->notes ?? '-',
-
-                    'evaluation_date' => $item->created_at,
+                    // Tanggal
+                    'evaluation_date' => $item->created_at
+                        ->translatedFormat('d F Y'),
                 ];
             });
 
@@ -667,25 +697,25 @@ class ReportController extends Controller
                         return [
                             'No' => $index + 1,
 
+                            // Identitas
                             'Konseli' => $item['counselee_name'],
-
                             'Nama Lansia' => $item['elderly_name'],
+                            'Jenis Kelamin' => $item['gender'],
+                            'Usia' => $item['age'],
 
+                            // Pelayanan
                             'Konselor' => $item['counselor_name'],
+                            'Puskesmas' => $item['puskesmas'],
 
+                            // Evaluasi
                             'Topik' => $item['topic_name'],
-
                             'Skor' => $item['score'],
-
-                            'Persentase' => $item['percentage'].'%',
-
+                            'Persentase' => $item['percentage'],
                             'Kategori' => $item['category'],
-
                             'Keterangan' => $item['interpretation'],
 
-                            'Tanggal Evaluasi' => Carbon::parse(
-                                $item['evaluation_date']
-                            )->translatedFormat('d F Y'),
+                            // Waktu
+                            'Tanggal Evaluasi' => $item['evaluation_date'],
                         ];
                     }),
             ],

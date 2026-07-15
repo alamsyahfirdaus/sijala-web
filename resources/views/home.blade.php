@@ -76,7 +76,7 @@
             <div class="card card-outline card-warning mb-4">
                 <div class="card-header border-0">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h3 class="card-title">Distribusi Hasil Skrining Risiko Jatuh</h3>
+                        <h3 class="card-title">Grafik Skrining Risiko Jatuh</h3>
                     </div>
                 </div>
                 <div class="card-body" style="height: 450px; overflow-y: auto;">
@@ -88,12 +88,9 @@
             <div class="card card-outline card-warning mb-4">
                 <div class="card-header border-0">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h3 class="card-title">
-                            Distribusi Hasil Pemberdayaan Keluarga
-                        </h3>
+                        <h3 class="card-title">Grafik Pemberdayaan Keluarga</h3>
                     </div>
                 </div>
-
                 <div class="card-body" style="height:450px;">
                     <div id="empowerment-chart"></div>
                 </div>
@@ -101,119 +98,213 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/browser/overlayscrollbars.browser.es6.min.js"
-        crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous">
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
+    <div class="col-12">
+        <div class="card card-outline card-warning mb-4">
+            <div class="card-header border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="card-title">Grafik Hasil Evaluasi</h3>
+                </div>
+            </div>
+            <div class="card-body" style="height: 450px; overflow-y: auto;">
+                <div id="evaluation-chart"></div>
+            </div>
+        </div>
+    </div>
 
-            // =====================================================
-            // GRAFIK RISIKO JATUH
-            // =====================================================
-            new ApexCharts(document.querySelector("#screening-chart"), {
+        <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/browser/overlayscrollbars.browser.es6.min.js"
+            crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous">
+        </script>
+        {{-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.min.js" crossorigin="anonymous"></script> --}}
+        <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
 
-                chart: {
-                    type: 'bar',
-                    height: 380,
-                    toolbar: {
+                new ApexCharts(document.querySelector("#screening-chart"), {
+
+                    chart: {
+                        type: 'bar',
+                        height: 380,
+                        toolbar: {
+                            show: false
+                        }
+                    },
+
+                    plotOptions: {
+                        bar: {
+                            horizontal: false,
+                            columnWidth: '40%',
+                            borderRadius: 6
+                        }
+                    },
+
+                    series: [{
+                        name: 'Jumlah Skrining',
+                        data: @json($fallRiskChart)
+                    }],
+
+                    xaxis: {
+                        categories: @json($testCategories)
+                    },
+
+                    yaxis: {
+                        title: {
+                            text: 'Jumlah Skrining'
+                        }
+                    },
+
+                    colors: ['#ffc107'],
+
+                    dataLabels: {
+                        enabled: true
+                    },
+
+                    legend: {
                         show: false
+                    },
+
+                    grid: {
+                        borderColor: '#ececec'
                     }
-                },
 
-                plotOptions: {
-                    bar: {
-                        horizontal: false,
-                        columnWidth: '40%',
-                        borderRadius: 6
-                    }
-                },
+                }).render();
 
-                series: [{
-                    name: 'Jumlah Skrining',
-                    data: @json($fallRiskChart)
-                }],
+                new ApexCharts(document.querySelector("#empowerment-chart"), {
 
-                xaxis: {
-                    categories: @json($testCategories)
-                },
+                    chart: {
+                        type: 'bar',
+                        height: 380,
+                        toolbar: {
+                            show: false
+                        }
+                    },
 
-                yaxis: {
-                    title: {
-                        text: 'Jumlah Skrining'
-                    }
-                },
+                    plotOptions: {
+                        bar: {
+                            horizontal: false,
+                            columnWidth: '40%',
+                            borderRadius: 6
+                        }
+                    },
 
-                colors: ['#ffc107'],
+                    series: [{
+                        name: 'Jumlah Skrining',
+                        data: @json($empowermentChart)
+                    }],
 
-                dataLabels: {
-                    enabled: true
-                },
+                    xaxis: {
+                        categories: @json($testCategories)
+                    },
 
-                legend: {
-                    show: false
-                },
+                    yaxis: {
+                        title: {
+                            text: 'Jumlah Skrining'
+                        }
+                    },
 
-                grid: {
-                    borderColor: '#ececec'
-                }
+                    colors: ['#198754'],
 
-            }).render();
+                    dataLabels: {
+                        enabled: true
+                    },
 
-            // =====================================================
-            // GRAFIK PEMBERDAYAAN KELUARGA
-            // =====================================================
-            new ApexCharts(document.querySelector("#empowerment-chart"), {
-
-                chart: {
-                    type: 'bar',
-                    height: 380,
-                    toolbar: {
+                    legend: {
                         show: false
+                    },
+
+                    grid: {
+                        borderColor: '#ececec'
                     }
-                },
 
-                plotOptions: {
-                    bar: {
-                        horizontal: false,
-                        columnWidth: '40%',
-                        borderRadius: 6
+                }).render();
+                new ApexCharts(document.querySelector("#evaluation-chart"), {
+
+                    chart: {
+                        type: 'bar',
+                        height: 380,
+                        toolbar: {
+                            show: false
+                        }
+                    },
+
+                    plotOptions: {
+                        bar: {
+                            horizontal: false,
+                            columnWidth: '45%',
+                            borderRadius: 6,
+                            distributed: true,
+                            dataLabels: {
+                                position: 'top'
+                            }
+                        }
+                    },
+
+                    series: [{
+                        name: 'Rata-rata Nilai',
+                        data: @json($evaluationChart)
+                    }],
+
+                    xaxis: {
+                        categories: @json($evaluationCategories),
+                        labels: {
+                            rotate: -25,
+                            trim: true,
+                            style: {
+                                fontSize: '12px'
+                            }
+                        }
+                    },
+
+                    yaxis: {
+                        min: 0,
+                        max: 100,
+                        tickAmount: 5,
+                        title: {
+                            text: 'Nilai Rata-rata'
+                        }
+                    },
+
+                    colors: [
+                        '#0d6efd',
+                        '#198754',
+                        '#ffc107',
+                        '#dc3545',
+                        '#6f42c1',
+                        '#20c997',
+                        '#fd7e14',
+                        '#6610f2'
+                    ],
+
+                    dataLabels: {
+                        enabled: true,
+                        offsetY: -18,
+                        formatter: function(val) {
+                            return val.toFixed(1);
+                        },
+                        style: {
+                            fontSize: '12px',
+                            colors: ['#333']
+                        }
+                    },
+
+                    tooltip: {
+                        y: {
+                            formatter: function(val) {
+                                return val.toFixed(2);
+                            }
+                        }
+                    },
+
+                    legend: {
+                        show: false
+                    },
+
+                    grid: {
+                        borderColor: '#ececec'
                     }
-                },
 
-                series: [{
-                    name: 'Jumlah Skrining',
-                    data: @json($empowermentChart)
-                }],
+                }).render();
 
-                xaxis: {
-                    categories: @json($testCategories)
-                },
-
-                yaxis: {
-                    title: {
-                        text: 'Jumlah Skrining'
-                    }
-                },
-
-                colors: ['#198754'],
-
-                dataLabels: {
-                    enabled: true
-                },
-
-                legend: {
-                    show: false
-                },
-
-                grid: {
-                    borderColor: '#ececec'
-                }
-
-            }).render();
-
-        });
-    </script>
-@endsection
+            });
+        </script>
+    @endsection

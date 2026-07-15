@@ -239,6 +239,117 @@
             background: var(--primary-dark);
             color: #fff;
         }
+
+        .poster-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .poster-card {
+            background: #fff;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: .3s;
+            cursor: pointer;
+        }
+
+        .poster-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .poster-image {
+            padding: 15px;
+        }
+
+        .poster-image img {
+            width: 100%;
+            height: 360px;
+            object-fit: contain;
+            border-radius: 12px;
+            background: #f8f8f8;
+            cursor: pointer;
+            transition: .3s;
+        }
+
+        .poster-image img:hover {
+            transform: scale(1.02);
+        }
+
+        .poster-info {
+            padding: 0 18px 18px;
+        }
+
+        .poster-modal.active img {
+            transform: scale(1);
+        }
+
+        .poster-download {
+            display: inline-block;
+            margin-top: 15px;
+            background: var(--primary);
+            color: var(--primary-dark);
+            padding: 10px 18px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .poster-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            z-index: 9999;
+
+            opacity: 0;
+            visibility: hidden;
+            transition: .3s ease;
+        }
+
+        .poster-modal img {
+            max-width: 90%;
+            max-height: 90vh;
+            background: #fff;
+            border-radius: 12px;
+            padding: 10px;
+            transform: scale(.9);
+            transition: .3s ease;
+        }
+
+        .poster-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .poster-close {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .15);
+            color: #fff;
+            font-size: 28px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: .2s;
+        }
+
+
+        .poster-close:hover {
+            background: #fff;
+            color: #000;
+        }
     </style>
 </head>
 
@@ -313,6 +424,46 @@
 
         </div>
 
+        <div class="section-title" style="margin-top:70px;">
+            <h2>Poster Edukasi Lansia</h2>
+        </div>
+
+        <div class="poster-container">
+
+            @forelse($posters as $poster)
+                <div class="poster-card" onclick="showPoster('{{ url('image/' . $poster->file_path) }}')">
+
+                    <div class="poster-image">
+                        <img src="{{ url('image/' . $poster->file_path) }}" alt="{{ $poster->title }}"
+                            onclick="showPoster('{{ url('image/' . $poster->file_path) }}')">
+                    </div>
+
+                    <div class="poster-info">
+
+                        <h3>{{ $poster->title }}</h3>
+
+                        @if ($poster->description)
+                            <p>{{ \Illuminate\Support\Str::limit($poster->description, 100) }}</p>
+                        @endif
+
+                        <span class="poster-download" onclick="showPoster('{{ url('image/' . $poster->file_path) }}')">
+                            Lihat Poster
+                        </span>
+
+                    </div>
+
+                </div>
+
+            @empty
+
+                <div class="empty-video">
+                    <h3>Tidak ada poster tersedia</h3>
+                    <p>Poster edukasi akan ditampilkan di sini.</p>
+                </div>
+            @endforelse
+
+        </div>
+
         <div class="apk-section">
 
             <h2>Aplikasi Jaga Lansia</h2>
@@ -347,10 +498,38 @@
 
     </div>
 
+    <div class="poster-modal" id="posterModal">
+        <span class="poster-close" onclick="closePoster()">&times;</span>
+        <img id="posterPreview" src="" alt="Poster">
+    </div>
+
     <footer>
         © {{ date('Y') }} Jaga Lansia Official. All Rights Reserved.
     </footer>
+    <script>
+        function showPoster(src) {
+            document.getElementById('posterPreview').src = src;
+            document.getElementById('posterModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
 
+        function closePoster() {
+            document.getElementById('posterModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        document.getElementById('posterModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePoster();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closePoster();
+            }
+        });
+    </script>
 </body>
 
 </html>

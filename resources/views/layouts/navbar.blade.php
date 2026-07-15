@@ -22,30 +22,21 @@
 
         <ul class="navbar-nav ms-auto">
             <li class="nav-item dropdown">
-
                 <a class="nav-link dropdown-toggle d-flex align-items-center" href="javascript:void(0)" role="button"
                     data-bs-toggle="dropdown" aria-expanded="false">
-
-                    <div class="user-avatar me-2">
-                        {{ $initials }}
-                    </div>
-
+                    <div class="user-avatar me-2">{{ $initials }}</div>
                     <span>{{ $name }}</span>
-
                 </a>
 
                 <ul class="dropdown-menu dropdown-menu-end">
-
                     <li>
-                        <a class="dropdown-item" href="#">
+                        <a class="dropdown-item" href="{{ route('profile') }}">
                             <i class="bi bi-person me-2"></i>
                             Profil
                         </a>
                     </li>
 
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
+                    <li><hr class="dropdown-divider"></li>
 
                     <li>
                         <form method="POST" action="{{ route('logout') }}">
