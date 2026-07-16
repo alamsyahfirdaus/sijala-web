@@ -227,6 +227,7 @@ class PresentationController extends Controller
             ], 500);
         }
     }
+    
     /*
     |--------------------------------------------------------------------------
     | STOP PRESENTATION
@@ -331,5 +332,36 @@ class PresentationController extends Controller
                 'message' => 'Terjadi kesalahan server.',
             ], 500);
         }
+    }
+
+    public function control(Request $request)
+    {
+        $request->validate([
+            'consultation_id' => 'required|exists:consultations,id',
+            'status' => 'required|in:playing,paused',
+        ]);
+
+        $presentation = ConsultationPresentation::active()
+            ->where('consultation_id', $request->consultation_id)
+            ->latest()
+            ->first();
+
+        if (!$presentation) {
+
+            return response()->json([
+                'success'=>false,
+                'message'=>'Presentasi tidak ditemukan'
+            ],404);
+
+        }
+
+        $presentation->status = $request->status;
+
+        $presentation->save();
+
+        return response()->json([
+            'success'=>true,
+            'data'=>$presentation
+        ]);
     }
 }

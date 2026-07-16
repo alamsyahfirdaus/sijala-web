@@ -180,6 +180,7 @@ Route::middleware('api.auth')->group(function () {
         Route::post('/pause', [PresentationController::class, 'pause']);
         Route::post('/resume', [PresentationController::class, 'resume']);
         Route::post('/stop', [PresentationController::class, 'stop']);
+        Route::post('/control', [PresentationController::class, 'control']);
     });
 });
 
