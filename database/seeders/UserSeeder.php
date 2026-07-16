@@ -53,7 +53,7 @@ class UserSeeder extends Seeder
             // KONSELOR
             // =====================
             [
-                'name' => 'Konselor Puskesmas',
+                'name' => 'Lina Safarina',
                 'username' => 'konselor',
                 'email' => 'konselor@jagalansia.id',
                 'password' => Hash::make('123456'),
@@ -72,7 +72,7 @@ class UserSeeder extends Seeder
             // KONSELI
             // =====================
             [
-                'name' => 'Keluarga Lansia',
+                'name' => 'Alamsyah Firdaus',
                 'username' => 'konseli',
                 'email' => 'konseli@jagalansia.id',
                 'password' => Hash::make('123456'),
