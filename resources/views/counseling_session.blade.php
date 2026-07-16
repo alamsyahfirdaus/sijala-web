@@ -91,37 +91,35 @@
 
                         @switch($id)
                             @case('skrining')
-                                <div class="table-responsive">
-                                    <table class="table table-hover align-middle datatable">
-                                        <thead>
-                                            <tr>
-                                                <th>Tanggal</th>
-                                                <th>Risiko Jatuh</th>
-                                                <th>Perberdayaan Keluarga</th>
-                                                @if (Auth::user()->username == 'alamsyahfirdaus')
-                                                    <th style="width: 5%;">Aksi</th>
-                                                @endif
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach ($screenings as $index => $screening)
+                                @if (Auth::user()->username == 'alamsyahfirdaus')
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle datatable">
+                                            <thead>
                                                 <tr>
-                                                    <td>
-                                                        {{ \Carbon\Carbon::parse($screening['session']->updated_at)->translatedFormat('d F Y') }}
-                                                    </td>
-                                                    <td>
-                                                        @if ($screening['fallRisk'])
-                                                            {{ $screening['fallRisk']->total_score }}
-                                                            <span class="text-muted">
-                                                                ({{ $screening['fallRisk']->risk_level }})
-                                                            </span>
-                                                        @else
-                                                            -
-                                                        @endif
-                                                    </td>
-                                                    <td>{{ $screening['empowerment'] ? $screening['empowerment']->total_score : '-' }}
-                                                    </td>
-                                                    @if (Auth::user()->username == 'alamsyahfirdaus')
+                                                    <th>Tanggal</th>
+                                                    <th>Risiko Jatuh</th>
+                                                    <th>Perberdayaan Keluarga</th>
+                                                    <th style="width: 5%;">Aksi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ([$screening['pre_test'], $screening['post_test']] as $index => $screening)
+                                                    <tr>
+                                                        <td>
+                                                            {{ \Carbon\Carbon::parse($screening['session_date'])->translatedFormat('d F Y') }}
+                                                        </td>
+                                                        <td>
+                                                            @if ($screening['fall_risk'])
+                                                                {{ $screening['fall_risk']['total_score'] }}
+                                                                <span class="text-muted">
+                                                                    ({{ $screening['fall_risk']['risk_level'] }})
+                                                                </span>
+                                                            @else
+                                                                -
+                                                            @endif
+                                                        </td>
+                                                        <td>{{ $screening['empowerment'] ? $screening['empowerment']['total_score'] : '-' }}
+                                                        </td>
                                                         <td>
                                                             <div class="btn-group btn-group-sm">
                                                                 <button type="button"
@@ -133,8 +131,8 @@
                                                                     <li><a href="javascript:void(0)"
                                                                             class="dropdown-item btn-edit-score"
                                                                             data-type="fall-risk"
-                                                                            data-id="{{ $screening['fallRisk']->id }}"
-                                                                            data-score="{{ $screening['fallRisk']->total_score ?? 0 }}">
+                                                                            data-id="{{ $screening['fall_risk']['id'] }}"
+                                                                            data-score="{{ $screening['fall_risk']['total_score'] ?? 0 }}">
                                                                             Ubah Skor Risiko Jatuh
                                                                         </a></li>
                                                                     <li>
@@ -144,233 +142,490 @@
                                                                         <a href="javascript:void(0)"
                                                                             class="dropdown-item btn-edit-score"
                                                                             data-type="empowerment"
-                                                                            data-id="{{ $screening['empowerment']->id }}"
-                                                                            data-score="{{ $screening['empowerment']->total_score ?? 0 }}">
+                                                                            data-id="{{ $screening['empowerment']['id'] }}"
+                                                                            data-score="{{ $screening['empowerment']['total_score'] ?? 0 }}">
                                                                             Ubah Skor Pemberdayaan
                                                                         </a>
                                                                     </li>
                                                                 </ul>
                                                             </div>
                                                         </td>
-                                                    @endif
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @else
+                                    <div class="timeline">
+
+                                        @if ($screening)
+                                            <div class="time-label">
+                                                <span class="badge bg-warning px-3 py-2 shadow-sm">
+                                                    {{ $screening['pre_test']['session_date']->translatedFormat('d F Y') }}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <div class="timeline-item shadow-sm border-0 rounded-3">
+                                                    <div class="timeline-header bg-primary text-white">
+                                                        <strong>Pre Test</strong>
+                                                        <span class="float-end">Sesi
+                                                            {{ $screening['pre_test']['session_number'] }}</span>
+                                                    </div>
+                                                    <div class="timeline-body">
+                                                        <div class="card border-0">
+                                                            <div class="card-body">
+                                                                <div class="row">
+                                                                    <div class="col-md-6">
+                                                                        <small class="text-muted">Risiko Jatuh</small>
+                                                                        @if ($screening['pre_test']['fall_risk'])
+                                                                            @php
+                                                                                $risk =
+                                                                                    $screening['pre_test']['fall_risk'];
+
+                                                                                $color = match ($risk->risk_level) {
+                                                                                    'Rendah' => 'success',
+                                                                                    'Sedang' => 'warning',
+                                                                                    'Tinggi' => 'danger',
+                                                                                    default => 'secondary',
+                                                                                };
+                                                                            @endphp
+                                                                            <h2 class="fw-bold mb-1">{{ $risk->total_score }}</h2>
+                                                                            <span
+                                                                                class="badge bg-{{ $color }}">{{ $risk->risk_level }}</span>
+                                                                        @else
+                                                                            <span class="text-muted">Belum ada data</span>
+                                                                        @endif
+
+                                                                    </div>
+
+                                                                    <div class="col-md-6">
+                                                                        <small class="text-muted">Pemberdayaan Keluarga</small>
+                                                                        @if ($screening['pre_test']['empowerment'])
+                                                                            <h2 class="fw-bold text-success">
+                                                                                {{ $screening['pre_test']['empowerment']->total_score }}
+                                                                            </h2>
+                                                                        @else
+                                                                            <span class="text-muted">Belum ada data</span>
+                                                                        @endif
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div class="timeline-item border-0 shadow-sm">
+                                                    <div class="timeline-body text-center">
+                                                        <h5 class="fw-bold mb-2">Proses Konseling</h5>
+                                                        <p class="text-muted mb-3">
+                                                            Konseling berlangsung dari
+                                                            <strong>Sesi {{ $screening['pre_test']['session_number'] }}</strong>
+                                                            hingga
+
+                                                            <strong>Sesi {{ $screening['post_test']['session_number'] }}</strong>
+                                                        </p>
+
+                                                        <span class="badge bg-secondary px-3 py-2">
+                                                            {{ $screening['post_test']['session_number'] - $screening['pre_test']['session_number'] + 1 }}
+                                                            Sesi Konseling
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="time-label">
+                                                <span
+                                                    class="badge bg-warning px-3 py-2 shadow-sm">{{ $screening['post_test']['session_date']->translatedFormat('d F Y') }}</span>
+                                            </div>
+
+                                            <div>
+                                                <div class="timeline-item shadow-sm border-0 rounded-3">
+                                                    <div class="timeline-header bg-success text-white">
+                                                        <strong>Post Test</strong>
+                                                        <span class="float-end">Sesi
+                                                            {{ $screening['post_test']['session_number'] }}</span>
+                                                    </div>
+                                                    <div class="timeline-body">
+                                                        <div class="card border-0">
+                                                            <div class="card-body">
+                                                                <div class="row">
+                                                                    <div class="col-md-6">
+                                                                        <small class="text-muted">Risiko Jatuh</small>
+
+                                                                        @if ($screening['post_test']['fall_risk'])
+                                                                            @php
+                                                                                $risk =
+                                                                                    $screening['post_test'][
+                                                                                        'fall_risk'
+                                                                                    ];
+
+                                                                                $color = match ($risk->risk_level) {
+                                                                                    'Rendah' => 'success',
+                                                                                    'Sedang' => 'warning',
+                                                                                    'Tinggi' => 'danger',
+                                                                                    default => 'secondary',
+                                                                                };
+                                                                            @endphp
+
+                                                                            <h2 class="fw-bold mb-1">{{ $risk->total_score }}</h2>
+                                                                            <span
+                                                                                class="badge bg-{{ $color }}">{{ $risk->risk_level }}</span>
+                                                                        @else
+                                                                            <span class="text-muted">Belum ada data</span>
+                                                                        @endif
+
+                                                                    </div>
+
+                                                                    <div class="col-md-6">
+                                                                        <small class="text-muted">Pemberdayaan Keluarga</small>
+
+                                                                        @if ($screening['post_test']['empowerment'])
+                                                                            <h2 class="fw-bold text-success">
+                                                                                {{ $screening['post_test']['empowerment']->total_score }}
+                                                                            </h2>
+                                                                        @else
+                                                                            <span class="text-muted">Belum ada data</span>
+                                                                        @endif
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <i class="timeline-icon bg-success text-white bi bi-check-lg"></i>
+                                            </div>
+                                        @else
+                                            <div class="text-center py-5">
+                                                <i class="bi bi-clipboard-x text-secondary" style="font-size:60px"></i>
+                                                <h5 class="mt-3">Belum Ada Hasil Skrining</h5>
+                                                <p class="text-muted">Hasil skrining akan muncul setelah konselor melakukan
+                                                    skrining.</p>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endif
                             @break
 
                             @case('evaluasi')
-                                <div class="table-responsive">
-                                    <table class="table table-hover align-middle datatable">
-                                        <thead>
-                                            <tr>
-                                                <th>Sesi</th>
-                                                <th>Tanggal</th>
-                                                <th>Topik</th>
-                                                <th>Skor</th>
-                                                <th>Kategori</th>
-                                                @if (Auth::user()->username == 'alamsyahfirdaus')
-                                                    <th style="width: 5%;">Aksi</th>
-                                                @endif
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach ($evaluations as $evaluation)
+                                @if (Auth::user()->username == 'alamsyahfirdaus')
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle datatable">
+                                            <thead>
                                                 <tr>
-                                                    <td>
-                                                        Sesi {{ $sessionNumbers[$evaluation->counseling_session_id] ?? '-' }}
-                                                    </td>
-
-                                                    <td>
-                                                        {{ \Carbon\Carbon::parse($evaluation->created_at)->translatedFormat('d F Y') }}
-                                                    </td>
-
-                                                    <td>
-                                                        {{ $evaluation->topic->topic ?? '-' }}
-                                                    </td>
-
-                                                    <td>
-                                                        {{ round($evaluation->percentage) }}
-                                                    </td>
-                                                    <td>
-                                                        {{ $evaluation->category ?? '-' }}
-                                                    </td>
-                                                    @if (Auth::user()->username == 'alamsyahfirdaus')
-                                                        <td>
-                                                            <div class="btn-group btn-group-sm">
-                                                                <button type="button"
-                                                                    class="btn btn-primary dropdown-toggle dropdown-menu-right"
-                                                                    data-bs-toggle="dropdown" aria-expanded="false">
-                                                                    Aksi
-                                                                </button>
-                                                                <ul class="dropdown-menu">
-                                                                    <li><a href="javascript:void(0)"
-                                                                            class="dropdown-item btn-edit-score"
-                                                                            data-type="evaluation" data-id="{{ $evaluation->id }}"
-                                                                            data-score="{{ $evaluation->total_score }}">
-                                                                            Ubah Skor
-                                                                        </a></li>
-                                                                </ul>
-                                                            </div>
-                                                        </td>
-                                                    @endif
+                                                    <th>Sesi</th>
+                                                    <th>Tanggal</th>
+                                                    <th>Topik</th>
+                                                    <th>Skor</th>
+                                                    <th>Kategori</th>
+                                                    <th style="width: 5%">Aksi</th>
                                                 </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
-                            @break
+                                            </thead>
+                                            <tbody>
 
-                            {{-- ========================================= --}}
-                            {{-- RESUME KONSELOR --}}
-                            {{-- ========================================= --}}
-                            @case('resume')
-                                RESUME KONSELOR
-                            @break
+                                                @foreach ($evaluations as $sessionId => $items)
+                                                    @foreach ($items as $evaluation)
+                                                        <tr>
+                                                            <td>Sesi {{ $sessionNumbers[$sessionId] ?? '-' }}</td>
+                                                            <td>{{ $evaluation->created_at->translatedFormat('d F Y') }}</td>
+                                                            <td>{{ $evaluation->topic->topic ?? '-' }}</td>
+                                                            <td>{{ $evaluation->total_score }}</td>
+                                                            <td>{{ $evaluation->category ?? '-' }}</td>
+                                                            <td>
+                                                                <div class="btn-group btn-group-sm">
+                                                                    <button type="button" class="btn btn-primary dropdown-toggle"
+                                                                        data-bs-toggle="dropdown">
+                                                                        Aksi
+                                                                    </button>
+                                                                    <ul class="dropdown-menu">
+                                                                        <li>
+                                                                            <a href="javascript:void(0)"
+                                                                                class="dropdown-item btn-edit-score"
+                                                                                data-type="evaluation"
+                                                                                data-id="{{ $evaluation->id }}"
+                                                                                data-score="{{ $evaluation->total_score }}">
+                                                                                Ubah Skor
+                                                                            </a>
+                                                                        </li>
+                                                                    </ul>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @else
+                                    @forelse($evaluations as $sessionId => $items)
+                                        <div class="card border shadow-sm mb-4">
+                                            <div class="card-header bg-light">
+                                                <div class="d-flex justify-content-between">
+                                                    <strong>Sesi {{ $sessionNumbers[$sessionId] }}</strong>
+                                                    <small
+                                                        class="text-muted">{{ $items->first()->created_at->translatedFormat('d F Y') }}</small>
+                                                </div>
+                                            </div>
 
-                            {{-- ========================================= --}}
-                            {{-- TINDAK LANJUT --}}
-                            {{-- ========================================= --}}
-                            @case('tindak-lanjut')
-                                TINDAK LANJUT
-                            @break
-                        @endswitch
+                                            <div class="card-body">
+                                                @foreach ($items as $evaluation)
+                                                    <div class="border rounded p-3 mb-3">
+                                                        <div class="fw-semibold">{{ $evaluation->topic->topic }}</div>
+                                                        <div class="mt-2">
+                                                            <span class="badge bg-primary">Skor
+                                                                {{ round($evaluation->percentage) }}</span>
+                                                            @php
+                                                                $color = match ($evaluation->category) {
+                                                                    'Baik' => 'success',
+                                                                    'Cukup' => 'warning',
+                                                                    'Kurang' => 'danger',
+                                                                    default => 'secondary',
+                                                                };
+                                                            @endphp
+                                                            <span
+                                                                class="badge bg-{{ $color }}">{{ $evaluation->category }}</span>
+                                                        </div>
+                                                        @if (Auth::user()->username == 'alamsyahfirdaus')
+                                                            <div class="mt-3">
+                                                                <button class="btn btn-sm btn-outline-primary btn-edit-score"
+                                                                    data-type="evaluation" data-id="{{ $evaluation->id }}"
+                                                                    data-score="{{ $evaluation->total_score }}">
+                                                                    <i class="bi bi-pencil"></i>Ubah Skor
+                                                                </button>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @empty
+                                        <div class="text-center py-5">
+                                            <i class="bi bi-journal-x fs-1 text-secondary"></i>
+                                            <h5 class="mt-3">Belum Ada Evaluasi</h5>
+                                        </div>
+                                    @endforelse
+                                @endif
+                                @break
 
-                    </div>
-                @endforeach
+                                @case('resume')
+                                    @forelse ($counselingResumes as $resume)
+                                        <div class="card border shadow-sm mb-3">
+                                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                                <h6 class="mb-0 fw-bold">Resume Sesi {{ $resume['session_number'] }}</h6>
+                                                <small class="text-muted ms-auto">
+                                                    {{ \Carbon\Carbon::createFromFormat('d-m-Y', $resume['session_date'])->translatedFormat('d F Y') }}
+                                                </small>
+                                            </div>
 
+                                            <div class="card-body">
+                                                @forelse ($resume['resume_options'] as $category => $options)
+                                                    <div class="mb-4">
+                                                        <div
+                                                            class="fw-semibold text-warning border-start border-4 border-warning ps-2 mb-2">
+                                                            {{ $category }}</div>
+                                                        <ul class="list-group list-group-flush">
+                                                            @foreach ($options as $option)
+                                                                <li class="list-group-item border-0 py-1 px-0">
+                                                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                                    {{ $option['title'] }}
+                                                                </li>
+                                                            @endforeach
+                                                        </ul>
+                                                    </div>
+                                                @empty
+                                                    <div class="text-center text-muted py-4">
+                                                        <i class="bi bi-journal-x fs-1 d-block mb-2"></i>
+                                                        Belum terdapat resume konselor.
+                                                    </div>
+                                                @endforelse
+                                            </div>
+                                        </div>
+                                    @empty
+                                        <div class="alert alert-light border text-center mb-0">
+                                            <i class="bi bi-info-circle me-2"></i>
+                                            Belum ada data resume konseling.
+                                        </div>
+                                    @endforelse
+                                @break
+
+                                @case('tindak-lanjut')
+                                    <div class="timeline">
+                                        @forelse ($followUps as $followUp)
+                                            <div class="time-label">
+                                                <span class="badge bg-warning px-3 py-2 shadow-sm">
+                                                    {{ \Carbon\Carbon::createFromFormat('d-m-Y', $followUp['session_date'])->translatedFormat('d F Y') }}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <div class="timeline-item shadow-sm border-0 rounded-3">
+                                                    <div class="timeline-header d-flex justify-content-between align-items-center"
+                                                        style="padding: 10px 16px;">
+                                                        <div><strong class="text-dark">Tindak Lanjut Sesi
+                                                                {{ $followUp['session_number'] }}</strong></div>
+                                                    </div>
+                                                    <div class="timeline-body">
+                                                        <div class="alert alert-light border mb-0">{!! nl2br(e($followUp['follow_up'])) !!}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @empty
+                                            <div class="text-center py-5">
+                                                <i class="bi bi-journal-x text-secondary" style="font-size:60px"></i>
+                                                <h5 class="mt-3">Belum Ada Tindak Lanjut</h5>
+                                                <p class="text-muted mb-0">
+                                                    Tindak lanjut konseling akan muncul setelah
+                                                    konselor menyelesaikan sesi konseling.
+                                                </p>
+                                            </div>
+                                        @endforelse
+                                        @if ($followUps->count())
+                                            <div><i class="timeline-icon bg-success text-white bi bi-check-lg"></i></div>
+                                        @endif
+                                    </div>
+                                @break
+                            @endswitch
+
+                        </div>
+                    @endforeach
+
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="modal fade" id="scoreModal" tabindex="-1" aria-labelledby="scoreModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <form action="{{ route('scores.update') }}" id="scoreForm" method="POST">
-                @csrf
-                @method('PUT')
+        @if (Auth::user()->username == 'alamsyahfirdaus')
+            <div class="modal fade" id="scoreModal" tabindex="-1" aria-labelledby="scoreModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <form action="{{ route('scores.update') }}" id="scoreForm" method="POST">
+                        @csrf
+                        @method('PUT')
 
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="scoreModalLabel">
-                            Ubah Skor
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-
-                    <div class="modal-body">
-
-                        <input type="hidden" name="type" id="score_type">
-                        <input type="hidden" name="id" id="score_id">
-
-                        <div class="form-group">
-                            <label for="score_value" class="form-label">Skor</label>
-                            <input type="number" class="form-control" id="score_value" name="score" min="0">
-                            <div class="invalid-feedback"></div>
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="scoreModalLabel">Ubah Skor</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <input type="hidden" name="type" id="score_type">
+                                <input type="hidden" name="id" id="score_id">
+                                <div class="form-group">
+                                    <label for="score_value" class="form-label">Skor</label>
+                                    <input type="number" class="form-control" id="score_value" name="score"
+                                        min="0">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                    data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-primary btn-sm">Simpan Perubahan</button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary btn-sm">Simpan Perubahan</button>
-                    </div>
+                    </form>
                 </div>
-            </form>
-        </div>
-    </div>
+            </div>
+        @endif
 
-    <style>
-        .counseling-tabs {
-            gap: 10px;
-            border-bottom: 1px solid #e9ecef;
-            padding-bottom: 12px;
-        }
+        <style>
+            .counseling-tabs {
+                gap: 10px;
+                border-bottom: 1px solid #e9ecef;
+                padding-bottom: 12px;
+            }
 
-        .counseling-tabs .nav-link {
-            border: none;
-            border-radius: 12px;
-            padding: 9px 18px;
-            color: #6c757d;
-            background: #f8f9fa;
-            transition: .25s;
-        }
+            .counseling-tabs .nav-link {
+                border: none;
+                border-radius: 12px;
+                padding: 9px 18px;
+                color: #6c757d;
+                background: #f8f9fa;
+                transition: .25s;
+            }
 
-        .counseling-tabs .nav-link i {
-            font-size: 14px;
-        }
+            .counseling-tabs .nav-link i {
+                font-size: 14px;
+            }
 
-        .counseling-tabs .nav-link:hover {
-            background: #fff7df;
-            color: #d98c00;
-            transform: translateY(-2px);
-        }
+            .counseling-tabs .nav-link:hover {
+                background: #fff7df;
+                color: #d98c00;
+                transform: translateY(-2px);
+            }
 
-        .counseling-tabs .nav-link.active {
-            background: #FFC107;
-            color: #fff;
-        }
-    </style>
+            .counseling-tabs .nav-link.active {
+                background: #FFC107;
+                color: #fff;
+            }
 
-    <script>
-        $(document).ready(function() {
+            .timeline-header {
+                background: #f8f9fa;
+                border-bottom: 1px solid #dee2e6;
+                border-radius: 6px 6px 0 0;
+            }
+        </style>
 
-            $('.btn-edit-score').on('click', function() {
+        <script>
+            $(document).ready(function() {
 
-                let type = $(this).data('type');
-                let id = $(this).data('id');
-                let score = $(this).data('score');
-                let title = $(this).text().trim();
+                $('.btn-edit-score').on('click', function() {
 
-                $('#score_type').val(type);
-                $('#score_id').val(id);
-                $('#score_value').val(score);
-                $('#scoreModalLabel').text(title);
+                    let type = $(this).data('type');
+                    let id = $(this).data('id');
+                    let score = $(this).data('score');
+                    let title = $(this).text().trim();
 
-                $('#score_value')
-                    .removeClass('is-invalid')
-                    .next('.invalid-feedback')
-                    .text('');
+                    $('#score_type').val(type);
+                    $('#score_id').val(id);
+                    $('#score_value').val(score);
+                    $('#scoreModalLabel').text(title);
 
-                $('#scoreModal').modal('show');
+                    $('#score_value')
+                        .removeClass('is-invalid')
+                        .next('.invalid-feedback')
+                        .text('');
+
+                    $('#scoreModal').modal('show');
+                });
+
+                $('#scoreForm').on('submit', function(e) {
+
+                    let score = $('#score_value').val().trim();
+
+                    let isValid = true;
+
+                    $('#score_value')
+                        .removeClass('is-invalid')
+                        .next('.invalid-feedback')
+                        .text('');
+
+                    if (score === '') {
+                        $('#score_value')
+                            .addClass('is-invalid')
+                            .next('.invalid-feedback')
+                            .text('Skor wajib diisi.');
+
+                        isValid = false;
+                    } else if (isNaN(score)) {
+                        $('#score_value')
+                            .addClass('is-invalid')
+                            .next('.invalid-feedback')
+                            .text('Skor harus berupa angka.');
+
+                        isValid = false;
+                    } else if (parseFloat(score) < 0) {
+                        $('#score_value')
+                            .addClass('is-invalid')
+                            .next('.invalid-feedback')
+                            .text('Skor tidak boleh kurang dari 0.');
+
+                        isValid = false;
+                    }
+
+                    if (!isValid) {
+                        e.preventDefault();
+                    }
+                });
             });
-
-            $('#scoreForm').on('submit', function(e) {
-
-                let score = $('#score_value').val().trim();
-
-                let isValid = true;
-
-                $('#score_value')
-                    .removeClass('is-invalid')
-                    .next('.invalid-feedback')
-                    .text('');
-
-                if (score === '') {
-                    $('#score_value')
-                        .addClass('is-invalid')
-                        .next('.invalid-feedback')
-                        .text('Skor wajib diisi.');
-
-                    isValid = false;
-                } else if (isNaN(score)) {
-                    $('#score_value')
-                        .addClass('is-invalid')
-                        .next('.invalid-feedback')
-                        .text('Skor harus berupa angka.');
-
-                    isValid = false;
-                } else if (parseFloat(score) < 0) {
-                    $('#score_value')
-                        .addClass('is-invalid')
-                        .next('.invalid-feedback')
-                        .text('Skor tidak boleh kurang dari 0.');
-
-                    isValid = false;
-                }
-
-                if (!isValid) {
-                    e.preventDefault();
-                }
-            });
-        });
-    </script>
-@endsection
+        </script>
+    @endsection

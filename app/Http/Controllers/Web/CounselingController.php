@@ -3,12 +3,18 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\CounselingResumeOption;
 use App\Models\CounselingSession;
 use App\Models\EmpowermentAssessment;
-use App\Models\FallRiskScreening;
+use App\Models\EmpowermentQuestion;
 use App\Models\Evaluation;
+use App\Models\EvaluationQuestion;
+use App\Models\FallRiskScreening;
+use App\Models\FallRiskQuestion;
 use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Crypt;
 
 class CounselingController extends Controller
@@ -48,85 +54,227 @@ class CounselingController extends Controller
 
             $title = 'Konseling';
 
-            // Ambil data sesi konseling beserta relasi:
-            // - Data lansia dan konseli
-            // - Data konselor dan puskesmas
+            // Ambil data sesi konseling
             $counseling = CounselingSession::with([
                 'elderlyCounselee.counselee',
                 'counselor.puskesmas',
             ])->findOrFail($id);
 
-            // Ambil seluruh riwayat sesi konseling
-            // berdasarkan lansia yang sama
+            // Seluruh riwayat sesi konseling
             $sessions = CounselingSession::where(
                 'elderly_counselee_id',
                 $counseling->elderly_counselee_id
             )
-                ->orderBy('created_at', 'asc')
+                ->orderBy('created_at')
                 ->get();
 
-            // Menampung seluruh hasil skrining
-            $screenings = [];
+            /*
+            |--------------------------------------------------------------------------
+            | PRE TEST = SESI PERTAMA
+            |--------------------------------------------------------------------------
+            */
 
-            foreach ($sessions as $session) {
+            $firstSession = $sessions->first();
 
-                // Ambil hasil skrining risiko jatuh
-                $fallRisk = FallRiskScreening::where(
-                    'counseling_session_id',
-                    $session->id
-                )->first();
+            /*
+            |--------------------------------------------------------------------------
+            | POST TEST = SESI TERAKHIR
+            |--------------------------------------------------------------------------
+            */
 
-                // Ambil hasil asesmen pemberdayaan keluarga
-                $empowerment = EmpowermentAssessment::where(
-                    'counseling_session_id',
-                    $session->id
-                )->first();
+            $lastSession = $sessions->last();
 
-                // Simpan hanya jika terdapat minimal
-                // satu hasil skrining pada sesi tersebut
-                if ($fallRisk || $empowerment) {
-                    $screenings[] = [
-                        'session' => $session,
-                        'fallRisk' => $fallRisk,
-                        'empowerment' => $empowerment,
-                    ];
-                }
+            /*
+            |--------------------------------------------------------------------------
+            | HASIL SKRINING
+            |--------------------------------------------------------------------------
+            */
+
+            $screening = null;
+
+            if ($firstSession && $lastSession) {
+
+                $screening = [
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | PRE TEST
+                    |--------------------------------------------------------------------------
+                    */
+                    'pre_test' => [
+
+                        'session_number' => 1,
+
+                        'session_date' => $firstSession->created_at,
+
+                        'fall_risk' => FallRiskScreening::where(
+                            'counseling_session_id',
+                            $firstSession->id
+                        )
+                            ->orderBy('id')
+                            ->first(),
+
+                        'empowerment' => EmpowermentAssessment::where(
+                            'counseling_session_id',
+                            $firstSession->id
+                        )
+                            ->orderBy('id')
+                            ->first(),
+
+                    ],
+
+                    /*
+                |--------------------------------------------------------------------------
+                | POST TEST
+                |--------------------------------------------------------------------------
+                */
+                    'post_test' => [
+
+                        'session_number' => $sessions->count(),
+
+                        'session_date' => $lastSession->created_at,
+
+                        'fall_risk' => FallRiskScreening::where(
+                            'counseling_session_id',
+                            $lastSession->id
+                        )
+                            ->orderByDesc('id')
+                            ->first(),
+
+                        'empowerment' => EmpowermentAssessment::where(
+                            'counseling_session_id',
+                            $lastSession->id
+                        )
+                            ->orderByDesc('id')
+                            ->first(),
+
+                    ],
+
+                ];
             }
+
+            /*
+            |--------------------------------------------------------------------------
+            | TINDAK LANJUT
+            |--------------------------------------------------------------------------
+            */
+
+            $followUps = $sessions
+                ->filter(fn ($session) => ! empty($session->note))
+                ->values()
+                ->map(function ($session, $index) {
+                    return [
+                        'session_number' => $index + 1,
+                        'session_date' => $session->created_at->format('d-m-Y'),
+                        'follow_up' => $session->note,
+                    ];
+                });
+
+            /*
+            |--------------------------------------------------------------------------
+            | HASIL EVALUASI
+            |--------------------------------------------------------------------------
+            */
 
             $evaluations = Evaluation::whereIn(
                 'counseling_session_id',
                 $sessions->pluck('id')
-            )->with('topic')->get();
+            )
+                ->with('topic')
+                ->orderBy('created_at')
+                ->get()
+                ->groupBy('counseling_session_id');
+
+            /*
+            |--------------------------------------------------------------------------
+            | NOMOR SESI
+            |--------------------------------------------------------------------------
+            */
 
             $sessionNumbers = $sessions
                 ->pluck('id')
                 ->flip()
                 ->map(fn ($index) => $index + 1);
 
-            // echo json_encode($screenings);
+            /*
+            |--------------------------------------------------------------------------
+            | RESUME KONSELOR
+            |--------------------------------------------------------------------------
+            */
 
-            // Tampilkan halaman detail konseling
+            $counselingResumes = $this->getCounselingResumes($sessions);
+
+            /*
+            |--------------------------------------------------------------------------
+            | TAMPILKAN HALAMAN
+            |--------------------------------------------------------------------------
+            */
+
+
+            // echo json_encode($evaluations);
+
             return view('counseling_session', compact(
                 'title',
                 'counseling',
                 'sessions',
-                'screenings',
+                'screening',
                 'evaluations',
-                'sessionNumbers'
+                'sessionNumbers',
+                'counselingResumes',
+                'followUps'
             ));
 
         } catch (DecryptException $e) {
 
-            // Jika ID tidak valid atau gagal didekripsi
             abort(404);
+
         }
+    }
+
+    private function getCounselingResumes($sessions)
+    {
+        $result = [];
+
+        foreach ($sessions as $index => $session) {
+
+            $resumeIds = $session->resume ?? [];
+
+            $resumeOptions = CounselingResumeOption::with('category')
+                ->whereIn('id', $resumeIds)
+                ->orderBy('sort_order')
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'category' => $item->category->title ?? '-',
+                        'title' => $item->title,
+                    ];
+                })
+                ->groupBy('category')
+                ->map(function ($items) {
+                    return $items->map(function ($item) {
+                        return [
+                            'id' => $item['id'],
+                            'title' => $item['title'],
+                        ];
+                    })->values();
+                });
+
+            $result[] = [
+                'session_number' => $index + 1,
+                'session_date' => $session->created_at->format('d-m-Y'),
+                'resume_options' => $resumeOptions,
+            ];
+        }
+
+        return collect($result);
     }
 
     public function updateScore(Request $request)
     {
         $request->validate([
-            'type' => 'required|in:fall-risk,empowerment,evaluation',
-            'id' => 'required|integer',
+            'type'  => 'required|in:fall-risk,empowerment,evaluation',
+            'id'    => 'required|integer',
             'score' => 'required|numeric|min:0',
         ]);
 
@@ -143,7 +291,14 @@ class CounselingController extends Controller
 
                     $data = FallRiskScreening::findOrFail($request->id);
 
-                    $totalScore = (int) $request->score;
+                    // Skor maksimum skrining risiko jatuh
+                    $maxScore = FallRiskQuestion::sum(DB::raw('GREATEST(score_yes, score_no)'));
+
+                    // Batasi nilai 0 - maksimum
+                    $totalScore = min(
+                        max((int) $request->score, 0),
+                        $maxScore
+                    );
 
                     if ($totalScore <= 3) {
 
@@ -168,8 +323,8 @@ class CounselingController extends Controller
                     }
 
                     $data->update([
-                        'total_score' => $totalScore,
-                        'risk_level' => $riskLevel,
+                        'total_score'    => $totalScore,
+                        'risk_level'     => $riskLevel,
                         'interpretation' => $interpretation,
                     ]);
 
@@ -184,57 +339,55 @@ class CounselingController extends Controller
 
                     $data = EmpowermentAssessment::findOrFail($request->id);
 
-                    $totalScore = (int) $request->score;
+                    // Maksimum = jumlah pertanyaan × 4
+                    $questionCount = EmpowermentQuestion::whereNotNull('dimension_id')
+                        ->count();
 
-                    /*
-                    * Diasumsikan skor yang diedit adalah skor akhir
-                    * dalam rentang 0 - 100.
-                    */
-                    $finalScore = $totalScore;
+                    $maxScore = $questionCount * 4;
 
-                    if ($finalScore <= 50) {
+                    // Batasi nilai 0 - maksimum
+                    $totalScore = min(
+                        max((int) $request->score, 0),
+                        $maxScore
+                    );
+
+                    if ($totalScore <= 70) {
 
                         $level = 'Rendah';
 
-                    } elseif ($finalScore <= 75) {
+                        $interpretation =
+                            'Tingkat pemberdayaan keluarga tergolong rendah. '
+                            .'Keluarga masih memerlukan pendampingan, edukasi, serta peningkatan '
+                            .'kemampuan dalam mengenali masalah kesehatan, mengambil keputusan, '
+                            .'merawat anggota keluarga, memodifikasi lingkungan, dan memanfaatkan '
+                            .'fasilitas pelayanan kesehatan.';
+
+                    } elseif ($totalScore <= 105) {
 
                         $level = 'Sedang';
+
+                        $interpretation =
+                            'Tingkat pemberdayaan keluarga tergolong sedang. '
+                            .'Keluarga telah memiliki kemampuan dalam mendukung perawatan '
+                            .'kesehatan anggota keluarga, namun masih diperlukan penguatan '
+                            .'melalui edukasi, motivasi, dan pendampingan secara berkelanjutan.';
 
                     } else {
 
                         $level = 'Tinggi';
-                    }
-
-                    if ($level === 'Tinggi') {
 
                         $interpretation =
                             'Tingkat pemberdayaan keluarga tergolong tinggi. '
-                            . 'Keluarga memiliki kemampuan yang baik dalam memahami, '
-                            . 'mengambil keputusan, serta berperan aktif dalam proses '
-                            . 'perawatan dan pemeliharaan kesehatan anggota keluarga.';
-
-                    } elseif ($level === 'Sedang') {
-
-                        $interpretation =
-                            'Tingkat pemberdayaan keluarga tergolong sedang. '
-                            . 'Keluarga telah menunjukkan kemampuan dalam mendukung '
-                            . 'perawatan kesehatan, namun masih terdapat beberapa aspek '
-                            . 'yang perlu diperkuat melalui edukasi dan pendampingan.';
-
-                    } else {
-
-                        $interpretation =
-                            'Tingkat pemberdayaan keluarga tergolong rendah. '
-                            . 'Diperlukan pendampingan yang lebih intensif, peningkatan '
-                            . 'pengetahuan, serta penguatan peran keluarga dalam '
-                            . 'mendukung perawatan dan pengambilan keputusan terkait '
-                            . 'kesehatan.';
+                            .'Keluarga memiliki kemampuan yang baik dalam mengenali masalah '
+                            .'kesehatan, mengambil keputusan, memberikan perawatan, '
+                            .'menciptakan lingkungan yang aman, serta memanfaatkan fasilitas '
+                            .'pelayanan kesehatan secara optimal.';
                     }
 
                     $data->update([
-                        'total_score' => $totalScore,
+                        'total_score'       => $totalScore,
                         'empowerment_level' => $level,
-                        'interpretation' => $interpretation,
+                        'interpretation'    => $interpretation,
                     ]);
 
                     break;
@@ -249,17 +402,38 @@ class CounselingController extends Controller
                     $data = Evaluation::with('topic')
                         ->findOrFail($request->id);
 
-                    $totalScore = (int) $request->score;
+                    /*
+                    |--------------------------------------------------------------------------
+                    | HITUNG TOTAL BOBOT MAKSIMUM
+                    |--------------------------------------------------------------------------
+                    */
+                    $maxScore = EvaluationQuestion::where(
+                            'evaluation_topic_id',
+                            $data->evaluation_topic_id
+                        )
+                        ->where('is_active', true)
+                        ->sum('score');
+
+                    // Batasi nilai 0 - maksimum
+                    $totalScore = min(
+                        max((int) $request->score, 0),
+                        $maxScore
+                    );
 
                     /*
-                    * Diasumsikan skor yang diedit sudah dalam bentuk
-                    * persentase (0 - 100).
-                    *
-                    * Jika menggunakan skor mentah, sesuaikan kembali
-                    * rumus perhitungannya.
+                    |--------------------------------------------------------------------------
+                    | HITUNG PERSENTASE
+                    |--------------------------------------------------------------------------
                     */
-                    $percentage = $totalScore;
+                    $percentage = $maxScore > 0
+                        ? round(($totalScore / $maxScore) * 100, 2)
+                        : 0;
 
+                    /*
+                    |--------------------------------------------------------------------------
+                    | KATEGORI
+                    |--------------------------------------------------------------------------
+                    */
                     if ($percentage >= 76) {
 
                         $category = 'Baik';
@@ -273,39 +447,44 @@ class CounselingController extends Controller
                         $category = 'Kurang';
                     }
 
+                    /*
+                    |--------------------------------------------------------------------------
+                    | INTERPRETASI
+                    |--------------------------------------------------------------------------
+                    */
                     $topicName = $data->topic->topic ?? 'materi';
 
                     if ($category === 'Baik') {
 
                         $interpretation =
                             'Peserta memiliki pemahaman yang baik terhadap materi "'
-                            . $topicName .
+                            .$topicName.
                             '". Sebagian besar pertanyaan dapat dijawab dengan benar. '
-                            . 'Disarankan untuk mempertahankan pemahaman yang sudah '
-                            . 'dimiliki dan terus menerapkan materi yang telah dipelajari.';
+                            .'Disarankan untuk mempertahankan pemahaman yang sudah dimiliki '
+                            .'dan terus menerapkan materi yang telah dipelajari.';
 
                     } elseif ($category === 'Cukup') {
 
                         $interpretation =
                             'Peserta memiliki pemahaman yang cukup terhadap materi "'
-                            . $topicName .
+                            .$topicName.
                             '". Masih terdapat beberapa konsep yang perlu diperkuat. '
-                            . 'Disarankan untuk mengulang kembali materi dan melakukan '
-                            . 'pendampingan lanjutan pada bagian yang belum dipahami.';
+                            .'Disarankan untuk mengulang kembali materi dan melakukan '
+                            .'pendampingan lanjutan pada bagian yang belum dipahami.';
 
                     } else {
 
                         $interpretation =
                             'Peserta masih mengalami kesulitan dalam memahami materi "'
-                            . $topicName .
+                            .$topicName.
                             '". Diperlukan edukasi ulang, pendampingan, serta penguatan '
-                            . 'materi agar tingkat pemahaman dapat meningkat.';
+                            .'materi agar tingkat pemahaman dapat meningkat.';
                     }
 
                     $data->update([
-                        'total_score' => $totalScore,
-                        'percentage' => $percentage,
-                        'category' => $category,
+                        'total_score'    => $totalScore,
+                        'percentage'     => $percentage,
+                        'category'       => $category,
                         'interpretation' => $interpretation,
                     ]);
 
@@ -317,7 +496,7 @@ class CounselingController extends Controller
                 'Skor berhasil diperbarui.'
             );
 
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
 
             return back()->with(
                 'error',
