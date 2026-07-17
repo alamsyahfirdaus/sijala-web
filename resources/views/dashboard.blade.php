@@ -386,42 +386,47 @@
         </div>
 
         <div class="video-container">
+            @foreach ($videos as $video)
+                @php
+                    if (is_array($video)) {
+                        // Data dari YouTube API
+                        $videoId = data_get($video, 'id.videoId');
+                        $link = $videoId ? "https://www.youtube.com/embed/{$videoId}" : '';
+                        $title = data_get($video, 'snippet.title', 'Video');
+                        $description = data_get($video, 'snippet.description', '');
+                    } else {
+                        // Data dari Database
+                        $link = $video->file_path;
+                        $title = $video->title;
+                        $description = $video->description;
 
-            @forelse($videos as $video)
-                @if (isset($video['id']['videoId']))
-                    <div class="video-card">
+                        if (!empty($link)) {
+                            // watch?v=
+                            if (preg_match('/[?&]v=([^&]+)/', $link, $matches)) {
+                                $link = 'https://www.youtube.com/embed/' . $matches[1];
+                            }
 
-                        <iframe src="https://www.youtube.com/embed/{{ $video['id']['videoId'] }}"
-                            title="{{ $video['snippet']['title'] }}" allowfullscreen>
-                        </iframe>
+                            // youtu.be/
+                            elseif (preg_match('/youtu\.be\/([^?]+)/', $link, $matches)) {
+                                $link = 'https://www.youtube.com/embed/' . $matches[1];
+                            }
 
-                        <div class="video-info">
-
-                            <div class="video-date" style="display: none;">
-                                {{ \Carbon\Carbon::parse($video['snippet']['publishedAt'])->translatedFormat('d F Y') }}
-                            </div>
-
-                            <h3>
-                                {{ $video['snippet']['title'] }}
-                            </h3>
-
-                            <p>
-                                {{ \Illuminate\Support\Str::limit($video['snippet']['description'], 200) }}
-                            </p>
-
-                        </div>
-
+                            // shorts/
+                            elseif (preg_match('/shorts\/([^?]+)/', $link, $matches)) {
+                                $link = 'https://www.youtube.com/embed/' . $matches[1];
+                            }
+                        }
+                    }
+                @endphp
+                <div class="video-card">
+                    <iframe src="{{ $link }}" title="{{ $title }}" allowfullscreen>
+                    </iframe>
+                    <div class="video-info">
+                        <h3>{{ $title }}</h3>
+                        <p>{{ \Illuminate\Support\Str::limit($description, 200) }}</p>
                     </div>
-                @endif
-
-            @empty
-
-                <div class="empty-video">
-                    <h3>Tidak ada video tersedia</h3>
-                    <p>Video edukasi akan ditampilkan di sini.</p>
                 </div>
-            @endforelse
-
+            @endforeach
         </div>
 
         <div class="section-title" style="margin-top:70px;">

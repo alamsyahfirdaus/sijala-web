@@ -41,6 +41,11 @@ class HomeController extends Controller
             }
         );
 
+        if (empty($videos)) {
+            $videos = EducationContent::where('category', 'video')
+                ->get();
+        }
+
         $posters = EducationContent::where('category', 'poster')->get();
 
         return view('dashboard', compact(
