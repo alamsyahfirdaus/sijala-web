@@ -168,7 +168,7 @@
                                                 <div class="timeline-item shadow-sm border-0 rounded-3">
                                                     <div class="timeline-header bg-primary text-white">
                                                         <strong>Pre Test</strong>
-                                                        <span class="float-end">Sesi
+                                                        <span class="float-end" style="font-size: 14px;">Sesi
                                                             {{ $screening['pre_test']['session_number'] }}</span>
                                                     </div>
                                                     <div class="timeline-body">
@@ -214,89 +214,91 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div>
-                                                <div class="timeline-item border-0 shadow-sm">
-                                                    <div class="timeline-body text-center">
-                                                        <h5 class="fw-bold mb-2">Proses Konseling</h5>
-                                                        <p class="text-muted mb-3">
-                                                            Konseling berlangsung dari
-                                                            <strong>Sesi {{ $screening['pre_test']['session_number'] }}</strong>
-                                                            hingga
+                                            @if ($screening['post_test'])
+                                                <div>
+                                                    <div class="timeline-item border-0 shadow-sm">
+                                                        <div class="timeline-body text-center">
+                                                            <h5 class="fw-bold mb-2">Proses Konseling</h5>
+                                                            <p class="text-muted mb-3">
+                                                                Konseling berlangsung dari
+                                                                <strong>Sesi
+                                                                    {{ $screening['pre_test']['session_number'] }}</strong>
+                                                                hingga
 
-                                                            <strong>Sesi {{ $screening['post_test']['session_number'] }}</strong>
-                                                        </p>
+                                                                <strong>Sesi
+                                                                    {{ $screening['post_test']['session_number'] }}</strong>
+                                                            </p>
 
-                                                        <span class="badge bg-secondary px-3 py-2">
-                                                            {{ $screening['post_test']['session_number'] - $screening['pre_test']['session_number'] + 1 }}
-                                                            Sesi Konseling
-                                                        </span>
+                                                            <span class="badge bg-secondary px-3 py-2">
+                                                                {{ $screening['post_test']['session_number'] - $screening['pre_test']['session_number'] + 1 }}
+                                                                Sesi Konseling
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-
-                                            <div class="time-label">
-                                                <span
-                                                    class="badge bg-warning px-3 py-2 shadow-sm">{{ $screening['post_test']['session_date']->translatedFormat('d F Y') }}</span>
-                                            </div>
-
-                                            <div>
-                                                <div class="timeline-item shadow-sm border-0 rounded-3">
-                                                    <div class="timeline-header bg-success text-white">
-                                                        <strong>Post Test</strong>
-                                                        <span class="float-end">Sesi
-                                                            {{ $screening['post_test']['session_number'] }}</span>
-                                                    </div>
-                                                    <div class="timeline-body">
-                                                        <div class="card border-0">
-                                                            <div class="card-body">
-                                                                <div class="row">
-                                                                    <div class="col-md-6">
-                                                                        <small class="text-muted">Risiko Jatuh</small>
-
-                                                                        @if ($screening['post_test']['fall_risk'])
-                                                                            @php
-                                                                                $risk =
-                                                                                    $screening['post_test'][
-                                                                                        'fall_risk'
-                                                                                    ];
-
-                                                                                $color = match ($risk->risk_level) {
-                                                                                    'Rendah' => 'success',
-                                                                                    'Sedang' => 'warning',
-                                                                                    'Tinggi' => 'danger',
-                                                                                    default => 'secondary',
-                                                                                };
-                                                                            @endphp
-
-                                                                            <h2 class="fw-bold mb-1">{{ $risk->total_score }}</h2>
-                                                                            <span
-                                                                                class="badge bg-{{ $color }}">{{ $risk->risk_level }}</span>
-                                                                        @else
-                                                                            <span class="text-muted">Belum ada data</span>
-                                                                        @endif
-
-                                                                    </div>
-
-                                                                    <div class="col-md-6">
-                                                                        <small class="text-muted">Pemberdayaan Keluarga</small>
-
-                                                                        @if ($screening['post_test']['empowerment'])
-                                                                            <h2 class="fw-bold text-success">
-                                                                                {{ $screening['post_test']['empowerment']->total_score }}
-                                                                            </h2>
-                                                                        @else
-                                                                            <span class="text-muted">Belum ada data</span>
-                                                                        @endif
+                                                <div class="time-label">
+                                                    <span
+                                                        class="badge bg-warning px-3 py-2 shadow-sm">{{ $screening['post_test']['session_date']->translatedFormat('d F Y') }}</span>
+                                                </div>
+                                                <div>
+                                                    <div class="timeline-item shadow-sm border-0 rounded-3">
+                                                        <div class="timeline-header bg-success text-white">
+                                                            <strong>Post Test</strong>
+                                                            <span class="float-end" style="font-size: 14px;">Sesi
+                                                                    {{ $screening['post_test']['session_number'] }}</span>
+                                                        </div>
+                                                        <div class="timeline-body">
+                                                            <div class="card border-0">
+                                                                <div class="card-body">
+                                                                    <div class="row">
+                                                                        <div class="col-md-6">
+                                                                            <small class="text-muted">Risiko Jatuh</small>
+    
+                                                                            @if ($screening['post_test']['fall_risk'])
+                                                                                @php
+                                                                                    $risk =
+                                                                                        $screening['post_test'][
+                                                                                            'fall_risk'
+                                                                                        ];
+    
+                                                                                    $color = match ($risk->risk_level) {
+                                                                                        'Rendah' => 'success',
+                                                                                        'Sedang' => 'warning',
+                                                                                        'Tinggi' => 'danger',
+                                                                                        default => 'secondary',
+                                                                                    };
+                                                                                @endphp
+    
+                                                                                <h2 class="fw-bold mb-1">{{ $risk->total_score }}</h2>
+                                                                                <span
+                                                                                    class="badge bg-{{ $color }}">{{ $risk->risk_level }}</span>
+                                                                            @else
+                                                                                <span class="text-muted">Belum ada data</span>
+                                                                            @endif
+    
+                                                                        </div>
+    
+                                                                        <div class="col-md-6">
+                                                                            <small class="text-muted">Pemberdayaan Keluarga</small>
+    
+                                                                            @if ($screening['post_test']['empowerment'])
+                                                                                <h2 class="fw-bold text-success">
+                                                                                    {{ $screening['post_test']['empowerment']->total_score }}
+                                                                                </h2>
+                                                                            @else
+                                                                                <span class="text-muted">Belum ada data</span>
+                                                                            @endif
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div>
-                                                <i class="timeline-icon bg-success text-white bi bi-check-lg"></i>
-                                            </div>
+                                                <div>
+                                                    <i class="timeline-icon bg-success text-white bi bi-check-lg"></i>
+                                                </div>
+                                            @endif
                                         @else
                                             <div class="text-center py-5">
                                                 <i class="bi bi-clipboard-x text-secondary" style="font-size:60px"></i>

@@ -94,62 +94,39 @@ class CounselingController extends Controller
 
             if ($firstSession && $lastSession) {
 
-                $screening = [
+                $preTest = [
+                    'session_number' => 1,
+                    'session_date' => $firstSession->created_at,
+                    'fall_risk' => FallRiskScreening::where(
+                        'counseling_session_id',
+                        $firstSession->id
+                    )->first(),
+                    'empowerment' => EmpowermentAssessment::where(
+                        'counseling_session_id',
+                        $firstSession->id
+                    )->first(),
+                ];
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | PRE TEST
-                    |--------------------------------------------------------------------------
-                    */
-                    'pre_test' => [
+                $postTest = null;
 
-                        'session_number' => 1,
-
-                        'session_date' => $firstSession->created_at,
-
-                        'fall_risk' => FallRiskScreening::where(
-                            'counseling_session_id',
-                            $firstSession->id
-                        )
-                            ->orderBy('id')
-                            ->first(),
-
-                        'empowerment' => EmpowermentAssessment::where(
-                            'counseling_session_id',
-                            $firstSession->id
-                        )
-                            ->orderBy('id')
-                            ->first(),
-
-                    ],
-
-                    /*
-                |--------------------------------------------------------------------------
-                | POST TEST
-                |--------------------------------------------------------------------------
-                */
-                    'post_test' => [
-
+                if ($sessions->count() > 1) {
+                    $postTest = [
                         'session_number' => $sessions->count(),
-
                         'session_date' => $lastSession->created_at,
-
                         'fall_risk' => FallRiskScreening::where(
                             'counseling_session_id',
                             $lastSession->id
-                        )
-                            ->orderByDesc('id')
-                            ->first(),
-
+                        )->latest('id')->first(),
                         'empowerment' => EmpowermentAssessment::where(
                             'counseling_session_id',
                             $lastSession->id
-                        )
-                            ->orderByDesc('id')
-                            ->first(),
+                        )->latest('id')->first(),
+                    ];
+                }
 
-                    ],
-
+                $screening = [
+                    'pre_test' => $preTest,
+                    'post_test' => $postTest,
                 ];
             }
 
