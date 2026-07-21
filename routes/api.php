@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\QaController;
 use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\UserDeviceController;
 use App\Http\Controllers\Api\PresentationController;
+use App\Http\Controllers\Api\AUserController;
 use App\Services\Agora\AgoraService;
 use Illuminate\Support\Facades\Route;
 
@@ -91,6 +92,9 @@ Route::get('/image/{filename}', function ($filename) {
     // Tampilkan file gambar
     return response()->file($path);
 });
+
+// GET DAFTAR USER LOGIN SURVEY
+Route::get('/v1-users', [AUserController::class, 'users']);
 
 Route::middleware('api.auth')->group(function () {
 
@@ -182,6 +186,19 @@ Route::middleware('api.auth')->group(function () {
         Route::post('/stop', [PresentationController::class, 'stop']);
         Route::post('/control', [PresentationController::class, 'control']);
     });
+
+    // SURVEY
+    Route::prefix('v1')->group(function () {
+
+        Route::post('/login', [AUserController::class, 'login']);
+        Route::post('/register', [AUserController::class, 'register']);
+        Route::post('/logout', [AUserController::class, 'logout']);
+
+        Route::get('/profile', [AUserController::class, 'profile']);
+        Route::post('/profile', [AUserController::class, 'updateProfile']);
+    });
+
+
 });
 
 /*

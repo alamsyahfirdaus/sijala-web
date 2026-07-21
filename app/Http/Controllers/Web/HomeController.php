@@ -48,7 +48,7 @@ class HomeController extends Controller
 
         $posters = EducationContent::where('category', 'poster')->get();
 
-        return view('dashboard', compact(
+        return view('maintenance', compact(
             'videos',
             'posters'
         ));
