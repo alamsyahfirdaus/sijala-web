@@ -11,140 +11,144 @@ use Illuminate\Support\Str;
 
 class AUserController extends Controller
 {
-    /**
-     * Login
-     */
     public function login(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-
-            'email' => 'required|email',
-
-            'password' => 'required',
-
-        ]);
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'email'    => 'required|email',
+                'password' => 'required',
+            ],
+            [
+                'email.required'    => 'Email wajib diisi.',
+                'email.email'       => 'Format email tidak valid.',
+                'password.required' => 'Password wajib diisi.',
+            ]
+        );
 
         if ($validator->fails()) {
-
             return response()->json([
                 'success' => false,
                 'message' => 'Validasi gagal.',
-                'errors' => $validator->errors()
-            ],422);
-
+                'errors'  => $validator->errors(),
+            ], 422);
         }
 
-        $user = AUser::where('email',$request->email)->first();
+        $user = AUser::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password,$user->password)) {
-
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
-                'success'=>false,
-                'message'=>'Email atau password salah.'
-            ],401);
-
+                'success' => false,
+                'message' => 'Email atau password salah.',
+            ], 401);
         }
 
-        $token = $user->createToken('flutter')->plainTextToken;
+        $token = Str::random(60);
+
+        $user->remember_token = $token;
+        $user->save();
 
         return response()->json([
-
-            'success'=>true,
-
-            'message'=>'Login berhasil.',
-
-            'token'=>$token,
-
-            'data'=>$user
-
+            'status' => true,
+            'message' => 'Login berhasil',
+            'data' => [
+                'id'        => $user->id,
+                'name'      => $user->name,
+                'email'     => $user->email,
+                'phone'     => $user->phone,
+                'token'     => $token,
+            ],
         ]);
     }
 
-    /**
-     * Register
-     */
     public function register(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'name'     => 'required|string|max:100',
+                'email'    => 'required|email|unique:a_users,email',
+                'password' => 'required|string|min:6|confirmed',
+                'phone'    => 'nullable|string|max:20',
+            ],
+            [
+                'name.required'      => 'Nama wajib diisi.',
+                'name.max'           => 'Nama maksimal 100 karakter.',
+                'email.required'     => 'Email wajib diisi.',
+                'email.email'        => 'Format email tidak valid.',
+                'email.unique'       => 'Email sudah terdaftar.',
+                'password.required'  => 'Password wajib diisi.',
+                'password.min'       => 'Password minimal 6 karakter.',
+                'password.confirmed' => 'Konfirmasi password tidak sesuai.',
+                'phone.max'          => 'Nomor telepon maksimal 20 karakter.',
+            ]
+        );
 
-            'name'=>'required',
-
-            'email'=>'required|email|unique:a_users,email',
-
-            'password'=>'required|confirmed|min:6',
-
-            'phone'=>'nullable'
-
-        ]);
-
-        if($validator->fails()){
-
+        if ($validator->fails()) {
             return response()->json([
-
-                'success'=>false,
-
-                'errors'=>$validator->errors()
-
-            ],422);
-
+                'success' => false,
+                'message' => 'Validasi gagal.',
+                'errors'  => $validator->errors(),
+            ], 422);
         }
 
         $user = AUser::create([
-
-            'name'=>$request->name,
-
-            'email'=>$request->email,
-
-            'password'=>Hash::make($request->password),
-
-            'phone'=>$request->phone,
-
-            'role'=>'user'
-
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'password' => Hash::make($request->password),
+            'phone'    => $request->phone,
+            'role'     => 'user',
         ]);
 
-        $token = $user->createToken('flutter')->plainTextToken;
-
         return response()->json([
-
-            'success'=>true,
-
-            'message'=>'Registrasi berhasil.',
-
-            'token'=>$token,
-
-            'data'=>$user
-
-        ],201);
+            'success' => true,
+            'message' => 'Registrasi berhasil.',
+            'data'    => [
+                'id'    => $user->id,
+                'name'  => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'role'  => $user->role,
+            ],
+        ], 201);
     }
 
-    /**
-     * Logout
-     */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pengguna tidak ditemukan.',
+            ], 401);
+        }
+
+        $user->update([
+            'remember_token' => null,
+        ]);
 
         return response()->json([
-
-            'success'=>true,
-
-            'message'=>'Logout berhasil.'
-
+            'success' => true,
+            'message' => 'Logout berhasil.',
         ]);
     }
 
-    /**
-     * Profile
-     */
     public function profile(Request $request)
     {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pengguna tidak ditemukan.',
+            ], 401);
+        }
+
         return response()->json([
-
-            'success'=>true,
-
-            'data'=>$request->user()
-
+            'success' => true,
+            'message' => 'Data profil berhasil diambil.',
+            'data'    => $user,
         ]);
     }
 

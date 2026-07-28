@@ -93,8 +93,12 @@ Route::get('/image/{filename}', function ($filename) {
     return response()->file($path);
 });
 
-// GET DAFTAR USER LOGIN SURVEY
-Route::get('/v1-users', [AUserController::class, 'users']);
+// SURVEY (TANPA TOKEN)
+Route::prefix('v1')->group(function () {
+    Route::get('/users', [AUserController::class, 'users']);
+    Route::post('/login', [AUserController::class, 'login']);
+    Route::post('/register', [AUserController::class, 'register']);
+});
 
 Route::middleware('api.auth')->group(function () {
 
@@ -187,18 +191,12 @@ Route::middleware('api.auth')->group(function () {
         Route::post('/control', [PresentationController::class, 'control']);
     });
 
-    // SURVEY
+    // SURVEY (MENGGUNAKAN TOKEN)
     Route::prefix('v1')->group(function () {
-
-        Route::post('/login', [AUserController::class, 'login']);
-        Route::post('/register', [AUserController::class, 'register']);
         Route::post('/logout', [AUserController::class, 'logout']);
-
         Route::get('/profile', [AUserController::class, 'profile']);
         Route::post('/profile', [AUserController::class, 'updateProfile']);
     });
-
-
 });
 
 /*
