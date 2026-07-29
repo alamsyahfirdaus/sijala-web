@@ -24,9 +24,9 @@ class CounselingController extends Controller
         $title = 'Konseling';
 
         $counselingSessions = CounselingSession::with([
-            'elderlyCounselee.counselee',
-            'counselor',
-        ])
+                'elderlyCounselee.counselee',
+                'counselor',
+            ])
             ->whereIn('id', function ($query) {
                 $query->selectRaw('MAX(id)')
                     ->from('counseling_sessions')
@@ -36,10 +36,38 @@ class CounselingController extends Controller
             ->get();
 
         foreach ($counselingSessions as $session) {
-            $session->session_count = CounselingSession::where(
+
+            $sessionCount = CounselingSession::where(
                 'elderly_counselee_id',
                 $session->elderly_counselee_id
             )->count();
+
+            $session->session_count = $sessionCount;
+
+            // ==========================================
+            // Menentukan Status Konseling
+            // ==========================================
+
+            // Cek apakah terdapat sesi evaluasi (sesi kedua terakhir)
+            $isLatest = CounselingSession::where(
+                    'elderly_counselee_id',
+                    $session->elderly_counselee_id
+                )
+                ->where('is_latest', 1)
+                ->first();
+
+            // Cek apakah sesi terakhir telah selesai
+            $isCompleted = CounselingSession::where(
+                    'elderly_counselee_id',
+                    $session->elderly_counselee_id
+                )
+                ->where('status', 'completed')
+                ->exists();
+
+            // Status konseling
+            $session->status_konseling = ($isLatest && $isCompleted)
+                ? 'Selesai'
+                : 'Berjalan';
         }
 
         return view('counselings', compact('title', 'counselingSessions'));
@@ -309,7 +337,7 @@ class CounselingController extends Controller
 
                 /*
                 |--------------------------------------------------------------------------
-                | PEMBERDAYAAN KELUARGA
+                | KEMANDIRIAN KESEHATAN KELUARGA
                 |--------------------------------------------------------------------------
                 */
                 case 'empowerment':
@@ -333,7 +361,7 @@ class CounselingController extends Controller
                         $level = 'Rendah';
 
                         $interpretation =
-                            'Tingkat pemberdayaan keluarga tergolong rendah. '
+                            'Tingkat kemandirian kesehatan keluarga tergolong rendah. '
                             .'Keluarga masih memerlukan pendampingan, edukasi, serta peningkatan '
                             .'kemampuan dalam mengenali masalah kesehatan, mengambil keputusan, '
                             .'merawat anggota keluarga, memodifikasi lingkungan, dan memanfaatkan '
@@ -344,7 +372,7 @@ class CounselingController extends Controller
                         $level = 'Sedang';
 
                         $interpretation =
-                            'Tingkat pemberdayaan keluarga tergolong sedang. '
+                            'Tingkat kemandirian kesehatan keluarga tergolong sedang. '
                             .'Keluarga telah memiliki kemampuan dalam mendukung perawatan '
                             .'kesehatan anggota keluarga, namun masih diperlukan penguatan '
                             .'melalui edukasi, motivasi, dan pendampingan secara berkelanjutan.';
@@ -354,7 +382,7 @@ class CounselingController extends Controller
                         $level = 'Tinggi';
 
                         $interpretation =
-                            'Tingkat pemberdayaan keluarga tergolong tinggi. '
+                            'Tingkat kemandirian kesehatan keluarga tergolong tinggi. '
                             .'Keluarga memiliki kemampuan yang baik dalam mengenali masalah '
                             .'kesehatan, mengambil keputusan, memberikan perawatan, '
                             .'menciptakan lingkungan yang aman, serta memanfaatkan fasilitas '

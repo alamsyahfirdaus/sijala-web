@@ -174,40 +174,75 @@
                                                     <div class="timeline-body">
                                                         <div class="card border-0">
                                                             <div class="card-body">
-                                                                <div class="row">
+                                                                <div class="row g-4">
                                                                     <div class="col-md-6">
-                                                                        <small class="text-muted">Risiko Jatuh</small>
+                                                                        <small class="text-muted d-block mb-2">
+                                                                            Risiko Jatuh
+                                                                        </small>
+
                                                                         @if ($screening['pre_test']['fall_risk'])
                                                                             @php
                                                                                 $risk =
                                                                                     $screening['pre_test']['fall_risk'];
 
-                                                                                $color = match ($risk->risk_level) {
+                                                                                $riskColor = match ($risk->risk_level) {
                                                                                     'Rendah' => 'success',
                                                                                     'Sedang' => 'warning',
                                                                                     'Tinggi' => 'danger',
                                                                                     default => 'secondary',
                                                                                 };
                                                                             @endphp
-                                                                            <h2 class="fw-bold mb-1">{{ $risk->total_score }}</h2>
-                                                                            <span
-                                                                                class="badge bg-{{ $color }}">{{ $risk->risk_level }}</span>
-                                                                        @else
-                                                                            <span class="text-muted">Belum ada data</span>
-                                                                        @endif
 
+                                                                            <h2 class="fw-bold mb-2">
+                                                                                {{ $risk->total_score }}
+                                                                            </h2>
+
+                                                                            <span class="badge bg-{{ $riskColor }}">
+                                                                                {{ $risk->risk_level }}
+                                                                            </span>
+                                                                        @else
+                                                                            <span class="text-muted">
+                                                                                Belum ada data
+                                                                            </span>
+                                                                        @endif
                                                                     </div>
 
                                                                     <div class="col-md-6">
-                                                                        <small class="text-muted">Pemberdayaan Keluarga</small>
+                                                                        <small class="text-muted d-block mb-2">
+                                                                            Kemandirian Kesehatan Keluarga
+                                                                        </small>
+
                                                                         @if ($screening['pre_test']['empowerment'])
-                                                                            <h2 class="fw-bold text-success">
-                                                                                {{ $screening['pre_test']['empowerment']->total_score }}
+                                                                            @php
+                                                                                $empowerment =
+                                                                                    $screening['pre_test'][
+                                                                                        'empowerment'
+                                                                                    ];
+
+                                                                                $empowermentColor = match (
+                                                                                    $empowerment->empowerment_level
+                                                                                ) {
+                                                                                    'Tinggi' => 'success',
+                                                                                    'Sedang' => 'warning',
+                                                                                    'Rendah' => 'danger',
+                                                                                    default => 'secondary',
+                                                                                };
+                                                                            @endphp
+
+                                                                            <h2 class="fw-bold mb-2">
+                                                                                {{ $empowerment->total_score }}
                                                                             </h2>
+
+                                                                            <span class="badge bg-{{ $empowermentColor }}">
+                                                                                {{ $empowerment->empowerment_level }}
+                                                                            </span>
                                                                         @else
-                                                                            <span class="text-muted">Belum ada data</span>
+                                                                            <span class="text-muted">
+                                                                                Belum ada data
+                                                                            </span>
                                                                         @endif
                                                                     </div>
+
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -245,50 +280,85 @@
                                                         <div class="timeline-header bg-success text-white">
                                                             <strong>Post Test</strong>
                                                             <span class="float-end" style="font-size: 14px;">Sesi
-                                                                    {{ $screening['post_test']['session_number'] }}</span>
+                                                                {{ $screening['post_test']['session_number'] }}</span>
                                                         </div>
                                                         <div class="timeline-body">
                                                             <div class="card border-0">
                                                                 <div class="card-body">
-                                                                    <div class="row">
+                                                                    <div class="row g-4">
+
                                                                         <div class="col-md-6">
-                                                                            <small class="text-muted">Risiko Jatuh</small>
-    
+                                                                            <small class="text-muted d-block mb-2">
+                                                                                Risiko Jatuh
+                                                                            </small>
+
                                                                             @if ($screening['post_test']['fall_risk'])
                                                                                 @php
                                                                                     $risk =
                                                                                         $screening['post_test'][
                                                                                             'fall_risk'
                                                                                         ];
-    
-                                                                                    $color = match ($risk->risk_level) {
+
+                                                                                    $riskColor = match (
+                                                                                        $risk->risk_level
+                                                                                    ) {
                                                                                         'Rendah' => 'success',
                                                                                         'Sedang' => 'warning',
                                                                                         'Tinggi' => 'danger',
                                                                                         default => 'secondary',
                                                                                     };
                                                                                 @endphp
-    
-                                                                                <h2 class="fw-bold mb-1">{{ $risk->total_score }}</h2>
-                                                                                <span
-                                                                                    class="badge bg-{{ $color }}">{{ $risk->risk_level }}</span>
-                                                                            @else
-                                                                                <span class="text-muted">Belum ada data</span>
-                                                                            @endif
-    
-                                                                        </div>
-    
-                                                                        <div class="col-md-6">
-                                                                            <small class="text-muted">Pemberdayaan Keluarga</small>
-    
-                                                                            @if ($screening['post_test']['empowerment'])
-                                                                                <h2 class="fw-bold text-success">
-                                                                                    {{ $screening['post_test']['empowerment']->total_score }}
+
+                                                                                <h2 class="fw-bold mb-2">
+                                                                                    {{ $risk->total_score }}
                                                                                 </h2>
+
+                                                                                <span class="badge bg-{{ $riskColor }}">
+                                                                                    {{ $risk->risk_level }}
+                                                                                </span>
                                                                             @else
-                                                                                <span class="text-muted">Belum ada data</span>
+                                                                                <span class="text-muted">
+                                                                                    Belum ada data
+                                                                                </span>
                                                                             @endif
                                                                         </div>
+
+                                                                        <div class="col-md-6">
+                                                                            <small class="text-muted d-block mb-2">
+                                                                                Kemandirian Kesehatan Keluarga
+                                                                            </small>
+
+                                                                            @if ($screening['post_test']['empowerment'])
+                                                                                @php
+                                                                                    $empowerment =
+                                                                                        $screening['post_test'][
+                                                                                            'empowerment'
+                                                                                        ];
+
+                                                                                    $empowermentColor = match (
+                                                                                        $empowerment->empowerment_level
+                                                                                    ) {
+                                                                                        'Tinggi' => 'success',
+                                                                                        'Sedang' => 'warning',
+                                                                                        'Rendah' => 'danger',
+                                                                                        default => 'secondary',
+                                                                                    };
+                                                                                @endphp
+
+                                                                                <h2 class="fw-bold mb-2">
+                                                                                    {{ $empowerment->total_score }}
+                                                                                </h2>
+
+                                                                                <span class="badge bg-{{ $empowermentColor }}">
+                                                                                    {{ $empowerment->empowerment_level }}
+                                                                                </span>
+                                                                            @else
+                                                                                <span class="text-muted">
+                                                                                    Belum ada data
+                                                                                </span>
+                                                                            @endif
+                                                                        </div>
+
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -376,8 +446,11 @@
                                                     <div class="border rounded p-3 mb-3">
                                                         <div class="fw-semibold">{{ $evaluation->topic->topic }}</div>
                                                         <div class="mt-2">
-                                                            <span class="badge bg-primary">Skor
-                                                                {{ round($evaluation->percentage) }}</span>
+                                                            <span class="badge bg-primary">
+                                                                Skor:
+                                                                {{ $evaluation->total_score }}/{{ $evaluation->total_questions }}
+                                                                ({{ $evaluation->percentage }}%)
+                                                            </span>
                                                             @php
                                                                 $color = match ($evaluation->category) {
                                                                     'Baik' => 'success',

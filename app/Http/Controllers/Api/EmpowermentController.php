@@ -43,7 +43,7 @@ class EmpowermentController extends Controller
 
         return response()->json([
             'status'  => true,
-            'message' => 'Daftar pertanyaan pemberdayaan keluarga berhasil diambil.',
+            'message' => 'Daftar pertanyaan kemandirian kesehatan keluarga berhasil diambil.',
             'data'    => $empowermentQuestions,
         ]);
     }
@@ -151,7 +151,7 @@ class EmpowermentController extends Controller
                 $empowermentLevel = 'Rendah';
 
                 $interpretation =
-                    'Tingkat pemberdayaan keluarga tergolong rendah. '
+                    'Tingkat kemandirian kesehatan keluarga tergolong rendah. '
                     . 'Keluarga masih memerlukan pendampingan, edukasi, serta peningkatan '
                     . 'kemampuan dalam mengenali masalah kesehatan, mengambil keputusan, '
                     . 'merawat anggota keluarga, memodifikasi lingkungan, dan memanfaatkan '
@@ -162,7 +162,7 @@ class EmpowermentController extends Controller
                 $empowermentLevel = 'Sedang';
 
                 $interpretation =
-                    'Tingkat pemberdayaan keluarga tergolong sedang. '
+                    'Tingkat kemandirian kesehatan keluarga tergolong sedang. '
                     . 'Keluarga telah memiliki kemampuan dalam mendukung perawatan '
                     . 'kesehatan anggota keluarga, namun masih diperlukan penguatan '
                     . 'melalui edukasi, motivasi, dan pendampingan secara berkelanjutan.';
@@ -172,7 +172,7 @@ class EmpowermentController extends Controller
                 $empowermentLevel = 'Tinggi';
 
                 $interpretation =
-                    'Tingkat pemberdayaan keluarga tergolong tinggi. '
+                    'Tingkat kemandirian kesehatan keluarga tergolong tinggi. '
                     . 'Keluarga memiliki kemampuan yang baik dalam mengenali masalah '
                     . 'kesehatan, mengambil keputusan, memberikan perawatan, '
                     . 'menciptakan lingkungan yang aman, serta memanfaatkan fasilitas '
@@ -234,8 +234,8 @@ class EmpowermentController extends Controller
             */
 
             $message = $empowerment->wasRecentlyCreated
-                ? 'Jawaban pemberdayaan keluarga berhasil disimpan.'
-                : 'Jawaban pemberdayaan keluarga berhasil diperbarui.';
+                ? 'Jawaban kemandirian kesehatan keluarga berhasil disimpan.'
+                : 'Jawaban kemandirian kesehatan keluarga berhasil diperbarui.';
 
             return response()->json([
                 'status'  => true,
@@ -260,7 +260,7 @@ class EmpowermentController extends Controller
 
             return response()->json([
                 'status'  => false,
-                'message' => 'Terjadi kesalahan saat menyimpan data pemberdayaan keluarga.',
+                'message' => 'Terjadi kesalahan saat menyimpan data kemandirian kesehatan keluarga.',
             ], 500);
         }
     }

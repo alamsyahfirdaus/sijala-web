@@ -187,9 +187,9 @@
                             <th>Konseli</th>
                             <th>Lansia</th>
                             <th>Risiko Jatuh</th>
-                            <th>Selisih</th>
-                            <th>Pemberdayaan</th>
-                            <th>Selisih</th>
+                            {{-- <th>Selisih</th> --}}
+                            <th>Kemandirian Kesehatan Keluarga</th>
+                            {{-- <th>Selisih</th> --}}
                         </tr>
                     </thead>
                     <tbody>
@@ -199,11 +199,18 @@
                                 <td>{{ $screening['counselee_name'] }}</td>
                                 <td>{{ $screening['elderly_name'] }}</td>
                                 <td>
-                                    <span>{{ $screening['fall_risk_pre_test'] !== '-' ? 'Pre ' . $screening['fall_risk_pre_test'] : '-' }}</span>
-                                    <span> | </span>
-                                    <span>{{ $screening['fall_risk_post_test'] !== '-' ? 'Post ' . $screening['fall_risk_post_test'] : '-' }}</span>
+                                    @if ($screening['fall_risk_post_test'] === '-')
+                                        Pre-Test
+                                        {{ $screening['fall_risk_pre_test'] !== '-' ? $screening['fall_risk_pre_test'] : '-' }}
+                                        <span class="text-muted" style="font-size: 12px;">(Belum Post-Test)</span>
+                                    @else
+                                        Pre-Test
+                                        {{ $screening['fall_risk_pre_test'] !== '-' ? $screening['fall_risk_pre_test'] : '-' }}
+                                        |
+                                        Post-Test {{ $screening['fall_risk_post_test'] }}
+                                    @endif
                                 </td>
-                                <td style="text-align: center;">
+                                {{-- <td style="text-align: center;">
                                     @if ($screening['fall_risk_difference'] === '-')
                                         <span>-</span>
                                     @elseif ($screening['fall_risk_difference'] < 0)
@@ -217,13 +224,20 @@
                                     @else
                                         <span>0</span>
                                     @endif
-                                </td>
+                                </td> --}}
                                 <td>
-                                    <span>{{ $screening['empowerment_pre_test'] !== '-' ? 'Pre ' . $screening['empowerment_pre_test'] : '-' }}</span>
-                                    <span> | </span>
-                                    <span>{{ $screening['empowerment_post_test'] !== '-' ? 'Post ' . $screening['empowerment_post_test'] : '-' }}</span>
+                                    @if ($screening['empowerment_post_test'] === '-')
+                                        Pre-Test
+                                        {{ $screening['empowerment_pre_test'] !== '-' ? $screening['empowerment_pre_test'] : '-' }}
+                                        <span class="text-muted" style="font-size: 12px;">(Belum Post-Test)</span>
+                                    @else
+                                        Pre-Test
+                                        {{ $screening['empowerment_pre_test'] !== '-' ? $screening['empowerment_pre_test'] : '-' }}
+                                        |
+                                        Post-Test {{ $screening['empowerment_post_test'] }}
+                                    @endif
                                 </td>
-                                <td style="text-align: center;">
+                                {{-- <td style="text-align: center;">
                                     @if ($screening['empowerment_difference'] === '-')
                                         <span>-</span>
                                     @elseif ($screening['empowerment_difference'] > 0)
@@ -237,7 +251,7 @@
                                     @else
                                         <span>0</span>
                                     @endif
-                                </td>
+                                </td> --}}
                             </tr>
                         @endforeach
                     </tbody>
@@ -253,7 +267,7 @@
                             <th>Lansia</th>
                             <th>Konselor</th>
                             <th>Topik</th>
-                            <th>Skor</th>
+                            <th style="width: 15%;">Skor</th>
                             <th>Kategori</th>
                             <th>Tgl.<span style="font-size: 10px; color: #fff;">_</span>Evaluasi</th>
                         </tr>
@@ -267,9 +281,13 @@
                                 <td>{{ $evaluation['elderly_name'] }}</td>
                                 <td>{{ $evaluation['counselor_name'] }}</td>
                                 <td>{{ $evaluation['topic_name'] }}</td>
-                                <td style="text-align: center;">{{ $evaluation['score'] }}</td>
+                                <td>
+                                    {{ $evaluation['score'] }}/{{ $evaluation['total_questions'] }}
+                                    ({{ $evaluation['percentage'] }})
+                                </td>
                                 <td>{{ $evaluation['category'] }}</td>
-                                <td>{{ \Carbon\Carbon::parse($evaluation['evaluation_date'])->translatedFormat('d F Y') }}</td>
+                                <td>{{ \Carbon\Carbon::parse($evaluation['evaluation_date'])->translatedFormat('d F Y') }}
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>

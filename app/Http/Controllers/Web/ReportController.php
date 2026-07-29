@@ -371,20 +371,27 @@ class ReportController extends Controller
                 )
             )
 
-            ->selectRaw('
+            ->selectRaw("
                 elderly_counselee_id,
                 MIN(id) as first_session_id,
-                MAX(id) as last_session_id
-            ')
+                CASE
+                    WHEN COUNT(*) > 1 THEN MAX(id)
+                    ELSE NULL
+                END as last_session_id,
+                COUNT(*) as total_session
+            ")
 
             ->groupBy('elderly_counselee_id');
 
-        $sessionIds = $query->get()
-            ->flatMap(fn ($item) => [
+        $groups = $query->get();
+
+        $sessionIds = $groups
+            ->flatMap(fn ($item) => array_filter([
                 $item->first_session_id,
                 $item->last_session_id,
-            ])
-            ->unique();
+            ]))
+            ->unique()
+            ->values();
 
         $sessions = CounselingSession::with([
             'counselor.puskesmas.village.district.regency',
@@ -396,72 +403,121 @@ class ReportController extends Controller
             ->get()
             ->keyBy('id');
 
-        $screenings = $query
-            ->get()
-            ->map(function ($item) use ($sessions) {
+        $screenings = $groups->map(function ($item) use ($sessions) {
 
-                $firstSession = $sessions[$item->first_session_id];
-                $lastSession = $sessions[$item->last_session_id];
+            $firstSession = $sessions->get($item->first_session_id);
 
+            $lastSession = $item->last_session_id
+                ? $sessions->get($item->last_session_id)
+                : null;
+
+            // Gunakan sesi terakhir jika ada,
+            // jika belum ada gunakan sesi pertama
+            $displaySession = $lastSession ?? $firstSession;
+
+            // ==========================================================
+            // Risiko Jatuh
+            // ==========================================================
+            $fallRiskPre = $firstSession?->fallRiskScreening?->total_score;
+
+            $fallRiskPost = $lastSession?->fallRiskScreening?->total_score;
+
+            // ==========================================================
+            // Pemberdayaan
+            // ==========================================================
+            $empowermentPre = $firstSession?->empowermentAssessment?->total_score;
+
+            $empowermentPost = $lastSession?->empowermentAssessment?->total_score;
+
+            return [
+
+                'id' => $displaySession?->id,
+
+                // ======================================================
+                // Jumlah Sesi
+                // ======================================================
+                'total_session' => $item->total_session,
+
+                // ======================================================
+                // Konseli
+                // ======================================================
+                'counselee_name' =>
+                    $displaySession?->elderlyCounselee?->counselee?->name ?? '-',
+
+                // ======================================================
+                // Lansia
+                // ======================================================
+                'elderly_name' =>
+                    $displaySession?->elderlyCounselee?->elderly_name ?? '-',
+
+                'gender' => match ($displaySession?->elderlyCounselee?->elderly_gender) {
+                    'L' => 'Laki-Laki',
+                    'P' => 'Perempuan',
+                    default => '-',
+                },
+
+                'age' => $displaySession?->elderlyCounselee?->elderly_age
+                    ? $displaySession->elderlyCounselee->elderly_age . ' Tahun'
+                    : '-',
+
+                // ======================================================
+                // Konselor
+                // ======================================================
+                'counselor_name' =>
+                    $displaySession?->counselor?->name ?? '-',
+
+                // ======================================================
+                // Puskesmas
+                // ======================================================
+                'puskesmas' => $displaySession?->counselor?->puskesmas
+                    ? collect([
+                        $displaySession->counselor->puskesmas->name,
+                        $displaySession->counselor->puskesmas->village?->name,
+                        $displaySession->counselor->puskesmas->village?->district?->name,
+                        $displaySession->counselor->puskesmas->village?->district?->regency?->name,
+                    ])->filter()->implode(', ')
+                    : '-',
+
+                // ======================================================
                 // Risiko Jatuh
-                $fallRiskPre = $firstSession->fallRiskScreening?->total_score;
-                $fallRiskPost = $lastSession->fallRiskScreening?->total_score;
+                // ======================================================
+                'fall_risk_pre_test' => $fallRiskPre ?? '-',
 
+                'fall_risk_post_test' => $fallRiskPost ?? '-',
+
+                'fall_risk_difference' =>
+                    is_numeric($fallRiskPre) && is_numeric($fallRiskPost)
+                        ? $fallRiskPost - $fallRiskPre
+                        : '-',
+
+                'fall_risk_category' =>
+                    $lastSession?->fallRiskScreening?->risk_level ?? '-',
+
+                // ======================================================
                 // Pemberdayaan
-                $empowermentPre = $firstSession->empowermentAssessment?->total_score;
-                $empowermentPost = $lastSession->empowermentAssessment?->total_score;
+                // ======================================================
+                'empowerment_pre_test' => $empowermentPre ?? '-',
 
-                return [
-                    'id' => $lastSession->id,
-                    // Konseli
-                    'counselee_name' => $lastSession->elderlyCounselee?->counselee?->name ?? '-',
-                    // Lansia
-                    'elderly_name' => $lastSession->elderlyCounselee?->elderly_name ?? '-',
-                    'gender' => match ($lastSession->elderlyCounselee?->elderly_gender) {
-                        'L' => 'Laki-Laki',
-                        'P' => 'Perempuan',
-                        default => '-',
-                    },
-                    'age' => $lastSession->elderlyCounselee?->elderly_age
-                        ? $lastSession->elderlyCounselee->elderly_age.' Tahun'
-                        : '-',
-                    // Konselor
-                    'counselor_name' => $lastSession->counselor?->name ?? '-',
+                'empowerment_post_test' => $empowermentPost ?? '-',
 
-                    // Puskesmas
-                    'puskesmas' => $lastSession->counselor?->puskesmas
-                        ? collect([
-                            $lastSession->counselor->puskesmas->name,
-                            $lastSession->counselor->puskesmas->village?->name,
-                            $lastSession->counselor->puskesmas->village?->district?->name,
-                            $lastSession->counselor->puskesmas->village?->district?->regency?->name,
-                        ])->filter()->implode(', ')
+                'empowerment_difference' =>
+                    is_numeric($empowermentPre) && is_numeric($empowermentPost)
+                        ? $empowermentPost - $empowermentPre
                         : '-',
 
-                    // Risiko Jatuh
-                    'fall_risk_pre_test' => $fallRiskPre ?? '-',
-                    'fall_risk_post_test' => $fallRiskPost ?? '-',
-                    'fall_risk_difference' => is_numeric($fallRiskPre) && is_numeric($fallRiskPost)
-                            ? $fallRiskPost - $fallRiskPre
-                            : '-',
-                    'fall_risk_category' => $lastSession->fallRiskScreening?->risk_level ?? '-',
+                'empowerment_category' =>
+                    $lastSession?->empowermentAssessment?->empowerment_level ?? '-',
 
-                    // Pemberdayaan
-                    'empowerment_pre_test' => $empowermentPre ?? '-',
-                    'empowerment_post_test' => $empowermentPost ?? '-',
-                    'empowerment_difference' => is_numeric($empowermentPre) && is_numeric($empowermentPost)
-                            ? $empowermentPost - $empowermentPre
-                            : '-',
+                // ======================================================
+                // Tanggal
+                // ======================================================
+                'first_screening_date' =>
+                    $firstSession?->created_at?->translatedFormat('d F Y') ?? '-',
 
-                    'empowerment_category' => $lastSession->empowermentAssessment?->empowerment_level ?? '-',
-                    // Tanggal
-                    'first_screening_date' => $firstSession->created_at
-                        ->translatedFormat('d F Y'),
-
-                    'last_screening_date' => $lastSession->created_at
-                        ->translatedFormat('d F Y'),
-                ];
-            });
+                'last_screening_date' =>
+                    $lastSession?->created_at?->translatedFormat('d F Y') ?? '-',
+            ];
+        });
 
         return [
             'availableDates' => $availableDates,
@@ -542,6 +598,8 @@ class ReportController extends Controller
 
                     // Evaluasi
                     'topic_name' => $item->topic?->topic ?? '-',
+
+                    'total_questions' => $item->total_questions ?? '-',
 
                     'score' => $item->total_score ?? '-',
 
@@ -680,11 +738,11 @@ class ReportController extends Controller
                             'Selisih Risiko Jatuh' => $item['fall_risk_difference'],
                             'Kategori Risiko Jatuh' => $item['fall_risk_category'],
 
-                            // Hasil Pemberdayaan
-                            'Pemberdayaan Keluarga (Pre-Test)' => $item['empowerment_pre_test'],
-                            'Pemberdayaan Keluarga (Post-Test)' => $item['empowerment_post_test'],
-                            'Selisih Pemberdayaan Keluarga' => $item['empowerment_difference'],
-                            'Kategori Pemberdayaan Keluarga' => $item['empowerment_category'],
+                            // Hasil Kemandirian Kesehatan Keluarga
+                            'Kemandirian Kesehatan Keluarga (Pre-Test)' => $item['empowerment_pre_test'],
+                            'Kemandirian Kesehatan Keluarga (Post-Test)' => $item['empowerment_post_test'],
+                            'Selisih Kemandirian Kesehatan Keluarga' => $item['empowerment_difference'],
+                            'Kategori Kemandirian Kesehatan Keluarga' => $item['empowerment_category'],
                         ];
                     }),
             ],
@@ -709,6 +767,7 @@ class ReportController extends Controller
 
                             // Evaluasi
                             'Topik' => $item['topic_name'],
+                            'Jumlah Pertanyaan' => $item['total_questions'],
                             'Skor' => $item['score'],
                             'Persentase' => $item['percentage'],
                             'Kategori' => $item['category'],

@@ -88,7 +88,7 @@
             <div class="card card-outline card-warning mb-4">
                 <div class="card-header border-0">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h3 class="card-title">Grafik Pemberdayaan Keluarga</h3>
+                        <h3 class="card-title">Grafik Kemandirian Kesehatan Keluarga</h3>
                     </div>
                 </div>
                 <div class="card-body" style="height:450px;">

@@ -7,7 +7,7 @@
     <title>SIJALA | Jaga Kesehatan Lansia</title>
     <meta name="title" content="SIJALA | Jaga Kesehatan Lansia">
     <meta name="description"
-        content="SIJALA merupakan Jaga Kesehatan Lansia yang mendukung skrining risiko jatuh, pemberdayaan keluarga, edukasi kesehatan, dan layanan konseling digital.">
+        content="SIJALA merupakan Jaga Kesehatan Lansia yang mendukung skrining risiko jatuh, kemandirian kesehatan keluarga, edukasi kesehatan, dan layanan konseling digital.">
     <meta name="theme-color" content="#FBC02D">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
@@ -166,7 +166,7 @@
                         <p class="lead text-center text-secondary mb-5">
                             Kami sedang menyempurnakan SIJALA agar dapat memberikan
                             pengalaman terbaik dalam mendukung pelayanan kesehatan lansia,
-                            skrining risiko jatuh, pemberdayaan keluarga, edukasi kesehatan,
+                            skrining risiko jatuh, kemandirian kesehatan keluarga, edukasi kesehatan,
                             dan layanan konseling digital.
                         </p>
                         <div class="row">
@@ -177,7 +177,7 @@
                                 </div>
                                 <div class="feature-item">
                                     <i class="bi bi-check-circle-fill"></i>
-                                    Pemberdayaan Keluarga
+                                    Kemandirian Kesehatan Keluarga
                                 </div>
                             </div>
                             <div class="col-md-6">

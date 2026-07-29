@@ -12,7 +12,7 @@ return new class extends Migration
 
             // PRIMARY KEY
             $table->id();
-            // ID unik asesmen pemberdayaan keluarga
+            // ID unik asesmen kemandirian kesehatan keluarga keluarga
 
             // RELASI KONSELI
             // $table->foreignId('counselee_id')
@@ -45,11 +45,11 @@ return new class extends Migration
 
             // HASIL
             $table->integer('total_score')->nullable();
-            // Total skor pemberdayaan keluarga
+            // Total skor kemandirian kesehatan keluarga
 
             // $table->enum('empowerment_level', ['low', 'medium', 'high'])->nullable();
             $table->string('empowerment_level')->nullable();
-            // Tingkat pemberdayaan keluarga
+            // Tingkat kemandirian kesehatan keluarga
 
             $table->text('interpretation')->nullable();
             // Interpretasi hasil asesmen

@@ -75,7 +75,7 @@ class HomeController extends Controller
         });
 
         // =====================================================
-        // PRE TEST - PEMBERDAYAAN KELUARGA
+        // PRE TEST - KEMANDIRIAN KESEHATAN KELUARGA
         // =====================================================
         $empowermentPreTest = EmpowermentAssessment::whereIn('id', function ($query) {
             $query->selectRaw('MIN(id)')
@@ -84,7 +84,7 @@ class HomeController extends Controller
         });
 
         // =====================================================
-        // POST TEST - PEMBERDAYAAN KELUARGA
+        // POST TEST - KEMANDIRIAN KESEHATAN KELUARGA
         // =====================================================
         $empowermentPostTest = EmpowermentAssessment::whereIn('id', function ($query) {
             $query->selectRaw('MAX(id)')
@@ -157,7 +157,7 @@ class HomeController extends Controller
             'totalPuskesmas' => Puskesmas::count(),
 
             // =================================================
-            // GRAFIK SKRINING RISIKO JATUH & PEMBERDAYAAN KELUARGA
+            // GRAFIK SKRINING RISIKO JATUH & KEMANDIRIAN KESEHATAN KELUARGA
             // =================================================
             'testCategories'   => $testCategories,
             'fallRiskChart'    => $fallRiskChart,

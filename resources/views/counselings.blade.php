@@ -20,7 +20,8 @@
                         <th>Nama Lansia</th>
                         <th>Konseli</th>
                         <th>Konselor</th>
-                        <th>Konseling</th>
+                        <th>Sesi</th>
+                        <th>Status</th>
                         <th style="width: 5%;">Aksi</th>
                     </tr>
                 </thead>
@@ -32,6 +33,7 @@
                             <td>{{ $session->elderlyCounselee->counselee->name ?? '-' }}</td>
                             <td>{{ $session->counselor->name ?? '-' }}</td>
                             <td>{{ $session->session_count }} Sesi</td>
+                            <td>{{ $session->status_konseling }}</td>
                             <td>
                                 <div class="btn-group btn-group-sm">
                                     <button type="button" class="btn btn-primary dropdown-toggle dropdown-menu-right"

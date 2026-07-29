@@ -127,7 +127,7 @@ class CounselingResumeOptionSeeder extends Seeder
             ],
             [
                 'category_id' => $skriningAwal,
-                'title' => 'Melakukan asesmen pemberdayaan keluarga',
+                'title' => 'Melakukan asesmen kemandirian kesehatan keluarga',
                 'description' => null,
                 'sort_order' => 2,
                 'is_active' => true,
@@ -335,7 +335,7 @@ class CounselingResumeOptionSeeder extends Seeder
             ],
             [
                 'category_id' => $skriningAkhir,
-                'title' => 'Melakukan asesmen pemberdayaan keluarga akhir',
+                'title' => 'Melakukan asesmen kemandirian kesehatan keluarga akhir',
                 'sort_order' => 2,
                 'description' => null,
                 'is_active' => true,
