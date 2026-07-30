@@ -614,16 +614,25 @@ class AuthController extends Controller
     private function sendWhatsapp(User $user): bool
     {
         // =========================================================
-        // KONSELI LOGIN
+        // PENDAMPING LANSIA (KONSELI) LOGIN
         // =========================================================
         if ($user->role == 'konseli') {
 
-            $elderlyCounselee = ElderlyCounselee::where('counselee_id', $user->id)->first();
+            // -----------------------------------------------------
+            // Cari data pendamping lansia berdasarkan akun login
+            // -----------------------------------------------------
+            $elderlyCounselee = ElderlyCounselee::where(
+                'counselee_id',
+                $user->id
+            )->first();
 
             if (! $elderlyCounselee) {
                 return false;
             }
 
+            // -----------------------------------------------------
+            // Cari sesi konseling aktif terakhir
+            // -----------------------------------------------------
             $counselingSession = CounselingSession::with('counselor')
                 ->where('elderly_counselee_id', $elderlyCounselee->id)
                 ->where('status', 'ongoing')
@@ -631,14 +640,14 @@ class AuthController extends Controller
                 ->first();
 
             // =====================================================
-            // Sudah memiliki konselor
+            // Sudah memiliki sesi konseling aktif
             // =====================================================
             if ($counselingSession && $counselingSession->counselor) {
 
                 $message =
                     "Halo {$counselingSession->counselor->name},\n\n".
                     "Pendamping lansia *{$user->name}* baru saja login ke aplikasi *SIJALA* dan siap mengikuti sesi konseling.\n\n".
-                    "Silakan menghubungi pendamping lansia melalui WhatsApp di nomor *{$user->phone}* untuk menentukan jadwal atau memulai sesi konseling. Selanjutnya, silakan membuka aplikasi *SIJALA* untuk melaksanakan proses konseling.\n\n\n".
+                    "Silakan menghubungi pendamping lansia melalui WhatsApp di nomor *{$user->phone}* untuk menentukan jadwal atau memulai sesi konseling. Selanjutnya, silakan membuka aplikasi *SIJALA* untuk melaksanakan proses konseling.\n\n".
                     "Pesan ini dikirim secara otomatis oleh Sistem SIJALA. Mohon tidak membalas pesan ini.";
 
                 return $this->sendMessage(
@@ -650,6 +659,7 @@ class AuthController extends Controller
 
             // =====================================================
             // Belum memiliki sesi konseling
+            // Cari konselor aktif pada Puskesmas yang sama
             // =====================================================
             $counselor = User::where('role', 'konselor')
                 ->where('puskesmas_id', $user->puskesmas_id)
@@ -663,7 +673,7 @@ class AuthController extends Controller
             $message =
                 "Halo {$counselor->name},\n\n".
                 "Terdapat pendamping lansia *{$user->name}* yang baru saja login ke aplikasi *SIJALA* dan membutuhkan layanan konseling.\n\n".
-                "Silakan menghubungi pendamping lansia melalui WhatsApp di nomor *{$user->phone}* untuk melakukan penjadwalan atau memulai sesi konseling. Setelah itu, silakan masuk ke aplikasi *SIJALA* untuk melanjutkan proses konseling.\n\n\n".
+                "Silakan menghubungi pendamping lansia melalui WhatsApp di nomor *{$user->phone}* untuk melakukan penjadwalan atau memulai sesi konseling. Setelah itu, silakan masuk ke aplikasi *SIJALA* untuk melanjutkan proses konseling.\n\n".
                 "Pesan ini dikirim secara otomatis oleh Sistem SIJALA. Mohon tidak membalas pesan ini.";
 
             return $this->sendMessage(
@@ -678,6 +688,10 @@ class AuthController extends Controller
         // =========================================================
         if ($user->role == 'konselor') {
 
+            // -----------------------------------------------------
+            // Ambil seluruh sesi konseling aktif yang ditangani
+            // oleh konselor
+            // -----------------------------------------------------
             $sessions = CounselingSession::with([
                     'elderlyCounselee.counselee'
                 ])
@@ -686,7 +700,8 @@ class AuthController extends Controller
                 ->get();
 
             // =====================================================
-            // Ada sesi konseling aktif
+            // Konselor memiliki sesi konseling aktif
+            // Kirim notifikasi kepada seluruh pendamping lansia
             // =====================================================
             if ($sessions->isNotEmpty()) {
 
@@ -704,15 +719,16 @@ class AuthController extends Controller
                     $message =
                         "Halo {$counselee->name},\n\n".
                         "Konselor *{$user->name}* baru saja login ke aplikasi *SIJALA* dan siap memberikan layanan konseling.\n\n".
-                        "Silakan menghubungi konselor melalui WhatsApp di nomor *{$user->phone}* untuk menentukan jadwal atau memulai sesi konseling. Selanjutnya, silakan membuka aplikasi *SIJALA* untuk mengikuti proses konseling.\n\n\n".
+                        "Silakan menghubungi konselor melalui WhatsApp di nomor *{$user->phone}* untuk menentukan jadwal atau memulai sesi konseling. Selanjutnya, silakan membuka aplikasi *SIJALA* untuk mengikuti proses konseling.\n\n".
                         "Pesan ini dikirim secara otomatis oleh Sistem SIJALA. Mohon tidak membalas pesan ini.";
 
                     $this->sendMessage(
                         $user,
-                        $elderlyCounselee->counselee,
+                        $counselee,
                         $message
                     );
 
+                    // Memberi jeda agar pengiriman tidak terlalu cepat
                     usleep(500000);
                 }
 
@@ -720,7 +736,9 @@ class AuthController extends Controller
             }
 
             // =====================================================
-            // Belum memiliki sesi
+            // Konselor belum memiliki sesi aktif
+            // Beritahukan seluruh pendamping lansia pada Puskesmas
+            // bahwa konselor siap memberikan layanan konseling
             // =====================================================
             $elderlyCounselees = ElderlyCounselee::with('counselee')
                 ->where('puskesmas_id', $user->puskesmas_id)
@@ -736,16 +754,16 @@ class AuthController extends Controller
                     "Halo {$elderlyCounselee->counselee->name},\n\n".
                     "Konselor *{$user->name}* baru saja login ke aplikasi *SIJALA* dan siap memberikan layanan konseling.\n\n".
                     "Apabila Anda membutuhkan layanan konseling, silakan menghubungi konselor melalui WhatsApp di nomor *{$user->phone}* untuk melakukan penjadwalan sesi konseling. Setelah jadwal disepakati, silakan membuka aplikasi *SIJALA* untuk memulai proses konseling.\n\n".
-                    "----------------------------------------\n".
                     "Pesan ini dikirim secara otomatis oleh Sistem SIJALA sebagai notifikasi dan pengingat layanan konseling.\n".
                     "Mohon tidak membalas pesan ini.";
 
                 $this->sendMessage(
                     $user,
-                    $counselee,
+                    $elderlyCounselee->counselee,
                     $message
                 );
 
+                // Memberi jeda agar pengiriman tidak terlalu cepat
                 usleep(500000);
             }
 
