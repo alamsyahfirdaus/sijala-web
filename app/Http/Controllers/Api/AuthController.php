@@ -810,11 +810,12 @@ class AuthController extends Controller
             if ($response->successful() && ($result['status'] ?? false)) {
 
                 Notification::create([
-                    'user_id' => $recipient->id,
-                    'title'   => 'Notifikasi WhatsApp',
-                    'body'    => $message,
-                    'type'    => 'wa_login',
-                    'data'    => json_encode([
+                    'user_id'   => $recipient->id,
+                    'sender_id' => $sender->id,
+                    'title'     => 'Notifikasi WhatsApp',
+                    'body'      => $message,
+                    'type'      => 'wa_login',
+                    'data'      => json_encode([
                         'sender_id' => $sender->id,
                         'phone'     => $recipient->phone,
                     ]),
