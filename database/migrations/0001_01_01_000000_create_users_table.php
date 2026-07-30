@@ -96,6 +96,23 @@ return new class extends Migration
             // false = nonaktif / diblokir
 
             // =========================
+            // STATUS LOGIN
+            // =========================
+            $table->boolean('is_online')->default(false);
+            // Status pengguna:
+            // true  = sedang online
+            // false = offline
+
+            $table->timestamp('last_login_at')->nullable();
+            // Waktu terakhir pengguna berhasil login
+
+            $table->timestamp('last_logout_at')->nullable();
+            // Waktu terakhir pengguna logout
+
+            $table->timestamp('last_seen_at')->nullable();
+            // Waktu terakhir pengguna aktif di aplikasi
+
+            // =========================
             // TIMESTAMP SISTEM
             // =========================
             $table->timestamps();

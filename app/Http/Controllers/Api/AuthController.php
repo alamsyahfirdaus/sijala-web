@@ -4,11 +4,17 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\CounselingSession;
+use App\Models\ElderlyCounselee;
+use App\Models\Notification;
+use App\Services\FonnteService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -142,62 +148,115 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        try {
 
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'username' => 'required',
-                'password' => 'required',
-            ],
-            [
-                'username.required' => 'Username / email / nomor HP wajib diisi.',
-                'password.required' => 'Password wajib diisi.',
-            ]
-        );
+            $validator = Validator::make(
+                $request->all(),
+                [
+                    'username' => 'required',
+                    'password' => 'required',
+                ],
+                [
+                    'username.required' => 'Username / Email / Nomor HP wajib diisi.',
+                    'password.required' => 'Password wajib diisi.',
+                ]
+            );
 
-        if ($validator->fails()) {
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            // =========================================================
+            // Cari pengguna berdasarkan Username / Email / Nomor HP
+            // =========================================================
+            $user = User::where('username', $request->username)
+                ->orWhere('email', $request->username)
+                ->orWhere('phone', $request->username)
+                ->first();
+
+            if (! $user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Akun tidak ditemukan.',
+                ], 401);
+            }
+
+            // =========================================================
+            // Cek status akun
+            // =========================================================
+            if (! $user->is_active) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Akun Anda tidak aktif.',
+                ], 403);
+            }
+
+            // =========================================================
+            // Cek Role
+            // Hanya Konseli dan Konselor yang boleh login melalui API
+            // =========================================================
+            if (! in_array($user->role, ['konseli', 'konselor'])) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Akun Anda tidak memiliki akses ke aplikasi ini.',
+                ], 403);
+            }
+
+            // =========================================================
+            // Verifikasi Password
+            // =========================================================
+            if (! Hash::check($request->password, $user->password)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Password salah.',
+                ], 401);
+            }
+
+            // =========================================================
+            // Generate Token
+            // =========================================================
+            $token = Str::random(60);
+
+            // =========================================================
+            // Update Status Login
+            // =========================================================
+            $user->update([
+                'remember_token' => $token,
+                'is_online'      => true,
+                'last_login_at'  => now(),
+                'last_seen_at'   => now(),
+            ]);
+
+            // =========================================================
+            // Kirim WhatsApp / Notifikasi ke pasangan konseling
+            // =========================================================
+            $this->sendWhatsapp($user);
+
+            return response()->json([
+                'status'  => true,
+                'message' => 'Login berhasil.',
+                'data' => [
+                    'id'       => $user->id,
+                    'name'     => $user->name,
+                    'username' => $user->username,
+                    'phone'    => $user->phone,
+                    'role'     => $user->role,
+                    'token'    => $token,
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+
             return response()->json([
                 'status' => false,
-                'errors' => $validator->errors(),
-            ], 422);
+                'message' => 'Terjadi kesalahan pada server.',
+                'error' => $e->getMessage(),
+            ], 500);
+
         }
-
-        $user = User::where('username', $request->username)
-            ->orWhere('email', $request->username)
-            ->orWhere('phone', $request->username)
-            ->first();
-
-        if (! $user) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Akun tidak ditemukan.',
-            ], 401);
-        }
-
-        if (! Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Password salah.',
-            ], 401);
-        }
-
-        $token = Str::random(60);
-
-        $user->remember_token = $token;
-        $user->save();
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Login berhasil',
-            'data' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'username' => $user->username,
-                'phone' => $user->phone,
-                'role' => $user->role,
-                'token' => $token,
-            ],
-        ]);
     }
 
     /*
@@ -281,15 +340,41 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $user = $request->attributes->get('user');
+        try {
 
-        $user->remember_token = null;
-        $user->save();
+            $user = $request->attributes->get('user');
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Logout berhasil',
-        ]);
+            if (! $user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'User tidak ditemukan.',
+                ], 401);
+            }
+
+            // =========================================================
+            // Update Status Logout
+            // =========================================================
+            $user->update([
+                'remember_token' => null,
+                'is_online'      => false,
+                'last_logout_at' => now(),
+                'last_seen_at'   => now(),
+            ]);
+
+            return response()->json([
+                'status'  => true,
+                'message' => 'Logout berhasil.',
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Terjadi kesalahan pada server.',
+                'error' => $e->getMessage(),
+            ], 500);
+
+        }
     }
 
     /*
@@ -524,5 +609,241 @@ class AuthController extends Controller
             'message' => 'Token berhasil diperbarui',
             'token' => $token,
         ]);
+    }
+
+    private function sendWhatsapp(User $user): bool
+    {
+        // =========================================================
+        // KONSELI LOGIN
+        // =========================================================
+        if ($user->role == 'konseli') {
+
+            $elderlyCounselee = ElderlyCounselee::where('counselee_id', $user->id)->first();
+
+            if (! $elderlyCounselee) {
+                return false;
+            }
+
+            $counselingSession = CounselingSession::with('counselor')
+                ->where('elderly_counselee_id', $elderlyCounselee->id)
+                ->where('status', 'ongoing')
+                ->latest()
+                ->first();
+
+            // =====================================================
+            // Sudah memiliki konselor
+            // =====================================================
+            if ($counselingSession && $counselingSession->counselor) {
+
+                $message =
+                    "Halo {$counselingSession->counselor->name},\n\n".
+                    "Pendamping lansia *{$user->name}* baru saja login ke aplikasi *SIJALA* dan siap mengikuti sesi konseling.\n\n".
+                    "Silakan menghubungi pendamping lansia melalui WhatsApp di nomor *{$user->phone}* untuk menentukan jadwal atau memulai sesi konseling. Selanjutnya, silakan membuka aplikasi *SIJALA* untuk melaksanakan proses konseling.\n\n\n".
+                    "Pesan ini dikirim secara otomatis oleh Sistem SIJALA. Mohon tidak membalas pesan ini.";
+
+                return $this->sendMessage(
+                    $user,
+                    $counselingSession->counselor,
+                    $message
+                );
+            }
+
+            // =====================================================
+            // Belum memiliki sesi konseling
+            // =====================================================
+            $counselor = User::where('role', 'konselor')
+                ->where('puskesmas_id', $user->puskesmas_id)
+                ->where('is_active', true)
+                ->first();
+
+            if (! $counselor) {
+                return false;
+            }
+
+            $message =
+                "Halo {$counselor->name},\n\n".
+                "Terdapat pendamping lansia *{$user->name}* yang baru saja login ke aplikasi *SIJALA* dan membutuhkan layanan konseling.\n\n".
+                "Silakan menghubungi pendamping lansia melalui WhatsApp di nomor *{$user->phone}* untuk melakukan penjadwalan atau memulai sesi konseling. Setelah itu, silakan masuk ke aplikasi *SIJALA* untuk melanjutkan proses konseling.\n\n\n".
+                "Pesan ini dikirim secara otomatis oleh Sistem SIJALA. Mohon tidak membalas pesan ini.";
+
+            return $this->sendMessage(
+                $user,
+                $counselor,
+                $message
+            );
+        }
+
+        // =========================================================
+        // KONSELOR LOGIN
+        // =========================================================
+        if ($user->role == 'konselor') {
+
+            $sessions = CounselingSession::with([
+                    'elderlyCounselee.counselee'
+                ])
+                ->where('counselor_id', $user->id)
+                ->where('status', 'ongoing')
+                ->get();
+
+            // =====================================================
+            // Ada sesi konseling aktif
+            // =====================================================
+            if ($sessions->isNotEmpty()) {
+
+                foreach ($sessions as $session) {
+
+                    if (
+                        ! $session->elderlyCounselee ||
+                        ! $session->elderlyCounselee->counselee
+                    ) {
+                        continue;
+                    }
+
+                    $counselee = $session->elderlyCounselee->counselee;
+
+                    $message =
+                        "Halo {$counselee->name},\n\n".
+                        "Konselor *{$user->name}* baru saja login ke aplikasi *SIJALA* dan siap memberikan layanan konseling.\n\n".
+                        "Silakan menghubungi konselor melalui WhatsApp di nomor *{$user->phone}* untuk menentukan jadwal atau memulai sesi konseling. Selanjutnya, silakan membuka aplikasi *SIJALA* untuk mengikuti proses konseling.\n\n\n".
+                        "Pesan ini dikirim secara otomatis oleh Sistem SIJALA. Mohon tidak membalas pesan ini.";
+
+                    $this->sendMessage(
+                        $user,
+                        $elderlyCounselee->counselee,
+                        $message
+                    );
+
+                    usleep(500000);
+                }
+
+                return true;
+            }
+
+            // =====================================================
+            // Belum memiliki sesi
+            // =====================================================
+            $elderlyCounselees = ElderlyCounselee::with('counselee')
+                ->where('puskesmas_id', $user->puskesmas_id)
+                ->get();
+
+            foreach ($elderlyCounselees as $elderlyCounselee) {
+
+                if (! $elderlyCounselee->counselee) {
+                    continue;
+                }
+
+                $message =
+                    "Halo {$elderlyCounselee->counselee->name},\n\n".
+                    "Konselor *{$user->name}* baru saja login ke aplikasi *SIJALA* dan siap memberikan layanan konseling.\n\n".
+                    "Apabila Anda membutuhkan layanan konseling, silakan menghubungi konselor melalui WhatsApp di nomor *{$user->phone}* untuk melakukan penjadwalan sesi konseling. Setelah jadwal disepakati, silakan membuka aplikasi *SIJALA* untuk memulai proses konseling.\n\n".
+                    "----------------------------------------\n".
+                    "Pesan ini dikirim secara otomatis oleh Sistem SIJALA sebagai notifikasi dan pengingat layanan konseling.\n".
+                    "Mohon tidak membalas pesan ini.";
+
+                $this->sendMessage(
+                    $user,
+                    $counselee,
+                    $message
+                );
+
+                usleep(500000);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private function sendMessage(User $sender, User $recipient, string $message): bool
+    {
+        $target = $this->normalizePhone($recipient->phone);
+
+        if (empty($target)) {
+
+            Log::warning('WhatsApp tidak dikirim karena nomor tujuan kosong.');
+
+            return false;
+        }
+
+        // =========================================================
+        // Notifikasi WhatsApp
+        // =========================================================
+       /* $exists = Notification::where('user_id', $recipient->id)
+            ->where('sender_id', $sender->id)
+            ->where('type', 'wa_login')
+            // ->where('created_at', '>=', now()->subMinutes(30))
+            ->where('created_at', '>=', now()->subDay())
+            ->exists();
+
+        if ($exists) {
+
+            // Log::info('WhatsApp tidak dikirim karena masih dalam batas 30 menit.', [
+            //     'recipient_id' => $recipient->id,
+            // ]);
+
+            Log::info('WhatsApp tidak dikirim karena notifikasi sudah pernah dikirim dalam 1 hari terakhir.', [
+                'sender_id'    => $sender->id,
+                'recipient_id' => $recipient->id,
+            ]);
+
+            return false;
+        } */
+
+        try {
+
+            $response = Http::withHeaders([
+                'Authorization' => 'YSdXWqVCzUeFC3V63CVW',
+            ])->post('https://api.fonnte.com/send', [
+                'target'  => $target,
+                'message' => $message,
+            ]);
+
+            $result = $response->json();
+
+            Log::info('WhatsApp Fonnte', [
+                'target'   => $target,
+                'status'   => $response->status(),
+                'response' => $result,
+            ]);
+
+            if ($response->successful() && ($result['status'] ?? false)) {
+
+                Notification::create([
+                    'user_id' => $recipient->id,
+                    'title'   => 'Notifikasi WhatsApp',
+                    'body'    => $message,
+                    'type'    => 'wa_login',
+                    'data'    => json_encode([
+                        'sender_id' => $sender->id,
+                        'phone'     => $recipient->phone,
+                    ]),
+                ]);
+
+                return true;
+            }
+
+            return false;
+
+        } catch (\Throwable $e) {
+
+            Log::error('WhatsApp Fonnte Error', [
+                'target' => $target,
+                'error'  => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
+    private function normalizePhone(string $phone): string
+    {
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+
+        if (str_starts_with($phone, '0')) {
+            $phone = '62'.substr($phone, 1);
+        }
+
+        return $phone;
     }
 }

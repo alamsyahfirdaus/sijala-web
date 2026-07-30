@@ -41,6 +41,23 @@ Route::get('/image/{filename}', function ($filename) {
     return response()->file($path);
 })->where('filename', '.*');
 
+Route::get('/test-wa', function () {
+
+    $response = Http::withHeaders([
+        'Authorization' => 'xyPjYLXVq1cv92cLdNEC',
+    ])->post('https://api.fonnte.com/send', [
+        'target'  => '6282215161998',
+        'message' => 'Test WhatsApp dari SIJALA berhasil.',
+    ]);
+
+    return response()->json([
+        'http_status' => $response->status(),
+        'success'     => $response->successful(),
+        'response'    => $response->json(),
+        'raw'         => $response->body(),
+    ]);
+});
+
 Route::get('/', [HomeController::class, 'index'])->name('landing');
 
 Route::middleware('guest')->group(function () {

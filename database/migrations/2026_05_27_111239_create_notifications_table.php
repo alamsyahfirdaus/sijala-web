@@ -19,6 +19,8 @@ return new class extends Migration
                 ->constrained('users')
                 ->cascadeOnDelete();
 
+            $table->foreignId('sender_id')->nullable()->constrained('users')->nullOnDelete();
+
             // Judul notifikasi
             $table->string('title');
 
@@ -33,6 +35,7 @@ return new class extends Migration
                 'message',
                 'consultation',
                 'reminder',
+                'wa_login',
                 'system'
             ])->default('system');
 

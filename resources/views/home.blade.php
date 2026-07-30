@@ -71,29 +71,16 @@
 
     </div>
 
-    <div class="row">
-        <div class="col-12 col-md-6">
-            <div class="card card-outline card-warning mb-4">
-                <div class="card-header border-0">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h3 class="card-title">Grafik Skrining Risiko Jatuh</h3>
-                    </div>
-                </div>
-                <div class="card-body" style="height: 450px; overflow-y: auto;">
-                    <div id="screening-chart"></div>
-                </div>
+    <div class="col-12">
+        <div class="card card-outline card-warning mb-4">
+            <div class="card-header">
+                <h3 class="card-title">
+                    Grafik Tren Hasil Skrining
+                </h3>
             </div>
-        </div>
-        <div class="col-12 col-lg-6">
-            <div class="card card-outline card-warning mb-4">
-                <div class="card-header border-0">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h3 class="card-title">Grafik Kemandirian Kesehatan Keluarga</h3>
-                    </div>
-                </div>
-                <div class="card-body" style="height:450px;">
-                    <div id="empowerment-chart"></div>
-                </div>
+
+            <div class="card-body">
+                <div id="trend-chart"></div>
             </div>
         </div>
     </div>
@@ -111,200 +98,431 @@
         </div>
     </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/browser/overlayscrollbars.browser.es6.min.js"
-            crossorigin="anonymous"></script>
-        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous">
-        </script>
-        {{-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.min.js" crossorigin="anonymous"></script> --}}
-        <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-        <script>
-            document.addEventListener("DOMContentLoaded", function() {
+    <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/browser/overlayscrollbars.browser.es6.min.js"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous">
+    </script>
+    {{-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.min.js" crossorigin="anonymous"></script> --}}
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script>
+        const fallRiskData = @json($fallRiskChart);
+        const empowermentData = @json($empowermentChart);
 
-                new ApexCharts(document.querySelector("#screening-chart"), {
+        function getFallRiskColor(score) {
 
-                    chart: {
-                        type: 'bar',
-                        height: 380,
-                        toolbar: {
-                            show: false
-                        }
-                    },
+            // Rendah
+            if (score <= 6)
+                return '#22C55E';
 
-                    plotOptions: {
-                        bar: {
-                            horizontal: false,
-                            columnWidth: '40%',
-                            borderRadius: 6
-                        }
-                    },
+            // Sedang
+            if (score <= 7)
+                return '#FACC15';
 
-                    series: [{
-                        name: 'Jumlah Skrining',
-                        data: @json($fallRiskChart)
-                    }],
+            // Tinggi
+            return '#DC2626';
+        }
 
-                    xaxis: {
-                        categories: @json($testCategories)
-                    },
+        function getEmpowermentColor(score) {
 
-                    yaxis: {
-                        title: {
-                            text: 'Jumlah Skrining'
-                        }
-                    },
+            // Rendah
+            if (score <= 70)
+                return '#DC2626';
 
-                    colors: ['#ffc107'],
+            // Sedang
+            if (score <= 105)
+                return '#FACC15';
 
-                    dataLabels: {
-                        enabled: true
-                    },
+            // Tinggi
+            return '#22C55E';
+        }
 
-                    legend: {
+        document.addEventListener("DOMContentLoaded", function() {
+
+            new ApexCharts(document.querySelector("#trend-chart"), {
+
+                chart: {
+                    type: 'line',
+                    height: 420,
+
+                    toolbar: {
                         show: false
                     },
 
-                    grid: {
-                        borderColor: '#ececec'
-                    }
-
-                }).render();
-
-                new ApexCharts(document.querySelector("#empowerment-chart"), {
-
-                    chart: {
-                        type: 'bar',
-                        height: 380,
-                        toolbar: {
-                            show: false
-                        }
+                    zoom: {
+                        enabled: false
                     },
 
-                    plotOptions: {
-                        bar: {
-                            horizontal: false,
-                            columnWidth: '40%',
-                            borderRadius: 6
-                        }
-                    },
-
-                    series: [{
-                        name: 'Jumlah Skrining',
-                        data: @json($empowermentChart)
-                    }],
-
-                    xaxis: {
-                        categories: @json($testCategories)
-                    },
-
-                    yaxis: {
-                        title: {
-                            text: 'Jumlah Skrining'
-                        }
-                    },
-
-                    colors: ['#198754'],
-
-                    dataLabels: {
-                        enabled: true
-                    },
-
-                    legend: {
-                        show: false
-                    },
-
-                    grid: {
-                        borderColor: '#ececec'
-                    }
-
-                }).render();
-                new ApexCharts(document.querySelector("#evaluation-chart"), {
-
-                    chart: {
-                        type: 'bar',
-                        height: 380,
-                        toolbar: {
-                            show: false
-                        }
-                    },
-
-                    plotOptions: {
-                        bar: {
-                            horizontal: false,
-                            columnWidth: '45%',
-                            borderRadius: 6,
-                            distributed: true,
-                            dataLabels: {
-                                position: 'top'
-                            }
-                        }
-                    },
-
-                    series: [{
-                        name: 'Rata-rata Nilai',
-                        data: @json($evaluationChart)
-                    }],
-
-                    xaxis: {
-                        categories: @json($evaluationCategories),
-                        labels: {
-                            rotate: -25,
-                            trim: true,
-                            style: {
-                                fontSize: '12px'
-                            }
-                        }
-                    },
-
-                    yaxis: {
-                        min: 0,
-                        max: 100,
-                        tickAmount: 5,
-                        title: {
-                            text: 'Nilai Rata-rata'
-                        }
-                    },
-
-                    colors: [
-                        '#0d6efd',
-                        '#198754',
-                        '#ffc107',
-                        '#dc3545',
-                        '#6f42c1',
-                        '#20c997',
-                        '#fd7e14',
-                        '#6610f2'
-                    ],
-
-                    dataLabels: {
+                    animations: {
                         enabled: true,
-                        offsetY: -18,
-                        formatter: function(val) {
-                            return val.toFixed(1);
+                        easing: 'easeinout',
+                        speed: 800
+                    }
+                },
+
+                // ===============================
+                // DATA
+                // ===============================
+
+                series: [{
+                        name: 'Risiko Jatuh',
+                        data: @json($fallRiskChart)
+                    },
+                    {
+                        name: 'Kemandirian Keluarga',
+                        data: @json($empowermentChart)
+                    }
+                ],
+
+                // ===============================
+                // WARNA GARIS
+                // ===============================
+
+                colors: [
+                    '#F59E0B', // Orange
+                    '#2563EB' // Blue
+                ],
+
+                // ===============================
+                // GARIS
+                // ===============================
+
+                stroke: {
+                    curve: 'smooth',
+                    width: 4
+                },
+
+                // ===============================
+                // MARKER SESUAI GRADE
+                // ===============================
+
+                markers: {
+
+                    size: 8,
+                    strokeWidth: 3,
+
+                    hover: {
+                        size: 10
+                    },
+
+                    discrete: [
+
+                        // ===============================
+                        // RISIKO JATUH
+                        // ===============================
+
+                        {
+                            seriesIndex: 0,
+                            dataPointIndex: 0,
+                            fillColor: getFallRiskColor(fallRiskData[0]),
+                            strokeColor: getFallRiskColor(fallRiskData[0]),
+                            size: 10
                         },
-                        style: {
-                            fontSize: '12px',
-                            colors: ['#333']
+
+                        {
+                            seriesIndex: 0,
+                            dataPointIndex: 1,
+                            fillColor: getFallRiskColor(fallRiskData[1]),
+                            strokeColor: getFallRiskColor(fallRiskData[1]),
+                            size: 10
+                        },
+
+                        // ===============================
+                        // KEMANDIRIAN KELUARGA
+                        // ===============================
+
+                        {
+                            seriesIndex: 1,
+                            dataPointIndex: 0,
+                            fillColor: getEmpowermentColor(empowermentData[0]),
+                            strokeColor: getEmpowermentColor(empowermentData[0]),
+                            size: 10
+                        },
+
+                        {
+                            seriesIndex: 1,
+                            dataPointIndex: 1,
+                            fillColor: getEmpowermentColor(empowermentData[1]),
+                            strokeColor: getEmpowermentColor(empowermentData[1]),
+                            size: 10
                         }
-                    },
 
-                    tooltip: {
-                        y: {
-                            formatter: function(val) {
-                                return val.toFixed(2);
-                            }
-                        }
-                    },
+                    ]
 
-                    legend: {
-                        show: false
-                    },
+                },
 
-                    grid: {
-                        borderColor: '#ececec'
+                // ===============================
+                // AREA
+                // ===============================
+
+                fill: {
+
+                    type: 'gradient',
+
+                    gradient: {
+
+                        shadeIntensity: 0.2,
+                        opacityFrom: 0.30,
+                        opacityTo: 0.05,
+                        stops: [0, 100]
+
                     }
 
-                }).render();
+                },
 
-            });
-        </script>
-    @endsection
+                // ===============================
+                // LABEL NILAI
+                // ===============================
+
+                dataLabels: {
+
+                    enabled: true,
+
+                    style: {
+
+                        fontSize: '12px',
+                        fontWeight: 'bold'
+
+                    },
+
+                    formatter: function(val) {
+                        return val.toFixed(2);
+                    }
+
+                },
+
+                // ===============================
+                // X AXIS
+                // ===============================
+
+                xaxis: {
+
+                    categories: @json($testCategories),
+                    labels: {
+
+                        style: {
+                            fontSize: '12px'
+                        }
+
+                    }
+
+                },
+
+                // ===============================
+                // Y AXIS
+                // ===============================
+
+                yaxis: {
+
+                    min: 0,
+
+                    title: {
+                        text: 'Rata-rata Skor'
+                    },
+
+                    labels: {
+
+                        formatter: function(val) {
+                            return val.toFixed(2);
+                        }
+
+                    }
+
+                },
+
+                // ===============================
+                // TOOLTIP
+                // ===============================
+
+                tooltip: {
+
+                    shared: true,
+                    intersect: false,
+
+                    x: {
+                        show: true
+                    },
+
+                    y: {
+
+                        formatter: function(val) {
+                            return val.toFixed(2);
+                        }
+
+                    }
+
+                },
+
+                // ===============================
+                // LEGEND
+                // ===============================
+
+                legend: {
+
+                    show: true,
+                    position: 'top',
+                    horizontalAlign: 'center',
+
+                    fontSize: '13px',
+
+                    markers: {
+                        radius: 12
+                    }
+
+                },
+
+                // ===============================
+                // GRID
+                // ===============================
+
+                grid: {
+
+                    borderColor: '#E5E7EB',
+                    strokeDashArray: 4,
+
+                    padding: {
+
+                        left: 10,
+                        right: 10
+
+                    }
+
+                },
+
+                // ===============================
+                // NO DATA
+                // ===============================
+
+                noData: {
+
+                    text: 'Belum tersedia data',
+
+                    align: 'center',
+                    verticalAlign: 'middle',
+
+                    style: {
+
+                        fontSize: '14px'
+
+                    }
+
+                },
+
+                // ===============================
+                // RESPONSIVE
+                // ===============================
+
+                responsive: [
+
+                    {
+
+                        breakpoint: 768,
+
+                        options: {
+
+                            chart: {
+                                height: 320
+                            },
+
+                            legend: {
+                                position: 'bottom'
+                            }
+
+                        }
+
+                    }
+
+                ]
+
+            }).render();
+
+            new ApexCharts(document.querySelector("#evaluation-chart"), {
+
+                chart: {
+                    type: 'bar',
+                    height: 380,
+                    toolbar: {
+                        show: false
+                    }
+                },
+
+                plotOptions: {
+                    bar: {
+                        horizontal: false,
+                        columnWidth: '45%',
+                        borderRadius: 6,
+                        distributed: true,
+                        dataLabels: {
+                            position: 'top'
+                        }
+                    }
+                },
+
+                series: [{
+                    name: 'Rata-rata Nilai',
+                    data: @json($evaluationChart)
+                }],
+
+                xaxis: {
+                    categories: @json($evaluationCategories),
+                    labels: {
+                        rotate: -25,
+                        trim: true,
+                        style: {
+                            fontSize: '12px'
+                        }
+                    }
+                },
+
+                yaxis: {
+                    min: 0,
+                    max: 100,
+                    tickAmount: 5,
+                    title: {
+                        text: 'Nilai Rata-rata'
+                    }
+                },
+
+                colors: [
+                    '#0d6efd',
+                    '#198754',
+                    '#ffc107',
+                    '#dc3545',
+                    '#6f42c1',
+                    '#20c997',
+                    '#fd7e14',
+                    '#6610f2'
+                ],
+
+                dataLabels: {
+                    enabled: true,
+                    offsetY: -18,
+                    formatter: function(val) {
+                        return val.toFixed(1);
+                    },
+                    style: {
+                        fontSize: '12px',
+                        colors: ['#333']
+                    }
+                },
+
+                tooltip: {
+                    y: {
+                        formatter: function(val) {
+                            return val.toFixed(2);
+                        }
+                    }
+                },
+
+                legend: {
+                    show: false
+                },
+
+                grid: {
+                    borderColor: '#ececec'
+                }
+
+            }).render();
+
+        });
+    </script>
+@endsection

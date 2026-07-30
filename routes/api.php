@@ -93,13 +93,6 @@ Route::get('/image/{filename}', function ($filename) {
     return response()->file($path);
 });
 
-// SURVEY (TANPA TOKEN)
-Route::prefix('v1')->group(function () {
-    Route::get('/users', [AUserController::class, 'users']);
-    Route::post('/login', [AUserController::class, 'login']);
-    Route::post('/register', [AUserController::class, 'register']);
-});
-
 Route::middleware('api.auth')->group(function () {
 
     // Auto login (cek token)
