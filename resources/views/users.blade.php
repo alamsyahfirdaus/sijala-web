@@ -72,6 +72,7 @@
                         <th>Nomor<span style="font-size: 10px; color: #fff;">_</span>HP</th>
                         <th>Role</th>
                         <th>Wilayah</th>
+                        <th>Login<span style="font-size: 10px; color: #fff;">_</span>Terakhir</th>
                         {{-- <th style="width: 5%;">Aksi</th> --}}
                     </tr>
                 </thead>
@@ -105,6 +106,15 @@
                                         {{ $user->puskesmas->village->district->name ?? '-' }},
                                         {{ $user->puskesmas->village->district->regency->name ?? '-' }}
                                     </span>
+                                @else
+                                    -
+                                @endif
+                            </td>
+                            <td>
+                                @if ($user->last_login_at)
+                                    <div>{{ $user->last_login_at->translatedFormat('d M Y H:i') }} WIB</div>
+                                    <span class="text-muted"
+                                        style="font-size: 12px;">{{ $user->last_login_at->diffForHumans() }}</span>
                                 @else
                                     -
                                 @endif
@@ -169,8 +179,8 @@
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label">Nomor HP</label>
-                            <input type="text" class="form-control" id="phone" name="phone" placeholder="Nomor HP"
-                                autocomplete="off">
+                            <input type="text" class="form-control" id="phone" name="phone"
+                                placeholder="Nomor HP" autocomplete="off">
                             <div class="invalid-feedback"></div>
                         </div>
                         <div class="form-group mb-3">

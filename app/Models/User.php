@@ -24,6 +24,10 @@ class User extends Authenticatable
     //     'password',
     // ];
 
+    protected $casts = [
+        'last_login_at' => 'datetime',
+    ];
+
     protected $guarded = [];
 
     /**
