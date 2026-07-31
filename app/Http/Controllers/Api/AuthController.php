@@ -787,26 +787,24 @@ class AuthController extends Controller
         // =========================================================
         // Notifikasi WhatsApp
         // =========================================================
-       /* $exists = Notification::where('user_id', $recipient->id)
+        $exists = Notification::where('user_id', $recipient->id)
             ->where('sender_id', $sender->id)
             ->where('type', 'wa_login')
-            // ->where('created_at', '>=', now()->subMinutes(30))
-            ->where('created_at', '>=', now()->subDay())
+            ->where('created_at', '>=', now()->subDays(2))
             ->exists();
 
         if ($exists) {
 
-            // Log::info('WhatsApp tidak dikirim karena masih dalam batas 30 menit.', [
-            //     'recipient_id' => $recipient->id,
-            // ]);
-
-            Log::info('WhatsApp tidak dikirim karena notifikasi sudah pernah dikirim dalam 1 hari terakhir.', [
-                'sender_id'    => $sender->id,
-                'recipient_id' => $recipient->id,
-            ]);
+            Log::info(
+                'WhatsApp tidak dikirim karena notifikasi login sudah pernah dikirim dalam 2 hari terakhir.',
+                [
+                    'sender_id'    => $sender->id,
+                    'recipient_id' => $recipient->id,
+                ]
+            );
 
             return false;
-        } */
+        }
 
         try {
 
