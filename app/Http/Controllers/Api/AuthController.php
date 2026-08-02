@@ -824,18 +824,31 @@ class AuthController extends Controller
             ]);
 
             if ($response->successful() && ($result['status'] ?? false)) {
+                
+            Notification::updateOrCreate(
 
-                Notification::create([
-                    'user_id'   => $recipient->id,
-                    'sender_id' => $sender->id,
-                    'title'     => 'Notifikasi WhatsApp',
-                    'body'      => $message,
-                    'type'      => 'wa_login',
-                    'data'      => json_encode([
+                    // Kunci pencarian
+                    [
+                        'user_id'   => $recipient->id,
                         'sender_id' => $sender->id,
-                        'phone'     => $recipient->phone,
-                    ]),
-                ]);
+                        'type'      => 'wa_login',
+                    ],
+
+                    // Data yang akan diupdate / dibuat
+                    [
+                        'title' => 'Notifikasi WhatsApp',
+
+                        'body' => $message,
+
+                        'data' => json_encode([
+                            'sender_id' => $sender->id,
+                            'phone'     => $recipient->phone,
+                        ]),
+
+                        // Perbarui waktu notifikasi terakhir
+                        'updated_at' => now(),
+                    ]
+                );
 
                 return true;
             }
