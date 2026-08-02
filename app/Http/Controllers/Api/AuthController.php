@@ -775,28 +775,40 @@ class AuthController extends Controller
 
     private function sendMessage(User $sender, User $recipient, string $message): bool
     {
-        $target = $this->normalizePhone($recipient->phone);
+        // =========================================================
+        // Validasi Nomor WhatsApp Penerima
+        // =========================================================
+        if (empty($recipient->phone)) {
 
-        if (empty($target)) {
-
-            Log::warning('WhatsApp tidak dikirim karena nomor tujuan kosong.');
+            Log::warning('WhatsApp tidak dikirim karena nomor HP penerima kosong.', [
+                'sender_id'    => $sender->id,
+                'recipient_id' => $recipient->id,
+            ]);
 
             return false;
         }
 
         // =========================================================
-        // Notifikasi WhatsApp
+        // Normalisasi Nomor WhatsApp
+        // =========================================================
+        $target = $this->normalizePhone($recipient->phone);
+
+        // =========================================================
+        // Cegah Pengiriman Notifikasi Berulang
+        // ---------------------------------------------------------
+        // Notifikasi login hanya dikirim satu kali dalam 2 hari
+        // kepada penerima yang sama dari pengirim yang sama.
         // =========================================================
         $exists = Notification::where('user_id', $recipient->id)
             ->where('sender_id', $sender->id)
             ->where('type', 'wa_login')
-            ->where('created_at', '>=', now()->subDays(2))
+            ->where('updated_at', '>=', now()->subDays(1))
             ->exists();
 
         if ($exists) {
 
             Log::info(
-                'WhatsApp tidak dikirim karena notifikasi login sudah pernah dikirim dalam 2 hari terakhir.',
+                'WhatsApp tidak dikirim karena notifikasi login sudah pernah dikirim dalam 1 hari terakhir.',
                 [
                     'sender_id'    => $sender->id,
                     'recipient_id' => $recipient->id,
@@ -808,6 +820,9 @@ class AuthController extends Controller
 
         try {
 
+            // =====================================================
+            // Kirim WhatsApp melalui Fonnte
+            // =====================================================
             $response = Http::withHeaders([
                 'Authorization' => 'YSdXWqVCzUeFC3V63CVW',
             ])->post('https://api.fonnte.com/send', [
@@ -818,14 +833,20 @@ class AuthController extends Controller
             $result = $response->json();
 
             Log::info('WhatsApp Fonnte', [
-                'target'   => $target,
-                'status'   => $response->status(),
-                'response' => $result,
+                'sender_id'    => $sender->id,
+                'recipient_id' => $recipient->id,
+                'target'       => $target,
+                'status'       => $response->status(),
+                'response'     => $result,
             ]);
 
+            // =====================================================
+            // Berhasil dikirim
+            // Simpan / Perbarui riwayat notifikasi
+            // =====================================================
             if ($response->successful() && ($result['status'] ?? false)) {
-                
-            Notification::updateOrCreate(
+
+                Notification::updateOrCreate(
 
                     // Kunci pencarian
                     [
@@ -834,7 +855,7 @@ class AuthController extends Controller
                         'type'      => 'wa_login',
                     ],
 
-                    // Data yang akan diupdate / dibuat
+                    // Data yang diperbarui
                     [
                         'title' => 'Notifikasi WhatsApp',
 
@@ -843,9 +864,10 @@ class AuthController extends Controller
                         'data' => json_encode([
                             'sender_id' => $sender->id,
                             'phone'     => $recipient->phone,
+                            'response'  => $result,
                         ]),
 
-                        // Perbarui waktu notifikasi terakhir
+                        // Waktu terakhir notifikasi berhasil dikirim
                         'updated_at' => now(),
                     ]
                 );
@@ -858,8 +880,10 @@ class AuthController extends Controller
         } catch (\Throwable $e) {
 
             Log::error('WhatsApp Fonnte Error', [
-                'target' => $target,
-                'error'  => $e->getMessage(),
+                'sender_id'    => $sender->id,
+                'recipient_id' => $recipient->id,
+                'target'       => $target,
+                'error'        => $e->getMessage(),
             ]);
 
             return false;
