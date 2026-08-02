@@ -286,8 +286,7 @@
                                     ({{ $evaluation['percentage'] }})
                                 </td>
                                 <td>{{ $evaluation['category'] }}</td>
-                                <td>{{ \Carbon\Carbon::parse($evaluation['evaluation_date'])->translatedFormat('d F Y') }}
-                                </td>
+                                <td>{{ $evaluation['evaluation_date'] }}</td>
                             </tr>
                         @endforeach
                     </tbody>
