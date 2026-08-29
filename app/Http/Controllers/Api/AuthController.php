@@ -640,7 +640,8 @@ class AuthController extends Controller
                 ->first();
 
             // =====================================================
-            // Sudah memiliki sesi konseling aktif
+            // SUDAH MEMILIKI SESI KONSELING
+            // Kirim notifikasi kepada konselor yang menangani
             // =====================================================
             if ($counselingSession && $counselingSession->counselor) {
 
@@ -658,7 +659,7 @@ class AuthController extends Controller
             }
 
             // =====================================================
-            // Belum memiliki sesi konseling
+            // BELUM MEMILIKI SESI KONSELING
             // Cari konselor aktif pada Puskesmas yang sama
             // =====================================================
             $counselor = User::where('role', 'konselor')
@@ -683,14 +684,15 @@ class AuthController extends Controller
             );
         }
 
+
         // =========================================================
         // KONSELOR LOGIN
         // =========================================================
         if ($user->role == 'konselor') {
 
             // -----------------------------------------------------
-            // Ambil seluruh sesi konseling aktif yang ditangani
-            // oleh konselor
+            // Cari seluruh sesi konseling aktif yang ditangani
+            // oleh konselor yang sedang login
             // -----------------------------------------------------
             $sessions = CounselingSession::with([
                     'elderlyCounselee.counselee'
@@ -700,13 +702,16 @@ class AuthController extends Controller
                 ->get();
 
             // =====================================================
+            // KONDISI 1:
             // Konselor memiliki sesi konseling aktif
-            // Kirim notifikasi kepada seluruh pendamping lansia
             // =====================================================
             if ($sessions->isNotEmpty()) {
 
                 foreach ($sessions as $session) {
 
+                    // -------------------------------------------------
+                    // Pastikan data pendamping dan akun konseli tersedia
+                    // -------------------------------------------------
                     if (
                         ! $session->elderlyCounselee ||
                         ! $session->elderlyCounselee->counselee
@@ -716,6 +721,9 @@ class AuthController extends Controller
 
                     $counselee = $session->elderlyCounselee->counselee;
 
+                    // -------------------------------------------------
+                    // Kirim notifikasi kepada konseli
+                    // -------------------------------------------------
                     $message =
                         "Halo {$counselee->name},\n\n".
                         "Konselor *{$user->name}* baru saja login ke aplikasi *SIJALA* dan siap memberikan layanan konseling.\n\n".
@@ -728,30 +736,41 @@ class AuthController extends Controller
                         $message
                     );
 
-                    // Memberi jeda agar pengiriman tidak terlalu cepat
+                    // Jeda 0,5 detik sebelum mengirim pesan berikutnya
                     usleep(500000);
                 }
 
                 return true;
             }
 
+
             // =====================================================
-            // Konselor belum memiliki sesi aktif
-            // Beritahukan seluruh pendamping lansia pada Puskesmas
-            // bahwa konselor siap memberikan layanan konseling
+            // KONDISI 2:
+            // Konselor belum memiliki sesi konseling aktif
             // =====================================================
+
+            // -----------------------------------------------------
+            // Ambil seluruh pendamping lansia yang terdaftar
+            // pada Puskesmas yang sama dengan konselor
+            // -----------------------------------------------------
             $elderlyCounselees = ElderlyCounselee::with('counselee')
                 ->where('puskesmas_id', $user->puskesmas_id)
                 ->get();
 
+            // -----------------------------------------------------
+            // Kirim notifikasi kepada setiap pendamping lansia
+            // -----------------------------------------------------
             foreach ($elderlyCounselees as $elderlyCounselee) {
 
+                // Pastikan akun konseli tersedia
                 if (! $elderlyCounselee->counselee) {
                     continue;
                 }
 
+                $counselee = $elderlyCounselee->counselee;
+
                 $message =
-                    "Halo {$elderlyCounselee->counselee->name},\n\n".
+                    "Halo {$counselee->name},\n\n".
                     "Konselor *{$user->name}* baru saja login ke aplikasi *SIJALA* dan siap memberikan layanan konseling.\n\n".
                     "Apabila Anda membutuhkan layanan konseling, silakan menghubungi konselor melalui WhatsApp di nomor *{$user->phone}* untuk melakukan penjadwalan sesi konseling. Setelah jadwal disepakati, silakan membuka aplikasi *SIJALA* untuk memulai proses konseling.\n\n".
                     "Pesan ini dikirim secara otomatis oleh Sistem SIJALA sebagai notifikasi dan pengingat layanan konseling.\n".
@@ -759,44 +778,58 @@ class AuthController extends Controller
 
                 $this->sendMessage(
                     $user,
-                    $elderlyCounselee->counselee,
+                    $counselee,
                     $message
                 );
 
-                // Memberi jeda agar pengiriman tidak terlalu cepat
+                // Jeda 0,5 detik sebelum mengirim pesan berikutnya
                 usleep(500000);
             }
 
             return true;
         }
 
+        // =========================================================
+        // Role tidak dikenali / tidak memiliki akses
+        // =========================================================
         return false;
     }
 
-    private function sendMessage(User $sender, User $recipient, string $message): bool
-    {
-        // =========================================================
-        // Validasi Nomor WhatsApp Penerima
-        // =========================================================
-        if (empty($recipient->phone)) {
+    private function sendMessage(
+        User $sender,
+        User $recipient,
+        string $message
+    ): bool {
 
-            Log::warning('WhatsApp tidak dikirim karena nomor HP penerima kosong.', [
-                'sender_id'    => $sender->id,
-                'recipient_id' => $recipient->id,
-            ]);
+        // =========================================================
+        // Normalisasi Nomor WhatsApp Penerima
+        // =========================================================
+        $target = $this->normalizePhone($recipient->phone);
+
+        // =========================================================
+        // Validasi Nomor WhatsApp
+        // =========================================================
+        // Jika nomor kosong atau tidak valid, WhatsApp tidak dikirim.
+        // Proses login tetap dapat dilanjutkan.
+        // =========================================================
+        if (empty($target)) {
+
+            Log::warning(
+                'WhatsApp tidak dikirim karena nomor HP penerima kosong atau tidak valid.',
+                [
+                    'sender_id'    => $sender->id,
+                    'recipient_id' => $recipient->id,
+                    'phone'        => $recipient->phone,
+                ]
+            );
 
             return false;
         }
 
         // =========================================================
-        // Normalisasi Nomor WhatsApp
+        // Cegah Pengiriman Notifikasi WhatsApp Berulang
         // =========================================================
-        $target = $this->normalizePhone($recipient->phone);
-
-        // =========================================================
-        // Cegah Pengiriman Notifikasi Berulang
-        // ---------------------------------------------------------
-        // Notifikasi login hanya dikirim satu kali dalam 2 hari
+        // Notifikasi login hanya dikirim satu kali dalam 1 hari
         // kepada penerima yang sama dari pengirim yang sama.
         // =========================================================
         $exists = Notification::where('user_id', $recipient->id)
@@ -832,6 +865,9 @@ class AuthController extends Controller
 
             $result = $response->json();
 
+            // =====================================================
+            // Catat Response Fonnte
+            // =====================================================
             Log::info('WhatsApp Fonnte', [
                 'sender_id'    => $sender->id,
                 'recipient_id' => $recipient->id,
@@ -841,11 +877,19 @@ class AuthController extends Controller
             ]);
 
             // =====================================================
-            // Berhasil dikirim
-            // Simpan / Perbarui riwayat notifikasi
+            // Jika Pengiriman Berhasil
             // =====================================================
-            if ($response->successful() && ($result['status'] ?? false)) {
+            if (
+                $response->successful() &&
+                ($result['status'] ?? false)
+            ) {
 
+                // -------------------------------------------------
+                // Simpan / Update Riwayat Notifikasi
+                // -------------------------------------------------
+                // Kombinasi user_id + sender_id + type digunakan
+                // agar notifikasi tidak membuat record baru terus.
+                // -------------------------------------------------
                 Notification::updateOrCreate(
 
                     // Kunci pencarian
@@ -875,10 +919,14 @@ class AuthController extends Controller
                 return true;
             }
 
+            // Pengiriman Fonnte gagal
             return false;
 
         } catch (\Throwable $e) {
 
+            // =====================================================
+            // Tangani Error Fonnte / HTTP
+            // =====================================================
             Log::error('WhatsApp Fonnte Error', [
                 'sender_id'    => $sender->id,
                 'recipient_id' => $recipient->id,
@@ -890,12 +938,25 @@ class AuthController extends Controller
         }
     }
 
-    private function normalizePhone(string $phone): string
+    private function normalizePhone(?string $phone): string
     {
+        // =========================================================
+        // Nomor kosong
+        // =========================================================
+        if (empty($phone)) {
+            return '';
+        }
+
+        // =========================================================
+        // Hapus karakter selain angka
+        // =========================================================
         $phone = preg_replace('/[^0-9]/', '', $phone);
 
+        // =========================================================
+        // Ubah format 08xxxxxxxx menjadi 628xxxxxxxx
+        // =========================================================
         if (str_starts_with($phone, '0')) {
-            $phone = '62'.substr($phone, 1);
+            $phone = '62' . substr($phone, 1);
         }
 
         return $phone;

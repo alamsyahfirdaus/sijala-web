@@ -136,6 +136,33 @@
             return '#22C55E';
         }
 
+        function shuffleColors(colors) {
+            return colors
+                .map(value => ({
+                    value,
+                    sort: Math.random()
+                }))
+                .sort((a, b) => a.sort - b.sort)
+                .map(item => item.value);
+        }
+
+        const colorPalette = [
+            '#0d6efd', // Blue
+            '#198754', // Green
+            '#ffc107', // Yellow
+            '#dc3545', // Red
+            '#6f42c1', // Purple
+            '#20c997', // Teal
+            '#fd7e14', // Orange
+            '#6610f2', // Indigo
+            '#0dcaf0', // Cyan
+            '#d63384', // Pink
+            '#198754', // Green
+            '#6c757d'  // Gray
+        ];
+
+        const randomColors = shuffleColors(colorPalette);
+
         document.addEventListener("DOMContentLoaded", function() {
 
             new ApexCharts(document.querySelector("#trend-chart"), {
@@ -482,16 +509,7 @@
                     }
                 },
 
-                colors: [
-                    '#0d6efd',
-                    '#198754',
-                    '#ffc107',
-                    '#dc3545',
-                    '#6f42c1',
-                    '#20c997',
-                    '#fd7e14',
-                    '#6610f2'
-                ],
+                colors: randomColors,
 
                 dataLabels: {
                     enabled: true,
