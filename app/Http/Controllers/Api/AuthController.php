@@ -102,7 +102,7 @@ class AuthController extends Controller
             // SIMPAN DATA USER
             // =========================================================
             $user = User::create([
-                'name' => $request->name,
+                'name' => ucwords(strtolower($request->name)),
                 'username' => $username,
                 'phone' => $request->phone,
                 'gender' => $request->gender,
