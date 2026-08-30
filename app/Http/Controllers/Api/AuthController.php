@@ -36,7 +36,7 @@ class AuthController extends Controller
             [
                 'name' => 'required|string|max:255',
                 'gender' => 'required|in:L,P',
-                'phone' => 'required|numeric|unique:users,phone',
+                'phone' => 'required|numeric',
                 'role' => 'required|in:konselor,konseli',
 
                 // Puskesmas wajib untuk semua role
