@@ -129,6 +129,276 @@ class ConsultationController extends Controller
         |--------------------------------------------------------------------------
         | USER ADALAH KONSELI
         |--------------------------------------------------------------------------
+        | KHUSUS UJICOBA:
+        | user_id 94-120  -> konselor ID 3
+        | user_id 121-124 -> konselor ID 125
+        | selain itu      -> berdasarkan puskesmas
+        |--------------------------------------------------------------------------
+        */
+        if ($user->role === 'konseli') {
+
+            // =====================================================
+            // KHUSUS UJICOBA
+            // =====================================================
+            if ($user->id >= 94 && $user->id <= 120) {
+
+                $receiverId = 3;
+
+            } elseif ($user->id >= 121 && $user->id <= 124) {
+
+                $receiverId = 125;
+
+            } else {
+
+                // =====================================================
+                // LOGIKA NORMAL
+                // =====================================================
+                $receiver = User::where([
+                    'puskesmas_id' => $user->puskesmas_id,
+                    'role' => 'konselor',
+                ])
+                    ->where('is_active', true)
+                    ->first();
+
+                if (! $receiver) {
+
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Konselor tidak ditemukan.',
+                    ], 404);
+                }
+
+                $receiverId = $receiver->id;
+            }
+
+            // =====================================================
+            // PASTIKAN RECEIVER ADA
+            // =====================================================
+            $receiver = User::find($receiverId);
+
+            if (! $receiver) {
+
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Konselor ujicoba tidak ditemukan.',
+                ], 404);
+            }
+
+            // =====================================================
+            // PASTIKAN RECEIVER AKTIF
+            // =====================================================
+            if (! $receiver->is_active) {
+
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Konselor sedang tidak aktif.',
+                ], 400);
+            }
+        }
+        /*
+        |--------------------------------------------------------------------------
+        | USER BUKAN KONSELI
+        |--------------------------------------------------------------------------
+        | Menggunakan sesi konseling yang sudah dijadwalkan.
+        |--------------------------------------------------------------------------
+        */
+        else {
+
+            $request->validate(
+                [
+                    'counseling_session_id' => 'required|exists:counseling_sessions,id',
+                ],
+                [
+                    'counseling_session_id.required' => 'Sesi konseling wajib dipilih.',
+                    'counseling_session_id.exists' => 'Sesi konseling yang dipilih tidak ditemukan.',
+                ]
+            );
+
+            $sessionId = $request->input('counseling_session_id');
+
+            /*
+            |--------------------------------------------------------------------------
+            | AMBIL SESI KONSELING
+            |--------------------------------------------------------------------------
+            */
+            $session = CounselingSession::with([
+                'elderlyCounselee.counselee',
+            ])->find($sessionId);
+
+            /*
+            |--------------------------------------------------------------------------
+            | VALIDASI PESERTA SESI
+            |--------------------------------------------------------------------------
+            */
+            if (
+                ! $session ||
+                ! $session->elderlyCounselee ||
+                ! $session->elderlyCounselee->counselee
+            ) {
+
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Peserta pada sesi konseling tidak ditemukan.',
+                ], 404);
+            }
+
+            $receiver = $session->elderlyCounselee->counselee;
+
+            $receiverId = $receiver->id;
+
+            /*
+            |--------------------------------------------------------------------------
+            | TIDAK BOLEH MELAKUKAN CALL KE DIRI SENDIRI
+            |--------------------------------------------------------------------------
+            */
+            if ($receiverId === $user->id) {
+
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Tidak dapat melakukan konsultasi dengan diri sendiri.',
+                ], 400);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | RECEIVER TIDAK AKTIF
+            |--------------------------------------------------------------------------
+            */
+            if (! $receiver->is_active) {
+
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Penerima konsultasi sedang tidak aktif.',
+                ], 400);
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | CEK KONSULTASI AKTIF
+        |--------------------------------------------------------------------------
+        | Mencegah dua video call aktif antara user yang sama.
+        |--------------------------------------------------------------------------
+        */
+        $existingConsultation = Consultation::where(function ($query) use ($user, $receiverId) {
+
+            $query->where(function ($q) use ($user, $receiverId) {
+
+                $q->where('caller_id', $user->id)
+                    ->where('receiver_id', $receiverId);
+
+            })->orWhere(function ($q) use ($user, $receiverId) {
+
+                $q->where('caller_id', $receiverId)
+                    ->where('receiver_id', $user->id);
+
+            });
+
+        })
+            ->whereIn('status', [
+                'calling',
+                'accepted',
+            ])
+            ->latest()
+            ->first();
+
+        /*
+        |--------------------------------------------------------------------------
+        | AKHIRI KONSULTASI LAMA
+        |--------------------------------------------------------------------------
+        */
+        if ($existingConsultation) {
+
+            $duration = 0;
+
+            if ($existingConsultation->started_at) {
+
+                $duration = now()->diffInSeconds(
+                    $existingConsultation->started_at
+                );
+            }
+
+            $existingConsultation->update([
+                'status' => 'ended',
+                'ended_at' => now(),
+                'duration' => $duration,
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | GENERATE CHANNEL AGORA
+        |--------------------------------------------------------------------------
+        */
+        $agora = AgoraService::generateCallData(
+            $user->id,
+            $receiverId
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | SIMPAN CONSULTATION
+        |--------------------------------------------------------------------------
+        */
+        $consultation = Consultation::create([
+            'counseling_session_id' => $sessionId,
+            'caller_id' => $user->id,
+            'receiver_id' => $receiverId,
+            'channel_name' => $agora['channel_name'],
+            'token' => $agora['token'],
+            'call_type' => 'video',
+            'status' => 'calling',
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | SIMPAN NOTIFICATION
+        |--------------------------------------------------------------------------
+        */
+        Notification::create([
+            'user_id' => $receiverId,
+            'title' => 'Incoming Video Call',
+            'body' => $user->name.' memanggil Anda',
+            'type' => 'incoming_call',
+            'data' => json_encode([
+                'consultation_id' => $consultation->id,
+                'counseling_session_id' => $sessionId,
+                'channel_name' => $consultation->channel_name,
+            ]),
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESPONSE
+        |--------------------------------------------------------------------------
+        */
+        return response()->json([
+            'status' => true,
+            'message' => 'Permintaan konsultasi berhasil dikirim.',
+            'data' => $consultation,
+        ]);
+    }
+
+    public function requestCall1(Request $request)
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | USER LOGIN
+        |--------------------------------------------------------------------------
+        */
+        $user = $request->attributes->get('user');
+
+        /*
+        |--------------------------------------------------------------------------
+        | DEFAULT SESSION
+        |--------------------------------------------------------------------------
+        */
+        $sessionId = null;
+
+        /*
+        |--------------------------------------------------------------------------
+        | USER ADALAH KONSELI
+        |--------------------------------------------------------------------------
         | Konseli akan otomatis menghubungi konselor berdasarkan puskesmas.
         |--------------------------------------------------------------------------
         */

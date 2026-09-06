@@ -249,56 +249,43 @@ class ElderlyCounseleeController extends Controller
         }
     }
 
-    // private function addCounselingSession($puskesmasId, $elderlyCounseleeId)
-    // {
-    //     // Cari konselor berdasarkan puskesmas
-    //     $counselor = User::where([
-    //         'role' => 'konselor',
-    //         'puskesmas_id' => $puskesmasId,
-    //     ])->first();
+    private function addCounselingSession($puskesmasId, $elderlyCounseleeId)
+    {
+        // Khusus ujicoba
+        if ($elderlyCounseleeId >= 56 && $elderlyCounseleeId <= 82) {
 
-    //     // Jika konselor tidak ditemukan
-    //     if (!$counselor) {
-    //         return null;
-    //     }
+            $counselorId = 3;
 
-    //     // Ambil semua sesi konseling milik konseli/lansia
-    //     $sessions = CounselingSession::where(
-    //         'elderly_counselee_id',
-    //         $elderlyCounseleeId
-    //     )->latest()->get();
+        } elseif ($elderlyCounseleeId >= 83 && $elderlyCounseleeId <= 86) {
 
-    //     // Cari sesi yang belum lengkap
-    //     foreach ($sessions as $session) {
-    //         $hasFallRisk = FallRiskScreening::where(
-    //             'counseling_session_id',
-    //             $session->id
-    //         )->exists();
+            $counselorId = 125;
 
-    //         $hasEmpowerment = EmpowermentAssessment::where(
-    //             'counseling_session_id',
-    //             $session->id
-    //         )->exists();
+        } else {
 
-    //         // Gunakan sesi jika salah satu data belum tersedia
-    //         if (!$hasFallRisk || !$hasEmpowerment) {
-    //             $session->update([
-    //                 'counselor_id' => $counselor->id,
-    //             ]);
+            // Cari konselor berdasarkan puskesmas
+            $counselor = User::where([
+                'role'         => 'konselor',
+                'puskesmas_id' => $puskesmasId,
+            ])->first();
 
-    //             return $session->fresh();
-    //         }
-    //     }
+            // Jika konselor tidak ditemukan
+            if (!$counselor) {
+                return null;
+            }
 
-    //     // Jika tidak ada sesi atau semua sesi sudah lengkap, buat sesi baru
-    //     return CounselingSession::create([
-    //         'elderly_counselee_id' => $elderlyCounseleeId,
-    //         'counselor_id'         => $counselor->id,
-    //         'status'               => 'ongoing',
-    //     ]);
-    // }
+            $counselorId = $counselor->id;
+        }
 
-    private function addCounselingSession($puskesmasId, $elderlyCounseleeId) {
+        // Selalu buat sesi baru
+        return CounselingSession::create([
+            'elderly_counselee_id' => $elderlyCounseleeId,
+            'counselor_id'         => $counselorId,
+            'status'               => 'ongoing',
+        ]);
+    }
+
+    private function addCounselingSession1($puskesmasId, $elderlyCounseleeId) 
+    {
         // Cari konselor berdasarkan puskesmas
         $counselor = User::where([
             'role' => 'konselor',

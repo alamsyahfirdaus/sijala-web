@@ -233,7 +233,7 @@ class AuthController extends Controller
             // =========================================================
             // Kirim WhatsApp / Notifikasi ke pasangan konseling
             // =========================================================
-            $this->sendWhatsapp($user);
+            // $this->sendWhatsapp($user);
 
             return response()->json([
                 'status'  => true,
