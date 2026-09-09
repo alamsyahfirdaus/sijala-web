@@ -252,7 +252,7 @@ class ElderlyCounseleeController extends Controller
     private function addCounselingSession($puskesmasId, $elderlyCounseleeId)
     {
         // Khusus ujicoba
-        if ($elderlyCounseleeId >= 56 && $elderlyCounseleeId <= 82) {
+        if ($elderlyCounseleeId >= 56 && $elderlyCounseleeId <= 82 || $elderlyCounseleeId == 46) {
 
             $counselorId = 3;
 

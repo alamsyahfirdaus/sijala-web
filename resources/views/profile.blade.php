@@ -53,40 +53,65 @@
                         @method('PUT')
                         <div class="form-group mb-3">
                             <label class="form-label">Pengguna</label>
-                            <select class="form-select select2" id="user_id" name="user_id" style="width: 100%;">
+                            <select class="form-select select2 @error('user_id') is-invalid @enderror" id="user_id" name="user_id" style="width: 100%;">
                                 <option value="">-- Pilih Pengguna --</option>
                                 @foreach ($users as $item)
-                                    <option value="{{ encrypt($item->id) }}" {{ $item->id == $user->id ? 'selected' : '' }}
+                                    @php
+                                        $encryptedId = encrypt($item->id);
+                                        $isSelected = old('user_id')
+                                            ? (function () use ($item) {
+                                                try {
+                                                    return decrypt(old('user_id')) == $item->id;
+                                                } catch (\Exception $e) {
+                                                    return false;
+                                                }
+                                            })()
+                                            : ($item->id == $user->id);
+                                    @endphp
+                                    <option value="{{ $encryptedId }}" {{ $isSelected ? 'selected' : '' }}
                                         data-username="{{ $item->username }}">
                                         {{ $item->name }} ({{ $item->username ?? '-' }})
                                     </option>
                                 @endforeach
                             </select>
-                            <div class="invalid-feedback"></div>
+                            @error('user_id')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @else
+                                <div class="invalid-feedback"></div>
+                            @enderror
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label">Username</label>
-                            <input type="text" name="username" id="username" class="form-control"
-                                value="{{ $user->username }}" placeholder="Username" autocomplete="off">
-                            <div class="invalid-feedback"></div>
+                            <input type="text" name="username" id="username" class="form-control @error('username') is-invalid @enderror"
+                                value="{{ old('username', $user->username) }}" placeholder="Username" autocomplete="off">
+                            @error('username')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @else
+                                <div class="invalid-feedback"></div>
+                            @enderror
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label">Password <span style="font-size: 12px;">(Opsional)</span></label>
                             <div class="input-group">
-                                <input type="password" name="password" id="password" class="form-control"
+                                <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror"
                                     placeholder="Password" autocomplete="new-password">
                                 <button class="btn btn-outline-secondary" type="button" id="togglePassword">
                                     <i class="bi bi-eye" id="togglePasswordIcon"></i>
                                 </button>
                             </div>
-                            <div class="invalid-feedback"></div>
+                            @error('password')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @else
+                                <div class="invalid-feedback"></div>
+                            @enderror
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="button" class="btn btn-warning text-white" id="btnUpdateProfile">Simpan
-                        Perubahan</button>
+                    <button type="submit" class="btn btn-warning text-white" id="btnUpdateProfile" form="editProfileForm">
+                        Simpan Perubahan
+                    </button>
                 </div>
             </div>
         </div>
@@ -97,27 +122,24 @@
 
             $('#editProfileModal').on('shown.bs.modal', function() {
                 if (!$('#user_id').hasClass('select2-hidden-accessible')) {
-
                     $('#user_id').select2({
                         theme: 'bootstrap-5',
                         placeholder: 'Pilih Pengguna',
                         allowClear: true,
                         dropdownParent: $('#editProfileModal')
                     });
-
                 }
+            });
 
-                resetValidation();
+            $('#editProfileModal').on('hidden.bs.modal', function() {
+                $('#btnUpdateProfile').prop('disabled', false).html('Simpan Perubahan');
             });
 
             $('#user_id').change(function() {
-
-                $('#username').val(
-                    $(this).find(':selected').data('username') ?? ''
-                );
-
+                const selectedOpt = $(this).find(':selected');
+                const uname = selectedOpt.attr('data-username') || selectedOpt.data('username') || '';
+                $('#username').val(uname);
                 resetValidation();
-
             });
 
             $('#togglePassword').on('click', function() {
@@ -132,103 +154,92 @@
                 }
             });
 
-            $('#btnUpdateProfile').click(function() {
-
+            $('#editProfileForm').on('submit', function(e) {
                 let isValid = true;
-
-                $('#editProfileForm .form-control').removeClass('is-invalid');
-                $('#editProfileForm .form-select').removeClass('is-invalid');
-                $('#editProfileForm .invalid-feedback').html('');
+                resetValidation();
 
                 const userId = $('#user_id').val();
-
-                if (userId === '') {
-
+                if (!userId) {
                     $('#user_id')
                         .addClass('is-invalid')
                         .closest('.form-group')
                         .find('.invalid-feedback')
+                        .addClass('d-block')
                         .html('Pengguna wajib dipilih.');
-
                     isValid = false;
                 }
 
                 const username = $('#username').val().trim();
-
                 if (username === '') {
-
                     $('#username')
                         .addClass('is-invalid')
                         .closest('.form-group')
                         .find('.invalid-feedback')
+                        .addClass('d-block')
                         .html('Username wajib diisi.');
-
                     isValid = false;
-
-                } else if (username.length < 4) {
-
+                } else if (username.length < 3) {
                     $('#username')
                         .addClass('is-invalid')
                         .closest('.form-group')
                         .find('.invalid-feedback')
-                        .html('Username minimal 4 karakter.');
-
+                        .addClass('d-block')
+                        .html('Username minimal 3 karakter.');
                     isValid = false;
                 }
 
-                const password = $('#password').val().trim();
-
-                if (password !== '' && password.length < 8) {
-
+                const password = $('#password').val();
+                if (password !== '' && password.length < 6) {
                     $('#password')
                         .addClass('is-invalid')
                         .closest('.form-group')
                         .find('.invalid-feedback')
-                        .html('Password minimal 8 karakter.');
-
+                        .addClass('d-block')
+                        .html('Password minimal 6 karakter.');
                     isValid = false;
                 }
 
-                if (
-                    isValid &&
-                    $('#username').val().trim() === $('#user_id').find(':selected').data('username') &&
-                    $('#password').val().trim() === ''
-                ) {
-
+                const selectedUsername = ($('#user_id').find(':selected').attr('data-username') || '').trim();
+                if (isValid && username === selectedUsername && password === '') {
                     $('#username')
                         .addClass('is-invalid')
                         .closest('.form-group')
                         .find('.invalid-feedback')
+                        .addClass('d-block')
                         .html('Silakan ubah username atau isi password.');
-
-                    return;
+                    e.preventDefault();
+                    return false;
                 }
 
-                if (isValid) {
-
-                    $('#btnUpdateProfile')
-                        .prop('disabled', true)
-                        .html(
-                            '<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...'
-                        );
-
-                    $('#editProfileForm').submit();
+                if (!isValid) {
+                    e.preventDefault();
+                    return false;
                 }
 
+                $('#btnUpdateProfile')
+                    .prop('disabled', true)
+                    .html('<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...');
             });
+
+            @if ($errors->any())
+                const editProfileModalEl = document.getElementById('editProfileModal');
+                if (editProfileModalEl) {
+                    const modalInstance = new bootstrap.Modal(editProfileModalEl);
+                    modalInstance.show();
+                }
+            @endif
 
         });
 
         function resetValidation() {
-
             $('#editProfileForm')
                 .find('.is-invalid')
                 .removeClass('is-invalid');
 
             $('#editProfileForm')
                 .find('.invalid-feedback')
+                .removeClass('d-block')
                 .html('');
-
         }
     </script>
 

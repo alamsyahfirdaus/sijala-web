@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Puskesmas;
 use App\Models\User;
 use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -54,116 +55,85 @@ class UserController extends Controller
 
     public function updateProfile(Request $request)
     {
-        /*
-        |--------------------------------------------------------------------------
-        | VALIDASI
-        |--------------------------------------------------------------------------
-        */
+        // 1. Validasi input user_id
         $request->validate([
             'user_id' => [
                 'required',
             ],
+        ], [
+            'user_id.required' => 'Pengguna wajib dipilih.',
+        ]);
 
+        // 2. Dekripsi user_id dan cari data pengguna
+        try {
+            $userId = decrypt($request->user_id);
+            $user = User::findOrFail($userId);
+        } catch (DecryptException $e) {
+            return redirect()
+                ->route('profile')
+                ->with('error', 'Data pengguna tidak valid.');
+        } catch (ModelNotFoundException $e) {
+            return redirect()
+                ->route('profile')
+                ->with('error', 'Pengguna tidak ditemukan.');
+        }
+
+        // 3. Validasi username dan password (opsional)
+        // Mengecualikan ID user yang sedang diedit agar tidak memicu unique error jika username tidak berubah
+        $request->validate([
             'username' => [
                 'required',
                 'string',
-                'min:4',
+                'min:3',
                 'max:50',
+                Rule::unique('users', 'username')->ignore($user->id),
             ],
-
             'password' => [
                 'nullable',
                 'string',
-                'min:8',
+                'min:6',
             ],
+        ], [
+            'username.required' => 'Username wajib diisi.',
+            'username.string'   => 'Username harus berupa teks.',
+            'username.min'      => 'Username minimal 3 karakter.',
+            'username.max'      => 'Username maksimal 50 karakter.',
+            'username.unique'   => 'Username sudah digunakan.',
+            'password.min'      => 'Password minimal 6 karakter.',
         ]);
 
+        // 4. Simpan perubahan ke database dalam transaksi
         DB::beginTransaction();
 
         try {
-
-            /*
-            |--------------------------------------------------------------------------
-            | DECRYPT USER
-            |--------------------------------------------------------------------------
-            */
-            $user = User::findOrFail(
-                decrypt($request->user_id)
-            );
-
-            /*
-            |--------------------------------------------------------------------------
-            | VALIDASI USERNAME
-            |--------------------------------------------------------------------------
-            */
-            validator(
-                ['username' => trim($request->username)],
-                [
-                    'username' => [
-                        Rule::unique('users', 'username')
-                            ->ignore($user->id),
-                    ],
-                ],
-                [
-                    'username.unique' => 'Username sudah digunakan.',
-                ]
-            )->validate();
-
-            /*
-            |--------------------------------------------------------------------------
-            | UPDATE USERNAME
-            |--------------------------------------------------------------------------
-            */
+            // Update username
             $user->username = trim($request->username);
 
-            /*
-            |--------------------------------------------------------------------------
-            | UPDATE PASSWORD (OPSIONAL)
-            |--------------------------------------------------------------------------
-            */
+            // Update password hanya jika diisi (opsional)
             if ($request->filled('password')) {
-
-                $user->password = Hash::make(
-                    $request->password
-                );
+                $user->password = Hash::make($request->password);
             }
 
             $user->save();
+
+            // Jika user yang diedit adalah user yang sedang login, update Auth user instance agar session tetap sinkron
+            if (Auth::id() === $user->id) {
+                Auth::setUser($user);
+            }
 
             DB::commit();
 
             return redirect()
                 ->route('profile')
-                ->with(
-                    'success',
-                    Auth::id() == $user->id
-                        ? 'Profil berhasil diperbarui.'
-                        : "Akun {$user->name} berhasil diperbarui."
-                );
-
-        } catch (DecryptException $e) {
-
-            DB::rollBack();
-
-            return redirect()
-                ->route('profile')
-                ->with(
-                    'error',
-                    'Data pengguna tidak valid.'
-                );
+                ->with('success', 'Profil berhasil diperbarui.');
 
         } catch (\Throwable $e) {
-
             DB::rollBack();
-
             report($e);
 
             return redirect()
                 ->route('profile')
-                ->with(
-                    'error',
-                    'Terjadi kesalahan saat memperbarui profil.'
-                );
+                ->with('error', 'Terjadi kesalahan saat memperbarui profil.');
         }
     }
 

@@ -92,6 +92,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/', [CounselingController::class, 'index'])->name('counselings');
         Route::get('/{id}/session', [CounselingController::class, 'session'])->name('counseling.session');
         Route::match(['post', 'put'], '/scores/update', [CounselingController::class, 'updateScore'])->name('scores.update');
+        Route::match(['post', 'put'], '/{id}/change-counselor', [CounselingController::class, 'changeCounselor'])->name('counseling.change-counselor');
         Route::match(['delete', 'post'], '{id}/delete', [CounselingController::class, 'destroy'])->name('counseling.delete');
     });
 

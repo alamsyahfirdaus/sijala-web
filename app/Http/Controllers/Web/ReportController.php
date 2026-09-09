@@ -24,7 +24,7 @@ class ReportController extends Controller
 
     public function show($report)
     {
-        $reports = [
+        $reportData = match ($report) {
 
             'counselee' => [
                 'title' => 'Konseli',
@@ -56,20 +56,20 @@ class ReportController extends Controller
                 'data' => $this->getEvaluationReport(),
             ],
 
-        ];
-
-        abort_unless(isset($reports[$report]), 404);
+            default => abort(404),
+        };
 
         return view('reports', [
-            'title' => $reports[$report]['title'],
+            'title' => $reportData['title'],
             'report' => $report,
-            'data' => $reports[$report]['data'],
+            'data' => $reportData['data'],
         ]);
     }
 
     private function getAvailableDates($model)
     {
         return $model::query()
+            ->whereNotNull('created_at')
             ->selectRaw('DATE(created_at) as date')
             ->distinct()
             ->orderByRaw('DATE(created_at) DESC')
@@ -118,7 +118,7 @@ class ReportController extends Controller
                     // Statistik
                     'jml_counselings' => $item->counseling_sessions_count > 0 ? $item->counseling_sessions_count.' Sesi' : '-',
 
-                    'created_at' => $item->created_at->format('d-m-Y'),
+                    'created_at' => $item->created_at ? $item->created_at->format('d-m-Y') : '-',
                 ];
             });
 
@@ -175,7 +175,7 @@ class ReportController extends Controller
                         : '-',
 
                     // Tanggal Pendaftaran
-                    'created_at' => $item->created_at->format('d-m-Y'),
+                    'created_at' => $item->created_at ? $item->created_at->format('d-m-Y') : '-',
                 ];
             });
 
@@ -228,7 +228,7 @@ class ReportController extends Controller
 
                     'total_elderlies' => $item->total_elderlies > 0 ? $item->total_elderlies.' Lansia' : '-',
 
-                    'created_at' => $item->created_at->format('d-m-Y'),
+                    'created_at' => $item->created_at ? $item->created_at->format('d-m-Y') : '-',
                 ];
             });
 
@@ -321,13 +321,13 @@ class ReportController extends Controller
                             ? $item->total_sessions.' Sesi'
                             : '-',
 
-                    'first_counseling_date' => Carbon::parse(
-                        $item->first_counseling_date
-                    )->translatedFormat('d F Y'),
+                    'first_counseling_date' => $item->first_counseling_date
+                        ? Carbon::parse($item->first_counseling_date)->translatedFormat('d F Y')
+                        : '-',
 
-                    'last_counseling_date' => Carbon::parse(
-                        $item->last_counseling_date
-                    )->translatedFormat('d F Y'),
+                    'last_counseling_date' => $item->last_counseling_date
+                        ? Carbon::parse($item->last_counseling_date)->translatedFormat('d F Y')
+                        : '-',
                 ];
             });
 
@@ -613,7 +613,8 @@ class ReportController extends Controller
 
                     // Tanggal
                     'evaluation_date' => $item->created_at
-                        ->translatedFormat('d F Y'),
+                        ? $item->created_at->translatedFormat('d F Y')
+                        : '-',
                 ];
             });
 
@@ -642,9 +643,9 @@ class ReportController extends Controller
                             'Pendidikan' => $item['education'],
                             'Puskesmas' => $item['puskesmas'],
                             'Jumlah Sesi' => $item['jml_counselings'],
-                            'Tanggal Terdaftar' => Carbon::parse(
-                                $item['created_at']
-                            )->translatedFormat('d F Y'),
+                            'Tanggal Terdaftar' => $item['created_at'] !== '-'
+                                ? Carbon::parse($item['created_at'])->translatedFormat('d F Y')
+                                : '-',
                         ];
                     }),
             ],
@@ -664,9 +665,9 @@ class ReportController extends Controller
                             'Pernah Jatuh' => $item['has_fallen'],
                             'Kondisi Kesehatan' => $item['health_problems'] ?? '-',
                             'Puskesmas' => $item['puskesmas'],
-                            'Tanggal Terdaftar' => Carbon::parse(
-                                $item['created_at']
-                            )->translatedFormat('d F Y'),
+                            'Tanggal Terdaftar' => $item['created_at'] !== '-'
+                                ? Carbon::parse($item['created_at'])->translatedFormat('d F Y')
+                                : '-',
                         ];
                     }),
             ],
@@ -683,9 +684,9 @@ class ReportController extends Controller
                             'Nomor HP' => $item['phone'],
                             'Total Lansia Ditangani' => $item['total_elderlies'],
                             'Puskesmas' => $item['puskesmas'],
-                            'Tanggal Terdaftar' => Carbon::parse(
-                                $item['created_at']
-                            )->translatedFormat('d F Y'),
+                            'Tanggal Terdaftar' => $item['created_at'] !== '-'
+                                ? Carbon::parse($item['created_at'])->translatedFormat('d F Y')
+                                : '-',
                         ];
                     }),
             ],

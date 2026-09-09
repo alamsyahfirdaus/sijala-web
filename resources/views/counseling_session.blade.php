@@ -38,9 +38,20 @@
                     <span>Pernah Jatuh</span>
                     <span>{{ $counseling->elderlyCounselee->has_fallen ? 'Ya' : 'Tidak' }}</span>
                 </li>
-                <li class="list-group-item d-flex justify-content-between px-0">
+                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                     <span>Konselor</span>
-                    <span>{{ $counseling->counselor->name }}</span>
+                    <div>
+                        <span>{{ $counseling->counselor->name ?? 'Belum Ditentukan' }}</span>
+                        {{-- <button type="button" class="btn btn-outline-warning btn-xs ms-2 py-0 px-2 btnChangeCounselor"
+                            data-url="{{ route('counseling.change-counselor', encrypt($counseling->id)) }}"
+                            data-elderly-name="{{ $counseling->elderlyCounselee->elderly_name ?? '-' }}"
+                            data-counselee-name="{{ $counseling->elderlyCounselee->counselee->name ?? '-' }}"
+                            data-current-counselor-id="{{ $counseling->counselor_id }}"
+                            data-current-counselor-name="{{ $counseling->counselor->name ?? 'Belum Ditentukan' }}"
+                            data-session-count="{{ $sessions->count() }}">
+                            <i class="bi bi-person-gear"></i> Ubah
+                        </button> --}}
+                    </div>
                 </li>
                 <li
                     class="list-group-item d-flex justify-content-between px-0 {{ $counseling->elderlyCounselee->health_problems ? 'border-bottom' : 'pb-0' }}">
@@ -602,6 +613,74 @@
             </div>
         @endif
 
+        <!-- Modal Ubah Konselor -->
+        <div class="modal fade" id="changeCounselorModal" tabindex="-1" aria-labelledby="changeCounselorModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form id="changeCounselorForm" method="POST" action="">
+                        @csrf
+                        @method('PUT')
+                        <div class="modal-header bg-light">
+                            <h5 class="modal-title" id="changeCounselorModalLabel">
+                                <i class="bi bi-person-gear me-1 text-warning"></i> Ubah Konselor
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="card bg-light border-0 mb-3">
+                                <div class="card-body p-3">
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <small class="text-muted d-block">Nama Lansia</small>
+                                            <strong id="modalElderlyName" class="text-dark">-</strong>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted d-block">Nama Konseli</small>
+                                            <strong id="modalCounseleeName" class="text-dark">-</strong>
+                                        </div>
+                                        <div class="col-6 mt-2">
+                                            <small class="text-muted d-block">Jumlah Sesi</small>
+                                            <span class="badge bg-info text-dark fw-semibold" id="modalSessionCount">- Sesi</span>
+                                        </div>
+                                        <div class="col-6 mt-2">
+                                            <small class="text-muted d-block">Konselor Saat Ini</small>
+                                            <span class="badge bg-secondary" id="modalCurrentCounselor">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="selectNewCounselor" class="form-label fw-semibold">
+                                    Konselor Baru <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select select2-counselor" id="selectNewCounselor" name="counselor_id" style="width: 100%;" required>
+                                    <option value="">-- Pilih Konselor Baru --</option>
+                                    @if(isset($counselors))
+                                        @foreach ($counselors as $counselor)
+                                            <option value="{{ $counselor->id }}">
+                                                {{ $counselor->name }}
+                                                @if ($counselor->puskesmas)
+                                                    (Puskesmas {{ $counselor->puskesmas->name }})
+                                                @endif
+                                            </option>
+                                        @endforeach
+                                    @endif
+                                </select>
+                                <div class="invalid-feedback">Silakan pilih konselor baru.</div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-warning btn-sm text-dark fw-semibold" id="btnSubmitChangeCounselor">
+                                <i class="bi bi-check2-circle me-1"></i> Simpan Perubahan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <style>
             .counseling-tabs {
                 gap: 10px;
@@ -699,6 +778,73 @@
 
                     if (!isValid) {
                         e.preventDefault();
+                    }
+                });
+
+                // Inisialisasi Select2 di dalam Modal jika library tersedia
+                if ($.fn.select2) {
+                    $('#selectNewCounselor').select2({
+                        theme: 'bootstrap-5',
+                        dropdownParent: $('#changeCounselorModal'),
+                        placeholder: '-- Pilih Konselor Baru --',
+                        allowClear: true
+                    });
+                }
+
+                // Trigger Modal Ubah Konselor
+                $(document).on('click', '.btnChangeCounselor', function() {
+                    const url = $(this).data('url');
+                    const elderlyName = $(this).data('elderly-name');
+                    const counseleeName = $(this).data('counselee-name');
+                    const currentCounselorId = $(this).data('current-counselor-id');
+                    const currentCounselorName = $(this).data('current-counselor-name');
+                    const sessionCount = $(this).data('session-count');
+
+                    $('#changeCounselorForm').attr('action', url);
+                    $('#modalElderlyName').text(elderlyName);
+                    $('#modalCounseleeName').text(counseleeName);
+                    $('#modalSessionCount').text(sessionCount + ' Sesi');
+                    $('#modalCurrentCounselor').text(currentCounselorName).data('current-id', currentCounselorId);
+
+                    $('#selectNewCounselor').val('').trigger('change');
+                    $('#selectNewCounselor').removeClass('is-invalid');
+
+                    $('#changeCounselorModal').modal('show');
+                });
+
+                // Konfirmasi Sebelum Submit
+                $('#changeCounselorForm').on('submit', function(e) {
+                    const newCounselorId = $('#selectNewCounselor').val();
+                    const newCounselorText = $('#selectNewCounselor option:selected').text().trim();
+                    const currentCounselorId = $('#modalCurrentCounselor').data('current-id');
+                    const currentCounselorText = $('#modalCurrentCounselor').text().trim();
+                    const elderlyName = $('#modalElderlyName').text().trim();
+                    const sessionCount = $('#modalSessionCount').text().trim();
+
+                    if (!newCounselorId) {
+                        e.preventDefault();
+                        $('#selectNewCounselor').addClass('is-invalid');
+                        alert('Silakan pilih konselor baru terlebih dahulu.');
+                        return false;
+                    }
+
+                    if (newCounselorId == currentCounselorId) {
+                        e.preventDefault();
+                        alert('Konselor yang dipilih sama dengan konselor saat ini. Silakan pilih konselor yang berbeda.');
+                        return false;
+                    }
+
+                    const confirmMessage =
+                        'Apakah Anda yakin ingin mengubah konselor?\n\n' +
+                        'Perubahan ini akan diterapkan pada SELURUH sesi konseling milik konseli/lansia tersebut (' + elderlyName + ').\n\n' +
+                        '• Dari: ' + currentCounselorText + '\n' +
+                        '• Menjadi: ' + newCounselorText + '\n' +
+                        '• Jumlah sesi terdampak: ' + sessionCount + '\n\n' +
+                        'Klik OK untuk mengonfirmasi perubahan.';
+
+                    if (!confirm(confirmMessage)) {
+                        e.preventDefault();
+                        return false;
                     }
                 });
             });

@@ -11,11 +11,14 @@ use App\Models\Evaluation;
 use App\Models\EvaluationQuestion;
 use App\Models\FallRiskScreening;
 use App\Models\FallRiskQuestion;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Validation\Rule;
 
 class CounselingController extends Controller
 {
@@ -35,6 +38,12 @@ class CounselingController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
+        $latestDates = CounselingSession::query()
+            ->selectRaw('elderly_counselee_id, MAX(created_at) as last_created_at')
+            ->whereIn('elderly_counselee_id', $counselingSessions->pluck('elderly_counselee_id'))
+            ->groupBy('elderly_counselee_id')
+            ->pluck('last_created_at', 'elderly_counselee_id');
+
         foreach ($counselingSessions as $session) {
 
             $sessionCount = CounselingSession::where(
@@ -43,6 +52,12 @@ class CounselingController extends Controller
             )->count();
 
             $session->session_count = $sessionCount;
+
+            $lastDatetime = $latestDates[$session->elderly_counselee_id] ?? $session->created_at;
+
+            $session->last_session_datetime = $lastDatetime
+                ? Carbon::parse($lastDatetime)->timezone('Asia/Jakarta')->format('d M Y H:i') . ' WIB'
+                : '-';
 
             // ==========================================
             // Menentukan Status Konseling
@@ -69,8 +84,14 @@ class CounselingController extends Controller
                 ? 'Selesai'
                 : 'Berjalan';
         }
+        
+        $counselors = User::where('role', 'konselor')
+            ->where('is_active', true)
+            ->with('puskesmas')
+            ->orderBy('name')
+            ->get();
 
-        return view('counselings', compact('title', 'counselingSessions'));
+        return view('counselings', compact('title', 'counselingSessions', 'counselors'));
     }
 
     public function session($id)
@@ -218,6 +239,12 @@ class CounselingController extends Controller
 
             // echo json_encode($evaluations);
 
+            $counselors = User::where('role', 'konselor')
+                ->where('is_active', true)
+                ->with('puskesmas')
+                ->orderBy('name')
+                ->get();
+
             return view('counseling_session', compact(
                 'title',
                 'counseling',
@@ -226,7 +253,8 @@ class CounselingController extends Controller
                 'evaluations',
                 'sessionNumbers',
                 'counselingResumes',
-                'followUps'
+                'followUps',
+                'counselors'
             ));
 
         } catch (DecryptException $e) {
@@ -514,6 +542,62 @@ class CounselingController extends Controller
                 'error',
                 'Terjadi kesalahan saat memperbarui skor.'
             );
+        }
+    }
+
+    public function changeCounselor(Request $request, $id)
+    {
+        $request->validate([
+            'counselor_id' => [
+                'required',
+                'integer',
+                Rule::exists('users', 'id')->where(function ($query) {
+                    $query->where('role', 'konselor')->where('is_active', true);
+                }),
+            ],
+        ], [
+            'counselor_id.required' => 'Konselor baru wajib dipilih.',
+            'counselor_id.integer'  => 'Konselor yang dipilih tidak valid.',
+            'counselor_id.exists'   => 'Konselor yang dipilih tidak valid atau sedang tidak aktif.',
+        ]);
+
+        try {
+            $id = decrypt($id);
+
+            $targetSession = CounselingSession::with('elderlyCounselee.counselee')->findOrFail($id);
+
+            $newCounselor = User::where('id', $request->counselor_id)
+                ->where('role', 'konselor')
+                ->where('is_active', true)
+                ->firstOrFail();
+
+            $elderlyCounseleeId = $targetSession->elderly_counselee_id;
+
+            $updatedCount = DB::transaction(function () use ($elderlyCounseleeId, $newCounselor) {
+                return CounselingSession::where('elderly_counselee_id', $elderlyCounseleeId)
+                    ->update([
+                        'counselor_id' => $newCounselor->id,
+                        'updated_at'   => now(),
+                    ]);
+            });
+
+            if ($updatedCount === 0) {
+                return back()->with('error', 'Tidak ada sesi konseling yang dapat diperbarui.');
+            }
+
+            $elderlyName = $targetSession->elderlyCounselee->elderly_name ?? 'Lansia';
+
+            return back()->with(
+                'success',
+                "Konselor untuk {$elderlyName} berhasil diubah menjadi {$newCounselor->name} pada seluruh ({$updatedCount}) sesi konseling."
+            );
+
+        } catch (DecryptException $e) {
+            return back()->with('error', 'Sesi konseling tidak valid atau tidak ditemukan.');
+        } catch (ModelNotFoundException $e) {
+            return back()->with('error', 'Data sesi konseling atau konselor tidak ditemukan.');
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Terjadi kesalahan saat memperbarui konselor: ' . $e->getMessage());
         }
     }
 

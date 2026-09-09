@@ -140,7 +140,7 @@ class ConsultationController extends Controller
             // =====================================================
             // KHUSUS UJICOBA
             // =====================================================
-            if ($user->id >= 94 && $user->id <= 120) {
+            if ($user->id >= 94 && $user->id <= 120 || $user->id == 70) {
 
                 $receiverId = 3;
 
