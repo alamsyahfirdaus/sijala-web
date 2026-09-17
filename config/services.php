@@ -55,4 +55,14 @@ return [
         'app_certificate' => env('AGORA_APP_CERTIFICATE'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Fonnte WhatsApp Gateway
+    |--------------------------------------------------------------------------
+    */
+    'fonnte' => [
+        'token' => env('FONNTE_TOKEN'),
+        'url'   => env('FONNTE_URL', 'https://api.fonnte.com/send'),
+    ],
+
 ];

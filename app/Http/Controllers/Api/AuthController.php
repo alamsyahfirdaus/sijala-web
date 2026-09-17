@@ -7,7 +7,6 @@ use App\Models\User;
 use App\Models\CounselingSession;
 use App\Models\ElderlyCounselee;
 use App\Models\Notification;
-use App\Services\FonnteService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -165,6 +164,7 @@ class AuthController extends Controller
             if ($validator->fails()) {
                 return response()->json([
                     'status' => false,
+                    'message' => 'Validasi gagal.',
                     'errors' => $validator->errors(),
                 ], 422);
             }
@@ -248,7 +248,13 @@ class AuthController extends Controller
                 ],
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+
+            Log::error('Login API Error', [
+                'message' => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+            ]);
 
             return response()->json([
                 'status' => false,
@@ -857,8 +863,8 @@ class AuthController extends Controller
             // Kirim WhatsApp melalui Fonnte
             // =====================================================
             $response = Http::withHeaders([
-                'Authorization' => 'YSdXWqVCzUeFC3V63CVW',
-            ])->post('https://api.fonnte.com/send', [
+                'Authorization' => config('services.fonnte.token', env('FONNTE_TOKEN')),
+            ])->post(config('services.fonnte.url', 'https://api.fonnte.com/send'), [
                 'target'  => $target,
                 'message' => $message,
             ]);

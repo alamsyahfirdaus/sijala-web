@@ -44,8 +44,8 @@ Route::get('/image/{filename}', function ($filename) {
 Route::get('/test-wa', function () {
 
     $response = Http::withHeaders([
-        'Authorization' => 'xyPjYLXVq1cv92cLdNEC',
-    ])->post('https://api.fonnte.com/send', [
+        'Authorization' => config('services.fonnte.token', env('FONNTE_TOKEN')),
+    ])->post(config('services.fonnte.url', 'https://api.fonnte.com/send'), [
         'target'  => '6282215161998',
         'message' => 'Test WhatsApp dari SIJALA berhasil.',
     ]);
@@ -103,6 +103,13 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     });
 });
 
-Route::fallback(function () {
+Route::fallback(function (\Illuminate\Http\Request $request) {
+    if ($request->is('api/*') || $request->expectsJson()) {
+        return response()->json([
+            'status'  => false,
+            'message' => 'Endpoint API tidak ditemukan.',
+        ], 404);
+    }
+
     return redirect()->route('landing');
 });

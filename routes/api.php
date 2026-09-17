@@ -212,3 +212,15 @@ Route::prefix('regions')->group(function () {
     // pencarian kelurahan (autocomplete)
     Route::get('/search-village', [RegionController::class, 'searchVillage']);
 });
+
+/*
+|--------------------------------------------------------------------------
+| FALLBACK ROUTE (API)
+|--------------------------------------------------------------------------
+*/
+Route::fallback(function () {
+    return response()->json([
+        'status'  => false,
+        'message' => 'Endpoint API tidak ditemukan.',
+    ], 404);
+});
