@@ -41,7 +41,11 @@ class RtcTokenBuilder2
      */
     public static function buildTokenWithUid($appId, $appCertificate, $channelName, $uid, $role, $tokenExpire, $privilegeExpire = 0)
     {
-        return self::buildTokenWithUserAccount($appId, $appCertificate, $channelName, $uid, $role, $tokenExpire, $privilegeExpire);
+        if ($privilegeExpire === 0) {
+            $privilegeExpire = $tokenExpire;
+        }
+        $account = ($uid === 0 || $uid === '0' || empty($uid)) ? '' : (string) $uid;
+        return self::buildTokenWithUserAccount($appId, $appCertificate, $channelName, $account, $role, $tokenExpire, $privilegeExpire);
     }
 
     /**
@@ -61,8 +65,11 @@ class RtcTokenBuilder2
      */
     public static function buildTokenWithUserAccount($appId, $appCertificate, $channelName, $account, $role, $tokenExpire, $privilegeExpire = 0)
     {
+        if ($privilegeExpire === 0) {
+            $privilegeExpire = $tokenExpire;
+        }
         $token = new AccessToken2($appId, $appCertificate, $tokenExpire);
-        $serviceRtc = new ServiceRtc($channelName, $account);
+        $serviceRtc = new ServiceRtc($channelName, (string) $account);
 
         $serviceRtc->addPrivilege($serviceRtc::PRIVILEGE_JOIN_CHANNEL, $privilegeExpire);
         if ($role == self::ROLE_PUBLISHER) {

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AgoraController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ConsultationController;
 use App\Http\Controllers\Api\CounselingChatController;
@@ -31,6 +32,8 @@ Route::get('/ping', function () {
         'message' => 'API OK',
     ]);
 });
+
+Route::get('/agora/config', [AgoraController::class, 'config']);
 
 Route::get('/agora/test', function () {
 
@@ -172,6 +175,9 @@ Route::middleware('api.auth')->group(function () {
         Route::post('/accept-call', [ConsultationController::class, 'acceptCall']);
         Route::post('/reject-call', [ConsultationController::class, 'rejectCall']);
         Route::post('/end-call', [ConsultationController::class, 'endCall']);
+        Route::get('/session/{sessionId}/credentials', [ConsultationController::class, 'sessionCredentials']);
+        Route::get('/agora/debug/{sessionId}', [ConsultationController::class, 'debugAgoraSession']);
+        Route::post('/renew-token', [ConsultationController::class, 'renewToken']);
     });
 
     Route::prefix('presentation')->group(function () {

@@ -14,6 +14,12 @@ class Consultation extends Model
 
     protected $guarded = [];
 
+    protected $casts = [
+        'metadata' => 'array',
+        'started_at' => 'datetime',
+        'ended_at' => 'datetime',
+    ];
+
     public function caller()
     {
         return $this->belongsTo(User::class, 'caller_id');
