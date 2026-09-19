@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AgoraController;
+use App\Http\Controllers\Api\AppUpdateController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ConsultationController;
 use App\Http\Controllers\Api\CounselingChatController;
@@ -34,6 +35,7 @@ Route::get('/ping', function () {
 });
 
 Route::get('/agora/config', [AgoraController::class, 'config']);
+Route::get('/app/version', [AppUpdateController::class, 'getVersion']);
 
 Route::get('/agora/test', function () {
 
