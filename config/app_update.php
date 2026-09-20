@@ -15,7 +15,7 @@ return [
 
     'version_code'  => 2,
 
-    'download_url'  => 'https://drive.google.com/file/d/10ts9iD1I0yJB2chVBq9aq-paygxd1JKK/view?usp=drive_link',
+    'download_url'  => 'https://drive.google.com/file/d/1ELt9sFfHialvU875oz4mkwtQFUcBtYOZ/view?usp=sharing',
 
     'release_notes' => [
         'Pembaruan sistem Video Call Agora RTC',
