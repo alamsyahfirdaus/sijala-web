@@ -115,53 +115,55 @@
                                             </thead>
                                             <tbody>
                                                 @foreach ([$screening['pre_test'], $screening['post_test']] as $index => $screening)
-                                                    <tr>
-                                                        <td>
-                                                            {{ \Carbon\Carbon::parse($screening['session_date'])->translatedFormat('d F Y') }}
-                                                        </td>
-                                                        <td>
-                                                            @if ($screening['fall_risk'])
-                                                                {{ $screening['fall_risk']['total_score'] }}
-                                                                <span class="text-muted">
-                                                                    ({{ $screening['fall_risk']['risk_level'] }})
-                                                                </span>
-                                                            @else
-                                                                -
-                                                            @endif
-                                                        </td>
-                                                        <td>{{ $screening['empowerment'] ? $screening['empowerment']['total_score'] : '-' }}
-                                                        </td>
-                                                        <td>
-                                                            <div class="btn-group btn-group-sm">
-                                                                <button type="button"
-                                                                    class="btn btn-primary dropdown-toggle dropdown-menu-right"
-                                                                    data-bs-toggle="dropdown" aria-expanded="false">
-                                                                    Aksi
-                                                                </button>
-                                                                <ul class="dropdown-menu">
-                                                                    <li><a href="javascript:void(0)"
-                                                                            class="dropdown-item btn-edit-score"
-                                                                            data-type="fall-risk"
-                                                                            data-id="{{ $screening['fall_risk']['id'] }}"
-                                                                            data-score="{{ $screening['fall_risk']['total_score'] ?? 0 }}">
-                                                                            Ubah Skor Risiko Jatuh
-                                                                        </a></li>
-                                                                    <li>
-                                                                        <hr class="dropdown-divider" />
-                                                                    </li>
-                                                                    <li>
-                                                                        <a href="javascript:void(0)"
-                                                                            class="dropdown-item btn-edit-score"
-                                                                            data-type="empowerment"
-                                                                            data-id="{{ $screening['empowerment']['id'] }}"
-                                                                            data-score="{{ $screening['empowerment']['total_score'] ?? 0 }}">
-                                                                            Ubah Skor Pemberdayaan
-                                                                        </a>
-                                                                    </li>
-                                                                </ul>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
+                                                    @if ($screening)
+                                                        <tr>
+                                                            <td>
+                                                                {{ $screening['session_date'] ? \Carbon\Carbon::parse($screening['session_date'])->translatedFormat('d F Y') : '' }}
+                                                            </td>
+                                                            <td>
+                                                                @if ($screening['fall_risk'])
+                                                                    {{ $screening['fall_risk']['total_score'] }}
+                                                                    <span class="text-muted">
+                                                                        ({{ $screening['fall_risk']['risk_level'] }})
+                                                                    </span>
+                                                                @else
+                                                                    -
+                                                                @endif
+                                                            </td>
+                                                            <td>{{ $screening['empowerment'] ? $screening['empowerment']['total_score'] : '-' }}
+                                                            </td>
+                                                            <td>
+                                                                <div class="btn-group btn-group-sm">
+                                                                    <button type="button"
+                                                                        class="btn btn-primary dropdown-toggle dropdown-menu-right"
+                                                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                                                        Aksi
+                                                                    </button>
+                                                                    <ul class="dropdown-menu">
+                                                                        <li><a href="javascript:void(0)"
+                                                                                class="dropdown-item btn-edit-score"
+                                                                                data-type="fall-risk"
+                                                                                data-id="{{ $screening['fall_risk']['id'] }}"
+                                                                                data-score="{{ $screening['fall_risk']['total_score'] ?? 0 }}">
+                                                                                Ubah Skor Risiko Jatuh
+                                                                            </a></li>
+                                                                        <li>
+                                                                            <hr class="dropdown-divider" />
+                                                                        </li>
+                                                                        <li>
+                                                                            <a href="javascript:void(0)"
+                                                                                class="dropdown-item btn-edit-score"
+                                                                                data-type="empowerment"
+                                                                                data-id="{{ $screening['empowerment']['id'] }}"
+                                                                                data-score="{{ $screening['empowerment']['total_score'] ?? 0 }}">
+                                                                                Ubah Skor Pemberdayaan
+                                                                            </a>
+                                                                        </li>
+                                                                    </ul>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    @endif
                                                 @endforeach
                                             </tbody>
                                         </table>
